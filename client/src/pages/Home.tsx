@@ -469,23 +469,23 @@ function TeamSection() {
     {
       name: "Oliver Curtis",
       role: "Co-Founder",
-      bio: "Oxford undergraduate. Specialises in Mathematics and Further Maths, A-Level and GCSE.",
+      bio: "Co-founder of Oak Scholars, passionate about making high-quality tutoring accessible to every student.",
       initials: "OC",
-      linkedin: "https://linkedin.com/in/oliver-curtis",
+      linkedin: "https://www.linkedin.com/in/oliver-curtis-122b48373/",
     },
     {
       name: "Aaron Onuorah",
       role: "Co-Founder",
-      bio: "UCL undergraduate. Specialises in Sciences and Medicine preparation.",
+      bio: "Philosophy & Theology undergraduate at the University of Nottingham. FIMS Intern at Hamilton Lane and Brokerage Young Leader.",
       initials: "AO",
-      linkedin: "https://linkedin.com/in/aaron-onuorah",
+      linkedin: "https://www.linkedin.com/in/aaron-onuorah",
     },
     {
       name: "Kolade Alabi",
       role: "Co-Founder",
-      bio: "Imperial undergraduate. Specialises in Economics, Business, and Humanities.",
+      bio: "Undergraduate at Nottingham Trent University. Entrepreneur and co-founder of Oak Scholars, driven to connect passionate tutors with students.",
       initials: "KA",
-      linkedin: "https://linkedin.com/in/kolade-alabi",
+      linkedin: "https://www.linkedin.com/in/kolade-alabi-34557a258/",
     },
   ];
 
