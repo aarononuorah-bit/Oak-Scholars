@@ -12,6 +12,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Account from "./pages/Account";
+import StudyResources from "./pages/StudyResources";
+import SupportGuidance from "./pages/SupportGuidance";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import CookieConsent from "./components/CookieConsent";
 
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/terms" component={TermsOfService} />
       <Route path="/account" component={Account} />
       <Route path="/account/:tab" component={Account} />
+      <Route path="/study-resources" component={StudyResources} />
+      <Route path="/support-guidance" component={SupportGuidance} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

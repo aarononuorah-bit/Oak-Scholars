@@ -18,8 +18,9 @@ const LOGO_URL = "/manus-storage/oak-logo_35a8e9ad.webp";
 const navLinks = [
   { label: "Services", href: "/#services" },
   { label: "How It Works", href: "/#how-it-works" },
+  { label: "Study Resources", href: "/study-resources" },
+  { label: "Support", href: "/support-guidance" },
   { label: "Pricing", href: "/#pricing" },
-  { label: "Team", href: "/#team" },
   { label: "Contact", href: "/contact" },
 ];
 

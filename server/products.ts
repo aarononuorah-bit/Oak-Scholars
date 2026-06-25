@@ -28,8 +28,8 @@ export const PRODUCTS = [
     id: "bundle8",
     name: "8-Session Bundle",
     description: "Best value — 8 sessions, maximum progress.",
-    priceInPence: 19000,
-    label: "£190",
+    priceInPence: 20000,
+    label: "£200",
     highlight: false,
   },
 ] as const;

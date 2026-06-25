@@ -54,3 +54,14 @@
 - [x] Build /account page: profile, order history, saved cards
 - [x] Wire Stripe Customer Portal for saved card management
 - [x] Add login/auth flow visible in Navbar (Login button → Manus OAuth)
+
+## Content & Feature Updates (Round 3)
+
+- [x] Change "7+ subjects covered" stat to "12+ subjects covered"
+- [x] Change 8-session bundle price from £190 to £200 (saving £40, not £50)
+- [x] Update products.ts with new £200 bundle price
+- [x] Split ServicesSection into 4 distinct cards: Tuition, Study Resources, Academic Support, Wellbeing Support
+- [x] Create /study-resources page with its own pricing (revision notes, mock questions, model answers, PowerPoints — £15–£20 per pack)
+- [x] Create /support-guidance page split into two groups: (1) Academic Support: personal statement help, EPQ support, CV writing, interview prep; (2) Wellbeing: support for students with mental health concerns, bullying, general wellbeing
+- [x] Update all service card CTAs to link to their correct dedicated pages (not all to booking)
+- [x] Register new routes in App.tsx

@@ -105,7 +105,7 @@ function HeroSection() {
                 <p className="text-white/60 text-xs mt-0.5">Per session from</p>
               </div>
               <div>
-                <p className="font-serif text-3xl font-bold text-white">7+</p>
+                <p className="font-serif text-3xl font-bold text-white">12+</p>
                 <p className="text-white/60 text-xs mt-0.5">Subjects covered</p>
               </div>
             </div>
@@ -187,18 +187,28 @@ function ServicesSection() {
       title: "1:1 Tuition",
       desc: "Personalised sessions tailored to your syllabus, exam board, and learning style. Weekly or intensive options available.",
       link: "/booking",
+      cta: "Book a session",
     },
     {
       icon: <FileText size={28} />,
       title: "Study Resources",
-      desc: "Revision notes, mock questions, model answers, and PowerPoints crafted by tutors who recently sat the same papers.",
-      link: "/booking",
+      desc: "Revision notes, mock questions, model answers, and PowerPoints crafted by tutors who recently sat the same papers. From £15 per pack.",
+      link: "/study-resources",
+      cta: "View resources",
+    },
+    {
+      icon: <GraduationCap size={28} />,
+      title: "Academic Support",
+      desc: "Personal statement help, EPQ support, CV writing, and interview preparation to strengthen your university application.",
+      link: "/support-guidance",
+      cta: "Find out more",
     },
     {
       icon: <Heart size={28} />,
-      title: "Support & Guidance",
-      desc: "Personal statement help, EPQ support, CV writing, and interview preparation for university applications.",
-      link: "/booking",
+      title: "Wellbeing Support",
+      desc: "A safe space for students dealing with stress, anxiety, bullying, or any challenges outside of the classroom. You're not alone.",
+      link: "/support-guidance#wellbeing",
+      cta: "Find out more",
     },
   ];
 
@@ -212,11 +222,11 @@ function ServicesSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((s) => (
             <div
               key={s.title}
-              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer"
+              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
             >
               <div
                 className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 text-amber group-hover:scale-110 transition-transform duration-300"
@@ -225,9 +235,9 @@ function ServicesSection() {
                 {s.icon}
               </div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{s.title}</h3>
-              <p className="text-muted-brand text-sm leading-relaxed mb-6">{s.desc}</p>
-              <Link href={s.link} className="text-amber font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
-                Learn more <ChevronRight size={16} />
+              <p className="text-muted-brand text-sm leading-relaxed mb-6 flex-1">{s.desc}</p>
+              <Link href={s.link} className="text-amber font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all mt-auto">
+                {s.cta} <ChevronRight size={16} />
               </Link>
             </div>
           ))}
@@ -328,8 +338,8 @@ function PricingSection() {
     },
     {
       name: "8-Session Bundle",
-      price: "£190",
-      save: "Save £50",
+      price: "£200",
+      save: "Save £40",
       desc: "Maximum progress — our best value package.",
       features: ["8 × 1 hour sessions", "Any subject", "Any level", "Progress tracking"],
       highlight: false,
