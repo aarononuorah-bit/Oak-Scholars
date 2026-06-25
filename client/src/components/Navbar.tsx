@@ -21,6 +21,7 @@ const navLinks = [
   { label: "Study Resources", href: "/study-resources" },
   { label: "Support", href: "/support-guidance" },
   { label: "Pricing", href: "/#pricing" },
+  { label: "Our Philosophy", href: "/philosophy" },
   { label: "Contact", href: "/contact" },
 ];
 

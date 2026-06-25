@@ -17,6 +17,7 @@ import StudyResourcesBooking from "./pages/StudyResourcesBooking";
 import SupportGuidance from "./pages/SupportGuidance";
 import AcademicSupportForm from "./pages/AcademicSupportForm";
 import WellbeingForm from "./pages/WellbeingForm";
+import Philosophy from "./pages/Philosophy";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import CookieConsent from "./components/CookieConsent";
 import { ChatbotWidget } from "./components/ChatbotWidget";
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/support-guidance" component={SupportGuidance} />
       <Route path="/academic-support" component={AcademicSupportForm} />
       <Route path="/wellbeing-support" component={WellbeingForm} />
+      <Route path="/philosophy" component={Philosophy} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
