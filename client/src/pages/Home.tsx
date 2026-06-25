@@ -39,67 +39,99 @@ function HeroSection() {
       className="relative min-h-screen flex items-center pt-20"
       style={{ background: "linear-gradient(160deg, #281A39 0%, #1e1230 50%, #160D22 100%)" }}
     >
-      {/* Background pattern */}
+      {/* Background image overlay */}
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `url('/manus-storage/hero-bg_d17613f1.webp')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+      {/* Dot pattern */}
       <div className="absolute inset-0 opacity-5" style={{
         backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
         backgroundSize: "40px 40px"
       }} />
 
       <div className="container relative z-10 py-20">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-amber/10 border border-amber/30 rounded-full px-4 py-1.5 mb-8">
-            <span className="text-amber text-xs font-semibold tracking-wider uppercase">50% off your first session</span>
-          </div>
-
-          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
-            Your A-Level tutor<br />
-            <span className="text-amber">sat the same paper</span><br />
-            two years ago.
-          </h1>
-
-          <p className="text-white/70 text-xl leading-relaxed mb-10 max-w-xl">
-            Oak Scholars connects ambitious students with undergraduates who recently aced the same exams. Real insight, real results — from 11+ to A-Level and IB.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/booking">
-              <Button
-                size="lg"
-                className="btn-press font-semibold text-base px-8 py-6"
-                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
-              >
-                Book Your Trial Session
-                <ChevronRight size={18} className="ml-1" />
-              </Button>
-            </Link>
-            <a href="#how-it-works">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-6"
-              >
-                How It Works
-              </Button>
-            </a>
-          </div>
-
-          <div className="flex items-center gap-6 mt-12 pt-8 border-t border-white/10">
-            <div className="flex -space-x-2">
-              {["O", "A", "K"].map((l, i) => (
-                <div
-                  key={i}
-                  className="w-9 h-9 rounded-full border-2 border-navy flex items-center justify-center font-bold text-sm text-white"
-                  style={{ backgroundColor: i === 0 ? "#E8A838" : i === 1 ? "#2a4a8a" : "#3a1a5a" }}
-                >
-                  {l}
-                </div>
-              ))}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left — copy */}
+          <div>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-8 h-px bg-amber" />
+              <span className="text-amber text-xs font-semibold tracking-widest uppercase">Online Tutoring</span>
             </div>
-            <div>
-              <div className="flex items-center gap-1">
-                {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="#E8A838" className="text-amber" />)}
+
+            <h1 className="font-serif text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
+              Your tutor sat{" "}
+              <em className="text-amber not-italic">the same exam</em>{" "}
+              two years ago.
+            </h1>
+
+            <p className="text-white/70 text-lg leading-relaxed mb-10">
+              Oak Scholars connects students with current undergraduates who recently aced the same papers. 1:1 online tutoring from 11+ through A-Level — tailored to you, priced fairly.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <Link href="/booking">
+                <Button
+                  size="lg"
+                  className="btn-press font-semibold text-base px-8 py-3"
+                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                >
+                  Book a Trial — 50% Off
+                </Button>
+              </Link>
+              <a href="#pricing">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-3"
+                >
+                  View Pricing
+                </Button>
+              </a>
+            </div>
+
+            {/* Stats row */}
+            <div className="flex items-center gap-8 pt-8 border-t border-white/10">
+              <div>
+                <p className="font-serif text-3xl font-bold text-amber">50%</p>
+                <p className="text-white/60 text-xs mt-0.5">Off first lesson</p>
               </div>
-              <p className="text-white/60 text-sm">Trusted by 200+ students</p>
+              <div>
+                <p className="font-serif text-3xl font-bold text-white">£30</p>
+                <p className="text-white/60 text-xs mt-0.5">Per session from</p>
+              </div>
+              <div>
+                <p className="font-serif text-3xl font-bold text-white">7+</p>
+                <p className="text-white/60 text-xs mt-0.5">Subjects covered</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — tutoring image with review card */}
+          <div className="relative hidden lg:block">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
+              <img
+                src="/manus-storage/study-session_3a51259f.webp"
+                alt="A university student tutoring a secondary school student"
+                className="w-full h-full object-cover"
+              />
+              {/* Gradient overlay at bottom */}
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(40,26,57,0.6) 0%, transparent 50%)" }} />
+            </div>
+            {/* Review card — overlaid at bottom-left */}
+            <div
+              className="absolute bottom-4 left-4 right-4 rounded-xl p-4"
+              style={{ backgroundColor: "rgba(40,26,57,0.92)", border: "1px solid rgba(232,168,56,0.2)", backdropFilter: "blur(8px)" }}
+            >
+              <p className="text-amber text-xs font-semibold tracking-widest uppercase mb-2">Recent Parent Review</p>
+              <p className="text-white/90 text-sm leading-relaxed italic">
+                "He really took time to understand strengths and weaknesses."
+              </p>
+              <p className="text-white/50 text-xs mt-2">— GCSE Chemistry Parent</p>
             </div>
           </div>
         </div>
