@@ -96,3 +96,10 @@
 - [x] Handle new user creation and existing user login via Google profile
 - [x] Add Google sign-in button back to Login.tsx and Register.tsx
 - [x] Google OAuth secrets test — 3/3 passing
+
+## Navbar & Chatbot Polish
+- [x] Differentiate "Become an Oak Scholar" button (outline/ghost style) vs "Book a Session" (primary amber fill)
+- [x] Add hover pop/scale animation to "Book a Session" button in navbar
+- [x] Inject accurate Oak Scholars system prompt into AI chatbot (services, pricing, how to book, etc.)
+- [x] Add "Connect to agent" fallback option in chatbot when AI cannot answer
+- [x] Move chatbot close button to bottom-right, change from red to brand-consistent colour

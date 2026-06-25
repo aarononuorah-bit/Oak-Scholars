@@ -94,21 +94,24 @@ export default function Navbar() {
 
           {/* Desktop CTA - right side */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            {/* Become an Oak Scholar - Highlighted */}
+            {/* Become an Oak Scholar - subtle outline so Book a Session stands out */}
             <Link href="/tutor-apply">
               <Button
-                className="font-semibold transition-all duration-300 ease-out hover:scale-105"
-                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                variant="outline"
+                className={`font-semibold transition-all duration-200 ease-out ${
+                  scrolled
+                    ? "border-[#281A39] text-[#281A39] hover:bg-[#281A39]/8 bg-transparent"
+                    : "border-white/70 text-white hover:bg-white/10 bg-transparent"
+                }`}
               >
                 Become an Oak Scholar
               </Button>
             </Link>
 
-            {/* Book a Session */}
+            {/* Book a Session - primary CTA, eye-catching amber with pop animation */}
             <Link href="/booking">
               <Button
-                size="sm"
-                className="btn-press font-semibold"
+                className="font-semibold shadow-md transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg active:scale-[0.97]"
                 style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 Book a Session
@@ -245,14 +248,17 @@ export default function Navbar() {
             }`}>
               <Link href="/tutor-apply" className="w-full">
                 <Button
-                  className="w-full font-semibold"
-                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                  variant="outline"
+                  className="w-full font-semibold border-[#281A39] text-[#281A39] hover:bg-[#281A39]/8 bg-transparent"
                 >
                   Become an Oak Scholar
                 </Button>
               </Link>
               <Link href="/booking" className="w-full">
-                <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+                <Button
+                  className="w-full font-semibold shadow-md transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-lg active:scale-[0.97]"
+                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                >
                   Book a Session
                 </Button>
               </Link>
