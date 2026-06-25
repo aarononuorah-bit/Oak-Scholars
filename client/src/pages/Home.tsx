@@ -94,7 +94,7 @@ function HeroSection() {
       <div
         className="absolute inset-0 opacity-20"
         style={{
-          backgroundImage: `url('/manus-storage/hero-bg_4b3ffe94.webp')`,
+          backgroundImage: `url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -162,7 +162,7 @@ function HeroSection() {
           <div className="relative hidden lg:block animate-slide-in-right" style={{ animationDelay: "200ms" }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="/manus-storage/study-session_0bfc8780.webp"
+                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"
                 alt="A university student tutoring a secondary school student"
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
               />
@@ -232,7 +232,7 @@ function HowItWorksSection() {
             <div key={step.num} className="relative group">
               {/* Connector line between steps */}
               {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-full w-full h-px z-0" style={{ background: "linear-gradient(to right, rgba(232,168,56,0.3), transparent)" }} />
+                <div className="hidden lg:block absolute top-10 left-full w-full h-px z-0" style={{ background: "linear-gradient(to right, #E8A838, transparent)" }} />
               )}
               <div className="section-number mb-2 group-hover:opacity-30 transition-opacity duration-300">{step.num}</div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{step.title}</h3>

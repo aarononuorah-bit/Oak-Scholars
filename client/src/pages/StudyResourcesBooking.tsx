@@ -159,31 +159,43 @@ export default function StudyResourcesBooking() {
 
         {/* Progress bar */}
         <div className="bg-white border-b border-gray-100 sticky top-16 z-40">
-          <div className="container py-4">
-            <div className="flex items-center gap-2 max-w-lg mx-auto">
-              {[1, 2, 3, 4].map((s) => (
-                <div key={s} className="flex items-center flex-1">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                      step >= s
-                        ? "text-white"
-                        : "bg-gray-100 text-gray-400"
-                    }`}
-                    style={step >= s ? { backgroundColor: "#281A39" } : {}}
-                  >
-                    {s}
+          <div className="container py-6">
+            <div className="max-w-xl mx-auto">
+              <div className="relative flex justify-between items-center">
+                {/* Background line */}
+                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 z-0" />
+                {/* Active line */}
+                <div 
+                  className="absolute top-1/2 left-0 h-0.5 bg-amber transition-all duration-500 -translate-y-1/2 z-0" 
+                  style={{ width: `${((step - 1) / 3) * 100}%` }}
+                />
+
+                {[
+                  { id: 1, label: "Resource" },
+                  { id: 2, label: "Subject" },
+                  { id: 3, label: "Details" },
+                  { id: 4, label: "Confirm" }
+                ].map((s) => (
+                  <div key={s.id} className="relative z-10 flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 border-4 ${
+                        step >= s.id
+                          ? "bg-[#281A39] border-[#281A39] text-white shadow-md"
+                          : "bg-white border-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {s.id}
+                    </div>
+                    <span 
+                      className={`absolute -bottom-7 whitespace-nowrap text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                        step >= s.id ? "text-navy-deep" : "text-gray-400"
+                      }`}
+                    >
+                      {s.label}
+                    </span>
                   </div>
-                  {s < 4 && (
-                    <div className="flex-1 h-1 mx-1 rounded" style={{ backgroundColor: step > s ? "#E8A838" : "#E5E7EB" }} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-1 max-w-lg mx-auto">
-              <span>Resource</span>
-              <span>Subject & Level</span>
-              <span>Your Details</span>
-              <span>Confirm</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>

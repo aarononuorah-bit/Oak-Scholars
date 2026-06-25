@@ -282,48 +282,45 @@ export default function Booking() {
         </div>
 
         {/* Step indicator */}
-        <div className="mb-8 animate-fade-in" style={{ animationDelay: "100ms" }}>
-          {/* Progress bar */}
-          <div className="h-1.5 bg-gray-100 rounded-full mb-6 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progressPct}%`, backgroundColor: "#E8A838" }}
+        <div className="mb-12 animate-fade-in" style={{ animationDelay: "100ms" }}>
+          <div className="relative flex justify-between items-center max-w-lg mx-auto">
+            {/* Background line */}
+            <div className="absolute top-5 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 z-0" />
+            {/* Active line */}
+            <div 
+              className="absolute top-5 left-0 h-0.5 bg-amber transition-all duration-500 -translate-y-1/2 z-0" 
+              style={{ width: `${((step - 1) / 3) * 100}%` }}
             />
-          </div>
 
-          <div className="flex items-center justify-between">
-            {STEP_LABELS.map((label, i) => {
-              const num = (i + 1) as Step;
-              const Icon = STEP_ICONS[i];
-              const active = step === num;
-              const done = step > num;
+            {[
+              { id: 1, label: "Subject", icon: BookOpen },
+              { id: 2, label: "Package", icon: CreditCard },
+              { id: 3, label: "Time", icon: Calendar },
+              { id: 4, label: "Details", icon: User }
+            ].map((s) => {
+              const Icon = s.icon;
+              const active = step === s.id;
+              const done = step > s.id;
               return (
-                <div key={label} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-400 ease-out ${
-                        done
-                          ? "bg-green-500 text-white shadow-md"
-                          : active
-                            ? "text-navy-deep shadow-lg scale-110"
-                            : "bg-gray-100 text-gray-400"
-                      }`}
-                      style={active ? { backgroundColor: "#E8A838" } : {}}
-                    >
-                      {done ? <CheckCircle size={18} /> : <Icon size={16} />}
-                    </div>
-                    <span className={`text-xs font-medium hidden sm:block text-center leading-tight max-w-[80px] transition-colors duration-300 ${
-                      active ? "text-navy-deep font-semibold" : done ? "text-green-600" : "text-muted-brand"
-                    }`}>
-                      {label}
-                    </span>
+                <div key={s.id} className="relative z-10 flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 border-4 ${
+                      done
+                        ? "bg-green-500 border-green-500 text-white"
+                        : active
+                          ? "bg-[#281A39] border-[#281A39] text-white shadow-md"
+                          : "bg-white border-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {done ? <CheckCircle size={18} /> : <Icon size={16} />}
                   </div>
-                  {i < STEP_LABELS.length - 1 && (
-                    <div
-                      className="h-0.5 flex-1 mx-2 rounded-full transition-all duration-500"
-                      style={{ backgroundColor: done ? "#22c55e" : "#e5e7eb" }}
-                    />
-                  )}
+                  <span 
+                    className={`absolute -bottom-7 whitespace-nowrap text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                      active ? "text-navy-deep" : done ? "text-green-600" : "text-gray-400"
+                    }`}
+                  >
+                    {s.label}
+                  </span>
                 </div>
               );
             })}

@@ -13,14 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const LOGO_URL = "/manus-storage/oak-logo_feb9f1bb.webp";
+const LOGO_URL = "https://framerusercontent.com/images/V6mG3N1n6Kz8Z2z5H8f0y3w.png"; // Placeholder for the actual logo
 
 const navLinks = [
   { label: "Tuition", href: "/booking" },
   { label: "Study Resources", href: "/study-resources" },
   { label: "Support", href: "/support-guidance" },
   { label: "How It Works", href: "/#how-it-works" },
-  { label: "Our Philosophy", href: "/philosophy" },
+  { label: "Philosophy", href: "/philosophy" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -119,6 +119,9 @@ export default function Navbar() {
 
           {/* Desktop CTA - right side */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
+            {/* Divider */}
+            <div className="hidden xl:block h-6 w-px bg-gray-200 mx-1" />
+
             {/* Become an Oak Scholar - subtle outline so Book a Session stands out */}
             <Link href="/tutor-apply">
               <Button

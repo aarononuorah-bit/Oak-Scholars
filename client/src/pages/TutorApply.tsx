@@ -139,7 +139,7 @@ export default function TutorApply() {
         <Navbar />
         <div className="container py-32 max-w-lg mx-auto text-center">
           <div className="bg-white rounded-2xl p-10 border border-gray-100">
-            <div className="w-16 h-16 bg-amber/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 bg-amber/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle size={32} className="text-amber" />
             </div>
             <h1 className="font-serif text-3xl font-bold text-navy-deep mb-4">Application Submitted!</h1>
@@ -166,32 +166,44 @@ export default function TutorApply() {
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center mb-10">
-          {STEP_LABELS.map((label, i) => {
-            const num = (i + 1) as Step;
-            const active = step === num;
-            const done = step > num;
-            return (
-              <div key={label} className="flex items-center flex-1">
-                <div className="flex flex-col items-center">
+        <div className="mb-12">
+          <div className="relative flex justify-between items-center max-w-lg mx-auto">
+            {/* Background line */}
+            <div className="absolute top-4 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 z-0" />
+            {/* Active line */}
+            <div 
+              className="absolute top-4 left-0 h-0.5 bg-amber transition-all duration-500 -translate-y-1/2 z-0" 
+              style={{ width: `${((step - 1) / 3) * 100}%` }}
+            />
+
+            {STEP_LABELS.map((label, i) => {
+              const num = (i + 1) as Step;
+              const active = step === num;
+              const done = step > num;
+              return (
+                <div key={label} className="relative z-10 flex flex-col items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                      done ? "bg-green-500 text-white" : active ? "text-navy-deep" : "bg-gray-100 text-gray-400"
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 border-2 ${
+                      done
+                        ? "bg-green-500 border-green-500 text-white"
+                        : active
+                          ? "bg-[#281A39] border-[#281A39] text-white shadow-md"
+                          : "bg-white border-gray-100 text-gray-400"
                     }`}
-                    style={active ? { backgroundColor: "#E8A838" } : {}}
                   >
-                    {done ? <CheckCircle size={16} /> : num}
+                    {done ? <CheckCircle size={14} /> : num}
                   </div>
-                  <span className={`text-xs mt-1 hidden sm:block ${active ? "text-navy-deep font-semibold" : "text-muted-brand"}`}>
-                    {label}
+                  <span 
+                    className={`absolute -bottom-6 whitespace-nowrap text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                      active ? "text-navy-deep" : done ? "text-green-600" : "text-gray-400"
+                    }`}
+                  >
+                    {label.split(' ')[0]}
                   </span>
                 </div>
-                {i < STEP_LABELS.length - 1 && (
-                  <div className={`h-0.5 flex-1 mx-2 rounded-full ${done ? "bg-green-400" : "bg-gray-200"}`} />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">

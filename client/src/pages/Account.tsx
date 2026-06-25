@@ -491,7 +491,7 @@ function DashboardTab() {
         </CardContent>
       </Card>
 
-      {/* Downloads Section */}
+      {/* Downloads Section - Conditional */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -501,19 +501,17 @@ function DashboardTab() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {["A-Level Maths: Integration Masterclass", "GCSE Physics: Formula Cheat Sheet"].map((res) => (
-              <div key={res} className="flex items-center justify-between p-3 rounded-xl border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded bg-amber/10 flex items-center justify-center">
-                    <BookOpen size={14} className="text-amber" />
-                  </div>
-                  <p className="text-xs font-medium text-navy-deep truncate max-w-[150px]">{res}</p>
-                </div>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-amber">
-                  <Download size={14} />
+            {/* Real resources would come from an orders query filtered by resource type */}
+            {/* For now, we show a message if no resources have been purchased */}
+            <div className="col-span-full py-8 text-center bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+              <BookOpen size={24} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-muted-brand">No resources purchased yet.</p>
+              <Link href="/study-resources">
+                <Button variant="link" className="text-amber text-xs font-bold p-0 h-auto mt-1">
+                  Browse Resource Packs
                 </Button>
-              </div>
-            ))}
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

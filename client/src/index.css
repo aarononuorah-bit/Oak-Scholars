@@ -287,16 +287,17 @@
 }
 
 /* ─── Page transition ───────────────────────────────────────────────────────── */
-.page-enter {
-  animation: pageEnter 280ms cubic-bezier(0.23, 1, 0.32, 1) both;
+.page-wrapper {
+  animation: pageFadeIn 400ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: opacity, transform;
 }
 
-@keyframes pageEnter {
-  from {
+@keyframes pageFadeIn {
+  0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
   }

@@ -158,9 +158,9 @@ export function ChatbotWidget() {
           />
 
           {/* Footer actions */}
-          <div className="px-3 pb-3 pt-1 bg-[#FDFAF5] border-t border-amber/10 flex items-center justify-between gap-2">
+          <div className="px-4 pb-4 pt-2 bg-[#FDFAF5] border-t border-amber/10 flex flex-col items-center gap-2">
             {showConnectAgent ? (
-              <Link href="/contact" className="flex-1">
+              <Link href="/contact" className="w-full">
                 <Button
                   className="w-full gap-2 font-semibold text-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                   style={{ backgroundColor: "#281A39", color: "#E8A838" }}
@@ -173,10 +173,10 @@ export function ChatbotWidget() {
             ) : (
               <button
                 onClick={handleConnectToAgent}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-105"
-                style={{ color: "#281A39", background: "rgba(40,26,57,0.06)", border: "1px solid rgba(40,26,57,0.15)" }}
+                className="w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 rounded-xl transition-all duration-200 hover:bg-navy-deep/5 active:scale-[0.98]"
+                style={{ color: "#281A39", border: "1px dashed rgba(40,26,57,0.2)" }}
               >
-                <UserCheck size={12} />
+                <UserCheck size={14} />
                 Talk to a human
               </button>
             )}

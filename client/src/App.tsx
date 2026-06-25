@@ -32,8 +32,8 @@ import { ChatbotWidget } from "./components/ChatbotWidget";
 function AnimatedRoutes() {
   const [location] = useLocation();
   return (
-    <div key={location} className="page-enter">
-      <Switch>
+    <div key={location} className="page-wrapper">
+      <Switch location={location}>
         <Route path="/" component={Home} />
         <Route path="/booking" component={Booking} />
         <Route path="/booking/success" component={BookingSuccess} />

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-const LOGO_URL = "/manus-storage/oak-logo_feb9f1bb.webp";
+const LOGO_URL = "https://framerusercontent.com/images/V6mG3N1n6Kz8Z2z5H8f0y3w.png";
 
 export default function Footer() {
   return (
