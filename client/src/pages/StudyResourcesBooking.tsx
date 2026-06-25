@@ -38,6 +38,7 @@ interface FormData {
   quantity: string;
   name: string;
   email: string;
+  phone: string;
   notes: string;
 }
 
@@ -50,6 +51,7 @@ const EMPTY: FormData = {
   quantity: "1",
   name: "",
   email: "",
+  phone: "",
   notes: "",
 };
 
@@ -75,11 +77,15 @@ export default function StudyResourcesBooking() {
   const canNext = () => {
     if (step === 1) return !!form.resourceType && (form.resourceType !== "other" || form.resourceTypeOther.trim().length > 0);
     if (step === 2) return !!form.level && !!form.subject && (form.subject !== "other" || form.subjectOther.trim().length > 0);
-    if (step === 3) return form.name.trim().length > 1 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+    if (step === 3) return form.name.trim().length > 1 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && form.phone.trim().length > 0;
     return false;
   };
 
   const handleSubmit = () => {
+    if (!form.phone) {
+      toast.error("Please provide a phone number.");
+      return;
+    }
     const resourceLabel = form.resourceType === "other" ? form.resourceTypeOther : selectedResource?.label ?? form.resourceType;
     const subjectLabel = form.subject === "other" ? form.subjectOther : form.subject;
     const message = [
@@ -87,12 +93,14 @@ export default function StudyResourcesBooking() {
       `Subject: ${subjectLabel}`,
       `Level: ${form.level}`,
       `Quantity: ${form.quantity}`,
+      `Phone: ${form.phone}`,
       form.notes ? `Additional Notes: ${form.notes}` : null,
     ].filter(Boolean).join("\n");
 
     contactMutation.mutate({
       name: form.name,
       email: form.email,
+      phone: form.phone,
       subject: `Study Resources Request — ${resourceLabel} (${subjectLabel})`,
       message,
     });
@@ -319,6 +327,16 @@ export default function StudyResourcesBooking() {
                       placeholder="e.g. sarah@example.com"
                       value={form.email}
                       onChange={(e) => set("email", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-2 block font-medium" style={{ color: "#281A39" }}>Phone Number *</Label>
+                    <Input
+                      type="tel"
+                      placeholder="e.g. +44 7700 000000"
+                      value={form.phone}
+                      onChange={(e) => set("phone", e.target.value)}
+                      required
                     />
                   </div>
                   <div>

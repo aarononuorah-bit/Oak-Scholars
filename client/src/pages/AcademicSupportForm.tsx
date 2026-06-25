@@ -49,6 +49,10 @@ export default function AcademicSupportForm() {
       toast.error("Please select at least one service you need help with.");
       return;
     }
+    if (!form.phone) {
+      toast.error("Please provide a phone number.");
+      return;
+    }
     const serviceLabels = selectedServices
       .map((id) => SERVICE_OPTIONS.find((s) => s.id === id)?.label)
       .filter(Boolean)
@@ -176,8 +180,10 @@ export default function AcademicSupportForm() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Phone Number</label>
+                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Phone Number <span className="text-amber">*</span></label>
                 <Input
+                  required
+                  type="tel"
                   placeholder="+44 7700 000000"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}

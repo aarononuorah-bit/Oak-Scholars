@@ -373,8 +373,8 @@ export default function Booking() {
                 <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@example.com" />
               </div>
               <div className="mb-4">
-                <Label htmlFor="phone" className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number (optional)</Label>
-                <Input id="phone" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 900000" />
+                <Label htmlFor="phone" className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number *</Label>
+                <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 900000" required />
               </div>
               <div className="mb-6">
                 <Label htmlFor="message" className="text-sm font-semibold text-navy-deep mb-1.5 block">Anything else? (optional)</Label>

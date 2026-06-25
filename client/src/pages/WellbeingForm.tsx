@@ -55,6 +55,10 @@ export default function WellbeingForm() {
       toast.error("Please select at least one area you'd like support with.");
       return;
     }
+    if (!form.phone) {
+      toast.error("Please provide a phone number.");
+      return;
+    }
     const typeLabels = selectedTypes
       .map((id) => SUPPORT_TYPES.find((s) => s.id === id)?.label)
       .filter(Boolean)
@@ -222,8 +226,10 @@ export default function WellbeingForm() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Phone Number</label>
+                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Phone Number <span className="text-amber">*</span></label>
                 <Input
+                  required
+                  type="tel"
                   placeholder="+44 7700 000000"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}

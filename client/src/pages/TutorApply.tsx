@@ -97,7 +97,7 @@ export default function TutorApply() {
   };
 
   const canAdvance = () => {
-    if (step === 1) return form.firstName && form.lastName && form.email && form.university && form.degreeSubject && form.yearOfStudy;
+    if (step === 1) return form.firstName && form.lastName && form.email && form.phone && form.university && form.degreeSubject && form.yearOfStudy;
     if (step === 2) return form.subjects.length > 0 && form.levels.length > 0;
     if (step === 3) return form.experience.length >= 20;
     if (step === 4) return form.consent;
@@ -105,9 +105,13 @@ export default function TutorApply() {
   };
 
   const handleSubmit = () => {
+    if (!form.phone) {
+      toast.error("Please provide a phone number.");
+      return;
+    }
     submitMutation.mutate({
       firstName: form.firstName, lastName: form.lastName,
-      email: form.email, phone: form.phone || undefined,
+      email: form.email, phone: form.phone,
       university: form.university, degreeSubject: form.degreeSubject,
       yearOfStudy: form.yearOfStudy,
       subjects: form.subjects.join(", "),
@@ -203,8 +207,8 @@ export default function TutorApply() {
                 <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@university.ac.uk" />
               </div>
               <div>
-                <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number (optional)</Label>
-                <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 900000" />
+                <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number *</Label>
+                <Input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 900000" required />
               </div>
               <div>
                 <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">University *</Label>

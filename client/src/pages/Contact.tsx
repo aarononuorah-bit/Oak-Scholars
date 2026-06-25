@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
-    name: "", email: "", subject: "", message: "",
+    name: "", email: "", phone: "", subject: "", message: "",
   });
 
   const submitMutation = trpc.contact.submit.useMutation({
@@ -25,7 +25,7 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.subject || !form.message) {
+    if (!form.name || !form.email || !form.phone || !form.subject || !form.message) {
       toast.error("Please fill in all fields.");
       return;
     }
@@ -91,6 +91,10 @@ export default function Contact() {
                     <Label htmlFor="email" className="text-sm font-semibold text-navy-deep mb-1.5 block">Email Address *</Label>
                     <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@example.com" required />
                   </div>
+                </div>
+                <div>
+                  <Label htmlFor="phone" className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number *</Label>
+                  <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 000000" required />
                 </div>
                 <div>
                   <Label htmlFor="subject" className="text-sm font-semibold text-navy-deep mb-1.5 block">Subject *</Label>
