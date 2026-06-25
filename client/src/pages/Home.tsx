@@ -223,7 +223,7 @@ function ServicesSection() {
             <Link
               key={s.title}
               href={s.link}
-              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 cursor-pointer flex flex-col no-underline animate-fade-in-up opacity-0 card-hover"
+              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline animate-fade-in-up opacity-0 hover-lift bg-white"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div

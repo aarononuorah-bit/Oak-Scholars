@@ -127,3 +127,11 @@
 - [x] Add /booking/success thank-you page shown after Stripe payment completes — new BookingSuccess.tsx page with confirmation message and next steps
 - [x] Smooth page transitions (fade/slide between routes) — page-enter CSS animation (220ms ease-out) applied to Router wrapper in App.tsx
 - [x] Polish animations site-wide (tasteful, professional) — added card-hover, stagger-item, pulse-amber utilities; prefers-reduced-motion respected
+
+## Referral Program (Round 6)
+- [x] Add referral_code to users table and create referrals table
+- [x] Implement referral stats and automatic code generation (tRPC)
+- [x] Update registration to support referral code entry
+- [x] Update Stripe integration to complete referrals and apply 20% discounts
+- [x] Add referral dashboard to Account page
+- [x] Update Booking flow to handle referral rewards and show discounted prices

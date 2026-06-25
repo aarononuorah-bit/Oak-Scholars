@@ -226,7 +226,7 @@ export default function SupportGuidance() {
                 </ul>
                 <Link href="/academic-support">
                   <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
-                    Book a Session <ChevronRight size={16} className="ml-1" />
+                    Enquire Now <ChevronRight size={16} className="ml-1" />
                   </Button>
                 </Link>
               </div>
@@ -282,7 +282,7 @@ export default function SupportGuidance() {
                 </ul>
                 <Link href="/wellbeing-support">
                   <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
-                    Get in Touch <ChevronRight size={16} className="ml-1" />
+                    Enquire Now <ChevronRight size={16} className="ml-1" />
                   </Button>
                 </Link>
               </div>

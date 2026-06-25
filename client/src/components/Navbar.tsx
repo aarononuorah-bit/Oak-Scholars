@@ -52,9 +52,8 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
           ? "shadow-md bg-white border-b border-gray-100"
-          : ""
+          : "bg-[#281A39]"
       }`}
-      style={scrolled ? {} : { backgroundColor: "#281A39" }}
     >
       <div className="max-w-screen-2xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-18">
@@ -81,7 +80,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop nav - centered */}
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 flex-1 justify-center px-4 xl:px-8">
+          <nav className="hidden lg:flex items-center gap-10 flex-1 justify-center px-4 xl:px-8">
             {navLinks.map((link) => (
               <a
                 key={link.href}
