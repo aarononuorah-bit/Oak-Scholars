@@ -29,6 +29,7 @@ type Step = 1 | 2 | 3 | 4;
 
 interface FormData {
   firstName: string; lastName: string; email: string; phone: string;
+  preferredContactMethod: "email" | "phone" | "whatsapp" | "";
   university: string; degreeSubject: string; yearOfStudy: string;
   subjects: string[]; levels: string[];
   experience: string; availability: string[]; coverLetter: string;
@@ -44,6 +45,7 @@ export default function TutorApply() {
 
   const [form, setForm] = useState<FormData>({
     firstName: "", lastName: "", email: "", phone: "",
+    preferredContactMethod: "",
     university: "", degreeSubject: "", yearOfStudy: "",
     subjects: [], levels: [],
     experience: "", availability: [], coverLetter: "",
@@ -97,7 +99,7 @@ export default function TutorApply() {
   };
 
   const canAdvance = () => {
-    if (step === 1) return form.firstName && form.lastName && form.email && form.phone && form.university && form.degreeSubject && form.yearOfStudy;
+    if (step === 1) return form.firstName && form.lastName && form.email && form.phone && form.preferredContactMethod && form.university && form.degreeSubject && form.yearOfStudy;
     if (step === 2) return form.subjects.length > 0 && form.levels.length > 0;
     if (step === 3) return form.experience.length >= 20;
     if (step === 4) return form.consent;
@@ -109,9 +111,14 @@ export default function TutorApply() {
       toast.error("Please provide a phone number.");
       return;
     }
+    if (!form.preferredContactMethod) {
+      toast.error("Please select a preferred contact method.");
+      return;
+    }
     submitMutation.mutate({
       firstName: form.firstName, lastName: form.lastName,
       email: form.email, phone: form.phone,
+      preferredContactMethod: form.preferredContactMethod,
       university: form.university, degreeSubject: form.degreeSubject,
       yearOfStudy: form.yearOfStudy,
       subjects: form.subjects.join(", "),
@@ -209,6 +216,29 @@ export default function TutorApply() {
               <div>
                 <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number *</Label>
                 <Input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 900000" required />
+              </div>
+              <div>
+                <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">Preferred Contact Method *</Label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { id: "email", label: "Email" },
+                    { id: "phone", label: "Phone call" },
+                    { id: "whatsapp", label: "WhatsApp" },
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => update("preferredContactMethod", method.id)}
+                      className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                        form.preferredContactMethod === method.id
+                          ? "border-amber bg-amber/10 text-navy-deep"
+                          : "border-gray-200 text-muted-brand hover:border-amber/40"
+                      }`}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">University *</Label>

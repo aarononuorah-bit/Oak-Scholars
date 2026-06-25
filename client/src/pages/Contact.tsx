@@ -9,8 +9,15 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+const CONTACT_METHODS = [
+  { id: "email", label: "Email" },
+  { id: "phone", label: "Phone call" },
+  { id: "whatsapp", label: "WhatsApp" },
+];
+
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
+  const [preferredContactMethod, setPreferredContactMethod] = useState("");
   const [form, setForm] = useState({
     name: "", email: "", phone: "", subject: "", message: "",
   });
@@ -25,11 +32,11 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.phone || !form.subject || !form.message) {
-      toast.error("Please fill in all fields.");
+    if (!form.name || !form.email || !form.phone || !form.subject || !form.message || !preferredContactMethod) {
+      toast.error("Please fill in all fields and select a preferred contact method.");
       return;
     }
-    submitMutation.mutate(form);
+    submitMutation.mutate({ ...form, preferredContactMethod });
   };
 
   return (
@@ -95,6 +102,25 @@ export default function Contact() {
                 <div>
                   <Label htmlFor="phone" className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number *</Label>
                   <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 000000" required />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">Preferred Contact Method *</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {CONTACT_METHODS.map((method) => (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setPreferredContactMethod(method.id)}
+                        className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                          preferredContactMethod === method.id
+                            ? "border-amber bg-amber/10 text-navy-deep"
+                            : "border-gray-200 text-muted-brand hover:border-amber/40"
+                        }`}
+                      >
+                        {method.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="subject" className="text-sm font-semibold text-navy-deep mb-1.5 block">Subject *</Label>

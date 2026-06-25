@@ -67,6 +67,8 @@ export default function WellbeingForm() {
     contactMutation.mutate({
       name: form.name,
       email: form.email,
+      phone: form.phone,
+      preferredContactMethod: contactPref,
       subject: `Wellbeing Support Enquiry — ${typeLabels}`,
       message: [
         `Support areas: ${typeLabels}`,

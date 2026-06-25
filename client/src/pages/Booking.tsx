@@ -72,6 +72,7 @@ interface FormData {
   lastName: string;
   email: string;
   phone: string;
+  preferredContactMethod: "email" | "phone" | "whatsapp" | "";
   message: string;
   consent: boolean;
 }
@@ -85,7 +86,7 @@ export default function Booking() {
   const [paymentStatus, setPaymentStatus] = useState<"success" | "cancelled" | null>(null);
   const [form, setForm] = useState<FormData>({
     subject: "", level: "", packageId: "", preferredTime: "",
-    firstName: "", lastName: "", email: "", phone: "", message: "", consent: false,
+    firstName: "", lastName: "", email: "", phone: "", preferredContactMethod: "", message: "", consent: false,
   });
 
   const [location] = useLocation();
@@ -116,18 +117,27 @@ export default function Booking() {
     if (step === 1) return form.subject && form.level;
     if (step === 2) return !!form.packageId;
     if (step === 3) return !!form.preferredTime;
-    if (step === 4) return form.firstName && form.lastName && form.email && form.consent;
+    if (step === 4) return form.firstName && form.lastName && form.email && form.phone && form.preferredContactMethod && form.consent;
     return false;
   };
 
   const handleSubmit = () => {
     if (!form.packageId) return;
+    if (!form.phone) {
+      toast.error("Please provide a phone number.");
+      return;
+    }
+    if (!form.preferredContactMethod) {
+      toast.error("Please select a preferred contact method.");
+      return;
+    }
     // First submit the booking to DB
     submitMutation.mutate({
       firstName: form.firstName,
       lastName: form.lastName,
       email: form.email,
-      phone: form.phone || undefined,
+      phone: form.phone,
+      preferredContactMethod: form.preferredContactMethod,
       subject: form.subject,
       level: form.level,
       sessionType: form.packageId,
@@ -375,6 +385,29 @@ export default function Booking() {
               <div className="mb-4">
                 <Label htmlFor="phone" className="text-sm font-semibold text-navy-deep mb-1.5 block">Phone Number *</Label>
                 <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+44 7700 900000" required />
+              </div>
+              <div className="mb-6">
+                <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">Preferred Contact Method *</Label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { id: "email", label: "Email" },
+                    { id: "phone", label: "Phone call" },
+                    { id: "whatsapp", label: "WhatsApp" },
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => update("preferredContactMethod", method.id)}
+                      className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                        form.preferredContactMethod === method.id
+                          ? "border-amber bg-amber/10 text-navy-deep"
+                          : "border-gray-200 text-muted-brand hover:border-amber/40"
+                      }`}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="mb-6">
                 <Label htmlFor="message" className="text-sm font-semibold text-navy-deep mb-1.5 block">Anything else? (optional)</Label>

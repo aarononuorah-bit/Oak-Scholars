@@ -39,6 +39,7 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
+  preferredContactMethod: "email" | "phone" | "whatsapp" | "";
   notes: string;
 }
 
@@ -52,6 +53,7 @@ const EMPTY: FormData = {
   name: "",
   email: "",
   phone: "",
+  preferredContactMethod: "",
   notes: "",
 };
 
@@ -77,13 +79,17 @@ export default function StudyResourcesBooking() {
   const canNext = () => {
     if (step === 1) return !!form.resourceType && (form.resourceType !== "other" || form.resourceTypeOther.trim().length > 0);
     if (step === 2) return !!form.level && !!form.subject && (form.subject !== "other" || form.subjectOther.trim().length > 0);
-    if (step === 3) return form.name.trim().length > 1 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && form.phone.trim().length > 0;
+    if (step === 3) return form.name.trim().length > 1 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && form.phone.trim().length > 0 && form.preferredContactMethod;
     return false;
   };
 
   const handleSubmit = () => {
     if (!form.phone) {
       toast.error("Please provide a phone number.");
+      return;
+    }
+    if (!form.preferredContactMethod) {
+      toast.error("Please select a preferred contact method.");
       return;
     }
     const resourceLabel = form.resourceType === "other" ? form.resourceTypeOther : selectedResource?.label ?? form.resourceType;
@@ -94,6 +100,7 @@ export default function StudyResourcesBooking() {
       `Level: ${form.level}`,
       `Quantity: ${form.quantity}`,
       `Phone: ${form.phone}`,
+      `Preferred Contact: ${form.preferredContactMethod}`,
       form.notes ? `Additional Notes: ${form.notes}` : null,
     ].filter(Boolean).join("\n");
 
@@ -101,6 +108,7 @@ export default function StudyResourcesBooking() {
       name: form.name,
       email: form.email,
       phone: form.phone,
+      preferredContactMethod: form.preferredContactMethod,
       subject: `Study Resources Request — ${resourceLabel} (${subjectLabel})`,
       message,
     });
@@ -338,6 +346,29 @@ export default function StudyResourcesBooking() {
                       onChange={(e) => set("phone", e.target.value)}
                       required
                     />
+                  </div>
+                  <div>
+                    <Label className="mb-2 block font-medium" style={{ color: "#281A39" }}>Preferred Contact Method *</Label>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { id: "email", label: "Email" },
+                        { id: "phone", label: "Phone call" },
+                        { id: "whatsapp", label: "WhatsApp" },
+                      ].map((method) => (
+                        <button
+                          key={method.id}
+                          type="button"
+                          onClick={() => set("preferredContactMethod", method.id)}
+                          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                            form.preferredContactMethod === method.id
+                              ? "border-amber bg-amber/10 text-navy-deep"
+                              : "border-gray-200 text-muted-brand hover:border-amber/40"
+                          }`}
+                        >
+                          {method.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <Label className="mb-2 block font-medium" style={{ color: "#281A39" }}>Additional Notes <span className="text-gray-400 font-normal">(optional)</span></Label>

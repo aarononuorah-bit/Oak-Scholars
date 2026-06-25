@@ -58,6 +58,7 @@ const bookingRouter = router({
         lastName: z.string().min(1),
         email: z.string().email(),
         phone: z.string().min(1, "Phone number is required"),
+        preferredContactMethod: z.enum(["email", "phone", "whatsapp"]),
         subject: z.string().min(1),
         level: z.string().min(1),
         sessionType: z.string().min(1),
@@ -69,7 +70,7 @@ const bookingRouter = router({
       await createBooking(input);
       await notifyOwner({
         title: `New Booking Request — ${input.firstName} ${input.lastName}`,
-        content: `Subject: ${input.subject} | Level: ${input.level} | Session: ${input.sessionType} | Time: ${input.preferredTime}\nEmail: ${input.email} | Phone: ${input.phone}${input.message ? `\nNote: ${input.message}` : ""}`,
+        content: `Subject: ${input.subject} | Level: ${input.level} | Session: ${input.sessionType} | Time: ${input.preferredTime}\nEmail: ${input.email} | Phone: ${input.phone}\nPreferred Contact: ${input.preferredContactMethod}${input.message ? `\nNote: ${input.message}` : ""}`,
       });
       Promise.all([
         sendAdminBookingAlert(input).catch((e) => console.error("[Email] Admin booking alert failed:", e)),
@@ -96,6 +97,7 @@ const contactRouter = router({
         name: z.string().min(1),
         email: z.string().email(),
         phone: z.string().min(1, "Phone number is required"),
+        preferredContactMethod: z.enum(["email", "phone", "whatsapp"]),
         subject: z.string().min(1),
         message: z.string().min(10),
       })
@@ -104,7 +106,7 @@ const contactRouter = router({
       await createContactMessage({ name: input.name, email: input.email, subject: input.subject, message: input.message });
       await notifyOwner({
         title: `New Contact Message — ${input.name}`,
-        content: `Subject: ${input.subject}\nFrom: ${input.email}\nPhone: ${input.phone}\n\n${input.message}`,
+        content: `Subject: ${input.subject}\nFrom: ${input.email}\nPhone: ${input.phone}\nPreferred Contact: ${input.preferredContactMethod}\n\n${input.message}`,
       });
       Promise.all([
         sendAdminContactAlert(input).catch((e) => console.error("[Email] Admin contact alert failed:", e)),
@@ -132,6 +134,7 @@ const tutorRouter = router({
         lastName: z.string().min(1),
         email: z.string().email(),
         phone: z.string().min(1, "Phone number is required"),
+        preferredContactMethod: z.enum(["email", "phone", "whatsapp"]),
         university: z.string().min(1),
         degreeSubject: z.string().min(1),
         yearOfStudy: z.string().min(1),
@@ -148,7 +151,7 @@ const tutorRouter = router({
       await createTutorApplication(input);
       await notifyOwner({
         title: `New Tutor Application — ${input.firstName} ${input.lastName}`,
-        content: `University: ${input.university} | Degree: ${input.degreeSubject} | Year: ${input.yearOfStudy}\nSubjects: ${input.subjects}\nEmail: ${input.email}\nPhone: ${input.phone}`,
+        content: `University: ${input.university} | Degree: ${input.degreeSubject} | Year: ${input.yearOfStudy}\nSubjects: ${input.subjects}\nEmail: ${input.email}\nPhone: ${input.phone}\nPreferred Contact: ${input.preferredContactMethod}`,
       });
       Promise.all([
         sendAdminTutorAlert(input).catch((e) => console.error("[Email] Admin tutor alert failed:", e)),

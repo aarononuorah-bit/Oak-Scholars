@@ -21,6 +21,7 @@ const YEAR_GROUPS = ["Year 10", "Year 11", "Year 12", "Year 13", "Gap Year", "Ot
 export default function AcademicSupportForm() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [preferredContactMethod, setPreferredContactMethod] = useState("");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -53,6 +54,10 @@ export default function AcademicSupportForm() {
       toast.error("Please provide a phone number.");
       return;
     }
+    if (!preferredContactMethod) {
+      toast.error("Please select a preferred contact method.");
+      return;
+    }
     const serviceLabels = selectedServices
       .map((id) => SERVICE_OPTIONS.find((s) => s.id === id)?.label)
       .filter(Boolean)
@@ -61,6 +66,8 @@ export default function AcademicSupportForm() {
     contactMutation.mutate({
       name: form.name,
       email: form.email,
+      phone: form.phone,
+      preferredContactMethod: preferredContactMethod,
       subject: `Academic Support Enquiry — ${serviceLabels}`,
       message: [
         `Services requested: ${serviceLabels}`,
@@ -188,6 +195,29 @@ export default function AcademicSupportForm() {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Preferred Contact Method <span className="text-amber">*</span></label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { id: "email", label: "Email" },
+                    { id: "phone", label: "Phone call" },
+                    { id: "whatsapp", label: "WhatsApp" },
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setPreferredContactMethod(method.id)}
+                      className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                        preferredContactMethod === method.id
+                          ? "border-amber bg-amber/10 text-navy-deep"
+                          : "border-gray-200 text-muted-brand hover:border-amber/40"
+                      }`}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-navy-deep mb-1.5">Year Group</label>
