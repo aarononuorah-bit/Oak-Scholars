@@ -5,6 +5,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { aiRouter } from "./ai";
 import { notifyOwner } from "./_core/notification";
+import { createCalendarEvent } from "./_core/google-calendar";
+import { addHours, parseISO } from "date-fns";
 import {
   sendAdminBookingAlert,
   sendAdminContactAlert,
@@ -72,7 +74,40 @@ const bookingRouter = router({
         title: `New Booking Request — ${input.firstName} ${input.lastName}`,
         content: `Subject: ${input.subject} | Level: ${input.level} | Session: ${input.sessionType} | Time: ${input.preferredTime}\nEmail: ${input.email} | Phone: ${input.phone}\nPreferred Contact: ${input.preferredContactMethod}${input.message ? `\nNote: ${input.message}` : ""}`,
       });
+      // Attempt to create Google Calendar event
+      const calendarPromise = (async () => {
+        try {
+          // Default to tomorrow 10am if we can't parse a specific date/time from the free-text input
+          // In a real scenario, we'd use LLM or more structured input to get exact start/end
+          const now = new Date();
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          tomorrow.setHours(10, 0, 0, 0);
+          
+          const startTime = tomorrow.toISOString();
+          const endTime = addHours(parseISO(startTime), 1).toISOString();
+
+          await createCalendarEvent({
+            summary: `Tutoring: ${input.subject} (${input.level}) - ${input.firstName} ${input.lastName}`,
+            description: `
+Student: ${input.firstName} ${input.lastName}
+Email: ${input.email}
+Phone: ${input.phone}
+Preferred Contact: ${input.preferredContactMethod}
+Session Type: ${input.sessionType}
+Preferred Time (User Input): ${input.preferredTime}
+Message: ${input.message || "None"}
+            `.trim(),
+            start: { dateTime: startTime },
+            end: { dateTime: endTime },
+          });
+        } catch (e) {
+          console.error("[Google Calendar] Event creation failed:", e);
+        }
+      })();
+
       Promise.all([
+        calendarPromise,
         sendAdminBookingAlert(input).catch((e) => console.error("[Email] Admin booking alert failed:", e)),
         sendBookingConfirmation(input).catch((e) => console.error("[Email] Booking confirmation failed:", e)),
       ]);
