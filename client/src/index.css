@@ -154,15 +154,15 @@
 }
 
 .hover-lift {
-  @apply transition-smooth hover:shadow-lg hover:-translate-y-1;
+  @apply transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1;
 }
 
 .hover-scale {
-  @apply transition-smooth hover:scale-105;
+  @apply transition-all duration-300 ease-out hover:scale-105;
 }
 
 .hover-glow {
-  @apply transition-smooth hover:shadow-amber/20 hover:shadow-lg;
+  @apply transition-all duration-300 ease-out hover:shadow-lg;
 }
 
 /* ─── CTA button press ──────────────────────────────────────────────────────── */

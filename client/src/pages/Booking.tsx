@@ -238,7 +238,7 @@ export default function Booking() {
               <div key={label} className="flex items-center gap-2 flex-1">
                 <div className={`flex items-center gap-2 ${i < STEP_LABELS.length - 1 ? "flex-1" : ""}`}>
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-smooth ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-out ${
                       done ? "bg-green-500 text-white" : active ? "text-white" : "bg-gray-100 text-gray-400"
                     }`}
                     style={active ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}

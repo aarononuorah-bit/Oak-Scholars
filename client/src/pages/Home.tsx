@@ -408,7 +408,7 @@ function PricingSection() {
               </ul>
               <Link href="/booking">
                 <Button
-                  className="w-full btn-press transition-smooth hover:scale-105"
+                  className="w-full btn-press transition-all duration-300 ease-out hover:scale-105"
                   style={plan.highlight ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
                   variant={plan.highlight ? "default" : "outline"}
                 >
