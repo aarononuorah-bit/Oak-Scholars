@@ -55,7 +55,7 @@ export default function Register() {
         <div className="text-center mb-8">
           <Link href="/">
             <img
-              src="/manus-storage/oak-scholars-logo_7b2e4f1a.png"
+              src="/manus-storage/oak-scholars-logo_fb984d15.webp"
               alt="Oak Scholars"
               className="h-12 mx-auto mb-4 cursor-pointer"
               onError={(e) => {

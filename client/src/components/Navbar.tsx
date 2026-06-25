@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const LOGO_URL = "/manus-storage/oak-logo_35a8e9ad.webp";
+const LOGO_URL = "/manus-storage/oak-logo_feb9f1bb.webp";
 
 const navLinks = [
   { label: "Tuition", href: "/booking" },

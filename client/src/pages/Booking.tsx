@@ -109,7 +109,21 @@ export default function Booking() {
   }, [location]);
 
   const submitMutation = trpc.booking.submit.useMutation({
-    onSuccess: () => setSubmitted(true),
+    onSuccess: () => {
+      // Auto-redirect to Stripe checkout immediately after booking is saved
+      if (form.packageId) {
+        checkoutMutation.mutate({
+          productId: form.packageId,
+          origin: window.location.origin,
+          customerEmail: form.email || undefined,
+          customerName: form.firstName ? `${form.firstName} ${form.lastName}` : undefined,
+          rewardId: rewardInfo?.id,
+          rewardType: rewardInfo?.type,
+        });
+      } else {
+        setSubmitted(true);
+      }
+    },
     onError: (err) => toast.error(err.message || "Something went wrong. Please try again."),
   });
 
@@ -514,11 +528,11 @@ export default function Booking() {
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={!canAdvance() || submitMutation.isPending}
+                disabled={!canAdvance() || submitMutation.isPending || checkoutMutation.isPending}
                 className="btn-press flex items-center gap-2"
                 style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
-                {submitMutation.isPending ? "Submitting..." : "Submit Booking"}
+                {submitMutation.isPending || checkoutMutation.isPending ? "Redirecting to payment..." : "Book & Pay"}
                 <ChevronRight size={16} />
               </Button>
             )}

@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
-import { upsertGoogleUser } from "./db";
+import { upsertGoogleUser, updateUserRole } from "./db";
 import { ENV } from "./_core/env";
 
 // In-memory CSRF state store (keyed by state token, value = expiry timestamp)
@@ -102,6 +102,13 @@ export function registerGoogleAuthRoutes(app: Express) {
         email: profile.email,
         picture: profile.picture ?? undefined,
       });
+
+      // Auto-promote team@oakscholars.com to admin
+      const ADMIN_EMAIL = "team@oakscholars.com";
+      if (profile.email.toLowerCase() === ADMIN_EMAIL && user.role !== "admin") {
+        await updateUserRole(user.id, "admin");
+        user.role = "admin";
+      }
 
       // Create session cookie using the same mechanism as email/password login
       const token = await sdk.createSessionToken(user.openId, { name: user.name || "" });

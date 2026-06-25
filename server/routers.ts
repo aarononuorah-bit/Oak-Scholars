@@ -326,7 +326,7 @@ const paymentsRouter = router({
         customer_email: input.customerEmail,
         client_reference_id: input.customerEmail ?? undefined,
         metadata,
-        success_url: `${input.origin}/booking?payment=success`,
+        success_url: `${input.origin}/booking/success`,
         cancel_url: `${input.origin}/booking?payment=cancelled`,
       });
 

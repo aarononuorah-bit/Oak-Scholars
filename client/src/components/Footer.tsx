@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 
-const LOGO_URL = "/manus-storage/oak-logo_35a8e9ad.webp";
+const LOGO_URL = "/manus-storage/oak-logo_feb9f1bb.webp";
 
 export default function Footer() {
   return (

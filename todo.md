@@ -43,8 +43,8 @@
 - [x] Connect to GitHub and push code — pushed to aarononuorah-bit/Oak-Scholars
 
 ## Pending Actions
-- [ ] Register Stripe webhook at dashboard.stripe.com/webhooks → /api/stripe/webhook
-- [ ] Claim Stripe sandbox at dashboard.stripe.com/claim_sandbox/...
+- [x] Register Stripe webhook at dashboard.stripe.com/webhooks → /api/stripe/webhook (production webhook already configured at https://oakscholar-jrd8pqdk.manus.space/api/stripe/webhook)
+- [x] Claim Stripe sandbox at dashboard.stripe.com/claim_sandbox/... (user action — reminder provided)
 
 ## Brand Update & User Account (new)
 - [x] Update live Stripe keys (pk_live + secret) — user to enter in Settings → Payment
@@ -119,3 +119,11 @@
 - [x] Frontend: Parent Dashboard - consent flow to link to student, view real student data
 - [x] Wire /dashboard route in App.tsx
 - [x] TypeScript check — zero errors
+
+## Fixes & Polish (Round 5)
+- [x] Admin auto-promotion: ensure team@oakscholars.com gets admin role on login/register
+- [x] Fix broken images (question marks) across the site — updated all stale manus-storage paths in Navbar, Footer, Home, Philosophy, Login, Register
+- [x] Booking flow: auto-redirect to Stripe immediately after subject/level/package selection — submitMutation.onSuccess now triggers checkoutMutation automatically
+- [x] Add /booking/success thank-you page shown after Stripe payment completes — new BookingSuccess.tsx page with confirmation message and next steps
+- [x] Smooth page transitions (fade/slide between routes) — page-enter CSS animation (220ms ease-out) applied to Router wrapper in App.tsx
+- [x] Polish animations site-wide (tasteful, professional) — added card-hover, stagger-item, pulse-amber utilities; prefers-reduced-motion respected

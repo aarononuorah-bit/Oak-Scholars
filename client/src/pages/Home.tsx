@@ -39,7 +39,7 @@ function HeroSection() {
       <div
         className="absolute inset-0 opacity-20"
         style={{
-          backgroundImage: `url('/manus-storage/hero-bg_d17613f1.webp')`,
+          backgroundImage: `url('/manus-storage/hero-bg_4b3ffe94.webp')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -111,7 +111,7 @@ function HeroSection() {
           <div className="relative hidden lg:block">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="/manus-storage/study-session_3a51259f.webp"
+                src="/manus-storage/study-session_0bfc8780.webp"
                 alt="A university student tutoring a secondary school student"
                 className="w-full h-full object-cover"
               />
@@ -223,7 +223,7 @@ function ServicesSection() {
             <Link
               key={s.title}
               href={s.link}
-              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline animate-fade-in-up opacity-0 hover-lift"
+              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 cursor-pointer flex flex-col no-underline animate-fade-in-up opacity-0 card-hover"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div
@@ -362,7 +362,7 @@ function PricingSection() {
           {plans.map((plan, i) => (
             <div
               key={plan.name}
-              className={`rounded-2xl p-6 flex flex-col transition-all duration-300 hover:shadow-xl animate-fade-in-up opacity-0 hover-lift ${
+              className={`rounded-2xl p-6 flex flex-col animate-fade-in-up opacity-0 card-hover ${
                 plan.highlight
                   ? "border-2 border-amber shadow-lg relative"
                   : "border border-gray-100"
@@ -454,7 +454,7 @@ function TestimonialsSection() {
           {testimonials.map((t, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300 animate-fade-in-up opacity-0 hover-lift"
+              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 animate-fade-in-up opacity-0 card-hover"
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="flex gap-1 mb-4">
