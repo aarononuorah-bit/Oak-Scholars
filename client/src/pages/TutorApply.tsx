@@ -161,8 +161,8 @@ export default function TutorApply() {
       <div className="container py-24 max-w-2xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">Join the team</p>
-          <h1 className="font-serif text-4xl font-bold text-navy-deep mb-3">Become an Oak Scholars Tutor</h1>
-          <p className="text-muted-brand">Earn £25–£40/hr tutoring students in subjects you excelled at.</p>
+          <h1 className="font-serif text-4xl font-bold text-navy-deep mb-3">Become an Oak Scholar</h1>
+          <p className="text-muted-brand">Earn £25–£40/hr supporting students in subjects you excelled at.</p>
         </div>
 
         {/* Step indicator */}
@@ -311,12 +311,12 @@ export default function TutorApply() {
               <h2 className="font-serif text-2xl font-bold text-navy-deep mb-2">Your experience</h2>
               <div>
                 <Label className="text-sm font-semibold text-navy-deep mb-1.5 block">
-                  Tutoring / Teaching Experience * <span className="text-muted-brand font-normal">(min. 20 characters)</span>
+                  Teaching & Mentorship Experience * <span className="text-muted-brand font-normal">(min. 20 characters)</span>
                 </Label>
                 <Textarea
                   value={form.experience}
                   onChange={(e) => update("experience", e.target.value)}
-                  placeholder="Describe any tutoring, mentoring, or teaching experience you have. Include subjects, levels, and outcomes..."
+                  placeholder="Describe any teaching, mentoring, or peer support experience you have. Include subjects, levels, and outcomes..."
                   rows={5}
                 />
                 <p className="text-xs text-muted-brand mt-1">{form.experience.length} characters</p>
@@ -375,7 +375,7 @@ export default function TutorApply() {
                 <Textarea
                   value={form.coverLetter}
                   onChange={(e) => update("coverLetter", e.target.value)}
-                  placeholder="Tell us why you'd be a great Oak Scholars tutor..."
+                  placeholder="Tell us why you'd be a great Oak Scholar..."
                   rows={4}
                 />
               </div>

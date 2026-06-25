@@ -34,7 +34,7 @@ const resourceTypes = [
   {
     icon: <FileText size={32} />,
     title: "Revision Notes",
-    desc: "Concise, exam-focused notes written by tutors who recently sat the same papers. Covers key concepts, definitions, and common exam traps.",
+    desc: "Concise, exam-focused notes written by Oak Scholars who recently sat the same papers. Covers key concepts, definitions, and common exam traps.",
     price: "£15",
     unit: "per subject pack",
     features: [
@@ -147,7 +147,7 @@ export default function StudyResources() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             {[
               { num: "01", title: "Choose Your Resource", desc: "Pick the type of material and subject you need — revision notes, mock questions, model answers, or PowerPoints." },
-              { num: "02", title: "We Prepare Your Pack", desc: "Our tutors prepare your materials tailored to your specific exam board and level." },
+              { num: "02", title: "We Prepare Your Pack", desc: "Our Oak Scholars prepare your materials tailored to your specific exam board and level." },
               { num: "03", title: "Download & Study", desc: "Receive your resource pack by email, ready to use straight away for your revision." },
             ].map((step) => (
               <div key={step.num}>
@@ -169,7 +169,7 @@ export default function StudyResources() {
               Four types of <span className="gold-underline">resource</span>
             </h2>
             <p className="text-muted-brand mt-4 max-w-lg mx-auto">
-              All materials are exam-board aligned and written by tutors who recently sat the same papers.
+              All materials are exam-board aligned and written by Oak Scholars who recently sat the same papers.
             </p>
           </div>
 

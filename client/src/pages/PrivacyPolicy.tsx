@@ -15,7 +15,7 @@ export default function PrivacyPolicy() {
             {[
               {
                 title: "1. Who We Are",
-                content: "Oak Scholars is an online tutoring service operated by Oak Scholars Ltd. We are committed to protecting your personal information and your right to privacy. If you have any questions about this policy, please contact us at hello@oakscholars.com.",
+                content: "Oak Scholars is an online tutoring service operated by Oak Scholars Ltd. We are committed to protecting your personal information and your right to privacy. If you have any questions about this policy, please contact us at team@oakscholars.com.",
               },
               {
                 title: "2. Information We Collect",
@@ -35,11 +35,11 @@ export default function PrivacyPolicy() {
               },
               {
                 title: "6. Data Retention",
-                content: "We retain your personal data for as long as necessary to provide our services and comply with legal obligations. Booking and contact records are retained for 3 years. You may request deletion of your data at any time by contacting hello@oakscholars.com.",
+                content: "We retain your personal data for as long as necessary to provide our services and comply with legal obligations. Booking and contact records are retained for 3 years. You may request deletion of your data at any time by contacting team@oakscholars.com.",
               },
               {
                 title: "7. Your Rights",
-                content: "Under UK GDPR, you have the right to: access your personal data, correct inaccurate data, request deletion, object to processing, and data portability. To exercise any of these rights, contact us at hello@oakscholars.com.",
+                content: "Under UK GDPR, you have the right to: access your personal data, correct inaccurate data, request deletion, object to processing, and data portability. To exercise any of these rights, contact us at team@oakscholars.com.",
               },
               {
                 title: "8. Security",
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
               },
               {
                 title: "9. Contact Us",
-                content: "If you have questions about this Privacy Policy or our data practices, please contact us at hello@oakscholars.com or write to us at Oak Scholars Ltd, United Kingdom.",
+                content: "If you have questions about this Privacy Policy or our data practices, please contact us at team@oakscholars.com or write to us at Oak Scholars Ltd, United Kingdom.",
               },
             ].map((section) => (
               <section key={section.title}>

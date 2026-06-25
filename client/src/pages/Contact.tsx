@@ -50,7 +50,7 @@ export default function Contact() {
             We'd love to hear from you
           </h1>
           <p className="text-muted-brand max-w-lg mx-auto">
-            Have a question about our tutors, subjects, or pricing? Drop us a message and we'll get back to you within 24 hours.
+            Have a question about our Oak Scholars, subjects, or pricing? Drop us a message and we'll get back to you within 24 hours.
           </p>
         </div>
 
@@ -58,7 +58,7 @@ export default function Contact() {
           {/* Info cards */}
           <div className="space-y-6">
             {[
-              { icon: Mail, title: "Email Us", desc: "hello@oakscholars.com", sub: "We reply within 24 hours" },
+              { icon: Mail, title: "Email Us", desc: "team@oakscholars.com", sub: "We reply within 24 hours" },
               { icon: MessageSquare, title: "Live Chat", desc: "Available on our site", sub: "Mon–Fri, 9am–6pm" },
               { icon: Clock, title: "Response Time", desc: "Under 24 hours", sub: "Usually much faster" },
             ].map((item) => (
@@ -124,7 +124,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <Label htmlFor="subject" className="text-sm font-semibold text-navy-deep mb-1.5 block">Subject *</Label>
-                  <Input id="subject" value={form.subject} onChange={(e) => update("subject", e.target.value)} placeholder="Question about A-Level Maths tutoring" required />
+                  <Input id="subject" value={form.subject} onChange={(e) => update("subject", e.target.value)} placeholder="Question about A-Level Maths support" required />
                 </div>
                 <div>
                   <Label htmlFor="message" className="text-sm font-semibold text-navy-deep mb-1.5 block">Message *</Label>

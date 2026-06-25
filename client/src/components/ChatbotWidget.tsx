@@ -11,15 +11,16 @@ import { cn } from "@/lib/utils";
  */
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      content: "You are a helpful assistant for Oak Scholars.",
+      content: "You are a helpful assistant for Oak Scholars. If a user expresses interest in speaking with a team member or 'an Oak Scholar', encourage them to leave their details or direct them to the contact page."
     },
     {
       role: "assistant",
       content:
-        "Hi! 👋 I'm here to help answer any questions about Oak Scholars tutoring. What would you like to know?",
+        "Hi! 👋 I'm here to help answer any questions about Oak Scholars. If you'd like to connect directly with one of our Oak Scholars (a member of our team), just let me know!",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -91,6 +92,31 @@ export function ChatbotWidget() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Show "Need some help?" prompt after 30 seconds or 50% scroll
+  useEffect(() => {
+    if (isOpen) {
+      setShowPrompt(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowPrompt(true);
+    }, 30000); // 30 seconds
+
+    const handleScroll = () => {
+      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      if (scrollPercent > 50) {
+        setShowPrompt(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isOpen]);
+
   return (
     <div ref={containerRef} className="fixed bottom-4 right-4 z-50">
       {/* Chat Box */}
@@ -116,10 +142,36 @@ export function ChatbotWidget() {
         </div>
       )}
 
+      {/* Help Prompt Popup */}
+      {!isOpen && showPrompt && (
+        <div 
+          className="absolute bottom-16 right-0 mb-2 w-48 bg-white p-4 rounded-2xl shadow-xl border border-amber/20 animate-in fade-in slide-in-from-bottom-2 duration-500 cursor-pointer group"
+          onClick={() => setIsOpen(true)}
+        >
+          <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-r border-b border-amber/20 rotate-45" />
+          <p className="text-navy-deep font-semibold text-sm flex items-center gap-2">
+            Need some help? <span className="group-hover:translate-x-1 transition-transform">👋</span>
+          </p>
+          <p className="text-muted-brand text-xs mt-1">I'm here to answer any questions!</p>
+          <button 
+            className="absolute -top-2 -left-2 bg-gray-100 hover:bg-gray-200 rounded-full p-1 shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPrompt(false);
+            }}
+          >
+            <X className="h-3 w-3 text-gray-500" />
+          </button>
+        </div>
+      )}
+
       {/* Toggle Button */}
       <Button
         data-chatbot-toggle
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) setShowPrompt(false);
+        }}
         size="lg"
         className={cn(
           "rounded-full shadow-lg h-14 w-14 p-0 transition-all duration-300",
@@ -127,6 +179,7 @@ export function ChatbotWidget() {
             ? "bg-destructive hover:bg-destructive/90"
             : "bg-primary hover:bg-primary/90"
         )}
+        style={!isOpen ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
         title={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (

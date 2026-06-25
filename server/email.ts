@@ -40,8 +40,8 @@ async function getTransporter(): Promise<Transporter> {
   return _transporter;
 }
 
-const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <hello@oakscholars.com>';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "hello@oakscholars.com";
+const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <team@oakscholars.com>';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "team@oakscholars.com";
 
 function baseTemplate(content: string): string {
   return `<!DOCTYPE html>
@@ -180,7 +180,7 @@ export async function sendBookingConfirmation(data: {
       </table>
     </div>
     <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 24px;">Your first session is <strong style="color:${BRAND_AMBER};">50% off</strong>. We'll send you payment details when we confirm your tutor match.</p>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">Any questions? Reply to this email or contact us at <a href="mailto:hello@oakscholars.com" style="color:${BRAND_AMBER};">hello@oakscholars.com</a></p>
+    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">Any questions? Reply to this email or contact us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};">team@oakscholars.com</a></p>
   `);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: data.email,
@@ -211,7 +211,7 @@ export async function sendTutorApplicationConfirmation(data: {
     <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Application Received ✓</h2>
     <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.firstName}</strong>, thank you for applying to become an Oak Scholars tutor! We've received your application from <strong>${data.university}</strong> and our team will review it within 3–5 working days.</p>
     <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 16px;">We'll be in touch about next steps, which may include a short interview and a trial session observation.</p>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">Questions? Email us at <a href="mailto:hello@oakscholars.com" style="color:${BRAND_AMBER};">hello@oakscholars.com</a></p>
+    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">Questions? Email us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};">team@oakscholars.com</a></p>
   `);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: data.email,

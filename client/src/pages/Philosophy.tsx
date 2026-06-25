@@ -35,7 +35,7 @@ const pillars = [
   {
     icon: <BookOpen size={28} />,
     title: "Academic Excellence",
-    desc: "Our core offering remains top-tier, personalised tuition from tutors who recently excelled in the very exams our students are preparing for. We focus on understanding individual learning styles and tailoring our approach to maximise impact.",
+    desc: "Our core offering remains top-tier, personalised tuition from Oak Scholars who recently excelled in the very exams our students are preparing for. We focus on understanding individual learning styles and tailoring our approach to maximise impact.",
     features: [
       "Tutors who sat the same exam",
       "Tailored to your exam board",
@@ -191,7 +191,7 @@ export default function Philosophy() {
                 We observed that many tutoring services focus solely on grades, overlooking the broader challenges students face. The pressure to perform, the anxiety of exams, and the daunting prospect of future careers can be overwhelming. We believed there was a better way.
               </p>
               <p className="text-muted-brand leading-relaxed">
-                Our tutors are not just subject matter experts — they are recent graduates who have walked in your shoes, offering not only academic guidance but also invaluable mentorship and genuine understanding.
+                Our Oak Scholars are not just subject matter experts — they are recent graduates who have walked in your shoes, offering not only academic guidance but also invaluable mentorship and genuine understanding.
               </p>
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function Philosophy() {
               {
                 num: "03",
                 title: "Peer-led mentorship",
-                desc: "Our tutors sat the same exams recently. That lived experience makes the difference between advice and genuine guidance.",
+                desc: "Our Oak Scholars sat the same exams recently. That lived experience makes the difference between advice and genuine guidance.",
               },
             ].map((v) => (
               <div key={v.title} className="text-center px-4">

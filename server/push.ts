@@ -13,7 +13,7 @@ function ensureVapid() {
   if (_vapidConfigured) return;
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT || "mailto:hello@oakscholars.com";
+  const subject = process.env.VAPID_SUBJECT || "mailto:team@oakscholars.com";
   if (!publicKey || !privateKey) {
     console.warn("[Push] VAPID keys not set. Push notifications will not work.");
     return;

@@ -64,13 +64,13 @@ function HeroSection() {
             </div>
 
             <h1 className="font-serif text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
-              Your tutor sat{" "}
+              Your Oak Scholar sat{" "}
               <em className="text-amber not-italic">the same exam</em>{" "}
               two years ago.
             </h1>
 
             <p className="text-white/70 text-lg leading-relaxed mb-10">
-              Oak Scholars connects students with current undergraduates who recently aced the same papers. 1:1 online tutoring from 11+ through A-Level — tailored to you, priced fairly.
+              Oak Scholars connects students with current undergraduates who recently aced the same papers. 1:1 online support from 11+ through A-Level — tailored to you, priced fairly.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -145,7 +145,7 @@ function HowItWorksSection() {
   const ref = useScrollReveal();
   const steps = [
     { num: "01", title: "Choose Your Subject", desc: "Select your subject, level, and the type of support you need — from exam prep to weekly tuition." },
-    { num: "02", title: "Get Matched", desc: "We match you with a tutor who recently studied the same subject at the same level. No guesswork." },
+    { num: "02", title: "Get Matched", desc: "We match you with an Oak Scholar who recently studied the same subject at the same level. No guesswork." },
     { num: "03", title: "Book & Pay", desc: "Confirm your session time and pay securely online. Your first session is 50% off, no commitment required." },
     { num: "04", title: "Start Learning", desc: "Join your session via video call. Get personalised guidance from someone who's been exactly where you are." },
   ];
@@ -192,7 +192,7 @@ function ServicesSection() {
     {
       icon: <FileText size={28} />,
       title: "Study Resources",
-      desc: "Revision notes, mock questions, model answers, and PowerPoints crafted by tutors who recently sat the same papers. From £15 per pack.",
+      desc: "Revision notes, mock questions, model answers, and PowerPoints crafted by Oak Scholars who recently sat the same papers. From £15 per pack.",
       link: "/study-resources",
       cta: "View resources",
     },
@@ -270,7 +270,7 @@ function SubjectsSection() {
               We cover <span className="gold-underline">every subject</span><br />at every level
             </h2>
             <p className="text-muted-brand leading-relaxed mb-8">
-              From 11+ preparation to A-Level and IB, our tutors cover the full curriculum. Can't see your subject? Get in touch — we'll find the right match.
+              From 11+ preparation to A-Level and IB, our Oak Scholars cover the full curriculum. Can't see your subject? Get in touch — we'll find the right match.
             </p>
             <div className="flex flex-wrap gap-2 mb-8">
               {levels.map((l) => (

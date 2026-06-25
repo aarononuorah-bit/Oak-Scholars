@@ -165,7 +165,7 @@ export default function Booking() {
             <CheckCircle size={32} className="text-green-600" />
           </div>
           <h1 className="font-serif text-3xl font-bold text-navy-deep mb-4">Payment Successful!</h1>
-          <p className="text-muted-brand mb-8">Your session has been booked and paid. We'll be in touch within 24 hours to confirm your tutor and session time.</p>
+          <p className="text-muted-brand mb-8">Your session has been booked and paid. We'll be in touch within 24 hours to confirm your Oak Scholar and session time.</p>
           <Button style={{ backgroundColor: "#E8A838", color: "#281A39" }} onClick={() => window.location.href = "/"}>
             Back to Home
           </Button>
@@ -189,7 +189,7 @@ export default function Booking() {
               Thanks, <strong>{form.firstName}</strong>! We've received your booking request for <strong>{form.subject}</strong>.
             </p>
             <p className="text-muted-brand text-sm mb-8">
-              We'll match you with a tutor and confirm your session within 24 hours. Check your email for a confirmation.
+              We'll match you with an Oak Scholar and confirm your session within 24 hours. Check your email for a confirmation.
             </p>
 
             {form.packageId && (

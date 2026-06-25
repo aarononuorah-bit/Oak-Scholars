@@ -14,7 +14,7 @@ export default function Footer() {
               <span className="font-serif font-bold text-xl text-amber uppercase tracking-wide whitespace-nowrap">Oak Scholars</span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-              Expert tutoring for ambitious students from 11+ through A-Level and IB. Run by undergraduates who recently aced the same exams.
+              Expert support for ambitious students from 11+ through A-Level and IB. Run by undergraduates who recently aced the same exams.
             </p>
             <div className="flex gap-4 mt-6">
               <a href="https://instagram.com/oakscholars" target="_blank" rel="noopener noreferrer" className="text-white/50 hover:text-amber transition-colors" aria-label="Instagram">
@@ -36,7 +36,7 @@ export default function Footer() {
               <li><a href="/#services" className="text-white/60 hover:text-amber transition-colors">1:1 Tuition</a></li>
               <li><a href="/#pricing" className="text-white/60 hover:text-amber transition-colors">Pricing</a></li>
               <li><Link href="/booking" className="text-white/60 hover:text-amber transition-colors">Book a Session</Link></li>
-              <li><Link href="/tutor-apply" className="text-white/60 hover:text-amber transition-colors">Become a Tutor</Link></li>
+              <li><Link href="/tutor-apply" className="text-white/60 hover:text-amber transition-colors">Become an Oak Scholar</Link></li>
             </ul>
           </div>
 

@@ -147,7 +147,7 @@ function OrdersTab() {
           <ShoppingBag size={40} className="text-muted-foreground mb-4" />
           <h3 className="font-semibold text-lg mb-1">No orders yet</h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Book your first tutoring session to see it here.
+            Book your first session with an Oak Scholar to see it here.
           </p>
           <a href="/booking">
             <Button style={{ backgroundColor: "#E8A838", color: "#281A39" }}>

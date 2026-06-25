@@ -20,7 +20,6 @@ const navLinks = [
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Study Resources", href: "/study-resources" },
   { label: "Support", href: "/support-guidance" },
-  { label: "Pricing", href: "/#pricing" },
   { label: "Our Philosophy", href: "/philosophy" },
   { label: "Contact", href: "/contact" },
 ];
@@ -54,22 +53,29 @@ export default function Navbar() {
       <div className="max-w-screen-xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-18">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <img
-              src={LOGO_URL}
-              alt="Oak Scholars"
-              className="h-8 w-auto object-contain"
+          <div className="flex items-center gap-4 shrink-0">
+            <Link href="/" className="flex items-center gap-2 group">
+              <img
+                src={LOGO_URL}
+                alt="Oak Scholars"
+                className="h-8 w-auto object-contain"
+              />
+              <span
+                className="font-serif font-bold text-lg tracking-wide uppercase hidden sm:inline whitespace-nowrap"
+                style={{ color: scrolled ? "#281A39" : "#E8A838" }}
+              >
+                Oak Scholars
+              </span>
+            </Link>
+            <div 
+              className={`hidden lg:block h-6 w-px transition-colors duration-300 ${
+                scrolled ? "bg-gray-200" : "bg-white/20"
+              }`} 
             />
-            <span
-              className="font-serif font-bold text-lg tracking-wide uppercase hidden sm:inline whitespace-nowrap"
-              style={{ color: scrolled ? "#281A39" : "#E8A838" }}
-            >
-              Oak Scholars
-            </span>
-          </Link>
+          </div>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 mx-4">
+          <nav className="hidden lg:flex items-center gap-8 mx-4 flex-1 justify-center">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -96,7 +102,7 @@ export default function Navbar() {
                   : "border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent whitespace-nowrap"
                 }
               >
-                Become a Tutor
+                Become an Oak Scholar
               </Button>
             </Link>
             {isAuthenticated ? (
@@ -203,7 +209,7 @@ export default function Navbar() {
                       : "border-white/30 text-white bg-transparent hover:bg-white/10"
                   }`}
                 >
-                  Become a Tutor
+                  Become an Oak Scholar
                 </Button>
               </Link>
               {isAuthenticated ? (

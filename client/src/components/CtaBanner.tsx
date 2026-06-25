@@ -10,7 +10,7 @@ export default function CtaBanner() {
           Your A-grades are closer<br />than you think.
         </h2>
         <p className="text-white/60 text-lg max-w-xl mx-auto mb-10">
-          Book your first session today — 50% off, no commitment required. Get matched with a tutor who recently aced the same exams.
+          Book your first session today — 50% off, no commitment required. Get matched with an Oak Scholar who recently aced the same exams.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/booking">
