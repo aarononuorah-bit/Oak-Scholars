@@ -50,6 +50,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
