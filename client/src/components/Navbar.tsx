@@ -104,7 +104,10 @@ export default function Navbar() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                    className={scrolled
+                      ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent gap-2"
+                      : "border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                    }
                   >
                     <User size={15} />
                     {user?.name?.split(" ")[0] ?? "Account"}
@@ -132,7 +135,10 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                  className={scrolled
+                    ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent gap-2"
+                    : "border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                  }
                 >
                   <User size={15} />
                   Login
@@ -152,7 +158,9 @@ export default function Navbar() {
 
           {/* Mobile menu toggle */}
           <button
-            className="lg:hidden text-white p-2"
+            className={`lg:hidden p-2 transition-colors ${
+              scrolled ? "text-gray-700" : "text-white"
+            }`}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
@@ -163,33 +171,61 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="lg:hidden bg-navy/98 backdrop-blur-md border-t border-white/10">
+        <div className={`lg:hidden backdrop-blur-md border-t ${
+          scrolled
+            ? "bg-gray-50 border-gray-200"
+            : "bg-navy/98 border-white/10"
+        }`}>
           <div className="container py-4 flex flex-col gap-4">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-white/80 hover:text-amber font-medium py-2 transition-colors"
+                className={`font-medium py-2 transition-colors ${
+                  scrolled
+                    ? "text-gray-700 hover:text-[#281A39]"
+                    : "text-white/80 hover:text-amber"
+                }`}
               >
                 {link.label}
               </a>
             ))}
-            <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
+            <div className={`flex flex-col gap-3 pt-2 border-t ${
+              scrolled ? "border-gray-200" : "border-white/10"
+            }`}>
               <Link href="/tutor-apply">
-                <Button variant="outline" className="w-full border-white/30 text-white bg-transparent hover:bg-white/10">
+                <Button
+                  variant="outline"
+                  className={`w-full ${
+                    scrolled
+                      ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
+                      : "border-white/30 text-white bg-transparent hover:bg-white/10"
+                  }`}
+                >
                   Become a Tutor
                 </Button>
               </Link>
               {isAuthenticated ? (
                 <>
                   <Link href="/account">
-                    <Button variant="outline" className="w-full border-white/30 text-white bg-transparent hover:bg-white/10">
+                    <Button
+                      variant="outline"
+                      className={`w-full ${
+                        scrolled
+                          ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
+                          : "border-white/30 text-white bg-transparent hover:bg-white/10"
+                      }`}
+                    >
                       My Account
                     </Button>
                   </Link>
                   <Button
                     variant="outline"
-                    className="w-full border-white/30 text-white bg-transparent hover:bg-white/10"
+                    className={`w-full ${
+                      scrolled
+                        ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
+                        : "border-white/30 text-white bg-transparent hover:bg-white/10"
+                    }`}
                     onClick={() => logoutMutation.mutate(undefined)}
                   >
                     Sign Out
@@ -197,7 +233,14 @@ export default function Navbar() {
                 </>
               ) : (
                 <a href={getLoginUrl()} className="w-full">
-                  <Button variant="outline" className="w-full border-white/30 text-white bg-transparent hover:bg-white/10">
+                  <Button
+                    variant="outline"
+                    className={`w-full ${
+                      scrolled
+                        ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
+                        : "border-white/30 text-white bg-transparent hover:bg-white/10"
+                    }`}
+                  >
                     Login
                   </Button>
                 </a>
