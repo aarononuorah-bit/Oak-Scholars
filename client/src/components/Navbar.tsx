@@ -16,10 +16,10 @@ import {
 const LOGO_URL = "/manus-storage/oak-logo_35a8e9ad.webp";
 
 const navLinks = [
-  { label: "Services", href: "/#services" },
-  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Tuition", href: "/booking" },
   { label: "Study Resources", href: "/study-resources" },
   { label: "Support", href: "/support-guidance" },
+  { label: "How It Works", href: "/#how-it-works" },
   { label: "Our Philosophy", href: "/philosophy" },
   { label: "Contact", href: "/contact" },
 ];

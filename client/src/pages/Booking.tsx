@@ -75,6 +75,7 @@ interface FormData {
   preferredContactMethod: "email" | "phone" | "whatsapp" | "";
   message: string;
   consent: boolean;
+  marketingOptIn: boolean;
 }
 
 const STEP_LABELS = ["Subject & Level", "Choose Package", "Preferred Time", "Your Details"];
@@ -86,7 +87,7 @@ export default function Booking() {
   const [paymentStatus, setPaymentStatus] = useState<"success" | "cancelled" | null>(null);
   const [form, setForm] = useState<FormData>({
     subject: "", level: "", packageId: "", preferredTime: "",
-    firstName: "", lastName: "", email: "", phone: "", preferredContactMethod: "", message: "", consent: false,
+    firstName: "", lastName: "", email: "", phone: "", preferredContactMethod: "", message: "", consent: false, marketingOptIn: false,
   });
 
   const [location] = useLocation();
@@ -413,20 +414,34 @@ export default function Booking() {
                 <Label htmlFor="message" className="text-sm font-semibold text-navy-deep mb-1.5 block">Anything else? (optional)</Label>
                 <Textarea id="message" value={form.message} onChange={(e) => update("message", e.target.value)} placeholder="Upcoming exam dates, specific topics, learning goals..." rows={3} />
               </div>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.consent}
-                  onChange={(e) => update("consent", e.target.checked)}
-                  className="mt-0.5 accent-amber"
-                />
-                <span className="text-sm text-muted-brand">
-                  I agree to the{" "}
-                  <a href="/terms" className="text-amber underline">Terms of Service</a>
-                  {" "}and{" "}
-                  <a href="/privacy" className="text-amber underline">Privacy Policy</a>.
-                </span>
-              </label>
+                      <div className="space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.consent}
+                    onChange={(e) => update("consent", e.target.checked)}
+                    className="mt-0.5 accent-amber"
+                  />
+                  <span className="text-sm text-muted-brand">
+                    I agree to the{" "}
+                    <a href="/terms" className="text-amber underline">Terms of Service</a>
+                    {" "}and{" "}
+                    <a href="/privacy" className="text-amber underline">Privacy Policy</a>. *
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.marketingOptIn}
+                    onChange={(e) => update("marketingOptIn", e.target.checked)}
+                    className="mt-0.5 accent-amber"
+                  />
+                  <span className="text-sm text-muted-brand">
+                    Keep me updated on flash sales, community events, and study tips.
+                  </span>
+                </label>
+              </div>
             </div>
           )}
 
