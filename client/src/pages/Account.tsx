@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { User, ShoppingBag, CreditCard, LogOut, Calendar, Package } from "lucide-react";
+import { User, ShoppingBag, CreditCard, LogOut, Calendar, Package, TrendingUp, Download, MessageSquare, BookOpen } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -257,6 +257,123 @@ function BillingTab() {
   );
 }
 
+// ─── Dashboard Tab ───────────────────────────────────────────────────────────
+
+function DashboardTab() {
+  const { user } = useAuth();
+  
+  const stats = [
+    { label: "Hours Completed", value: "12", icon: <Calendar size={18} />, color: "bg-blue-100 text-blue-700" },
+    { label: "Target Grade", value: "A*", icon: <TrendingUp size={18} />, color: "bg-amber/20 text-amber" },
+    { label: "Resources Unlocked", value: "8", icon: <BookOpen size={18} />, color: "bg-green-100 text-green-700" },
+  ];
+
+  const upcomingSessions = [
+    { id: 1, subject: "A-Level Mathematics", scholar: "Sam (LSE)", date: "Tomorrow, 4:00 PM", status: "Confirmed" },
+    { id: 2, subject: "GCSE Physics", scholar: "Emma (Oxford)", date: "Friday, 5:30 PM", status: "Pending" },
+  ];
+
+  const recentNotes = [
+    { id: 1, from: "Sam (Oak Scholar)", text: "Great progress on calculus today! Make sure to review the integration by parts worksheet.", date: "2 days ago" },
+    { id: 2, from: "Emma (Oak Scholar)", text: "Strong understanding of kinematics. Focus on energy conservation next session.", date: "Last week" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {stats.map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.color}`}>
+                {stat.icon}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+                <p className="text-xl font-bold text-navy-deep">{stat.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upcoming Sessions */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar size={18} className="text-amber" />
+              Upcoming Sessions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {upcomingSessions.map((session) => (
+              <div key={session.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                <div>
+                  <p className="font-bold text-sm text-navy-deep">{session.subject}</p>
+                  <p className="text-xs text-muted-brand">with {session.scholar}</p>
+                  <p className="text-xs font-medium text-amber mt-1">{session.date}</p>
+                </div>
+                <Badge variant="outline" className="bg-white text-[10px]">{session.status}</Badge>
+              </div>
+            ))}
+            <Button variant="outline" className="w-full text-xs h-9 border-navy/10">View Full Schedule</Button>
+          </CardContent>
+        </Card>
+
+        {/* Scholar Notes */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageSquare size={18} className="text-amber" />
+              Scholar Feedback
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentNotes.map((note) => (
+              <div key={note.id} className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-xs font-bold text-navy-deep">{note.from}</p>
+                  <span className="text-[10px] text-muted-brand">{note.date}</span>
+                </div>
+                <p className="text-xs text-muted-brand italic leading-relaxed">"{note.text}"</p>
+              </div>
+            ))}
+            <Button variant="outline" className="w-full text-xs h-9 border-navy/10">Message Your Scholar</Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Downloads Section */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Download size={18} className="text-amber" />
+            My Resources
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {["A-Level Maths: Integration Masterclass", "GCSE Physics: Formula Cheat Sheet"].map((res) => (
+              <div key={res} className="flex items-center justify-between p-3 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded bg-amber/10 flex items-center justify-center">
+                    <BookOpen size={14} className="text-amber" />
+                  </div>
+                  <p className="text-xs font-medium text-navy-deep truncate max-w-[150px]">{res}</p>
+                </div>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-amber">
+                  <Download size={14} />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Account Page ────────────────────────────────────────────────────────
 
 export default function Account() {
@@ -340,8 +457,12 @@ export default function Account() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="profile">
+          <Tabs defaultValue="dashboard">
             <TabsList className="mb-6">
+              <TabsTrigger value="dashboard" className="gap-2">
+                <TrendingUp size={14} />
+                My Progress
+              </TabsTrigger>
               <TabsTrigger value="profile" className="gap-2">
                 <User size={14} />
                 Profile
@@ -355,6 +476,10 @@ export default function Account() {
                 Billing
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="dashboard">
+              <DashboardTab />
+            </TabsContent>
 
             <TabsContent value="profile">
               <ProfileTab />

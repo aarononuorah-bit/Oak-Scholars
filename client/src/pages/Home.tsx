@@ -16,16 +16,12 @@ function useScrollReveal() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.style.opacity = "1";
-          el.style.transform = "translateY(0)";
+          el.classList.add("is-visible");
           observer.unobserve(el);
         }
       },
       { threshold: 0.1 }
     );
-    el.style.opacity = "0";
-    el.style.transform = "translateY(20px)";
-    el.style.transition = "opacity 0.5s cubic-bezier(0.23,1,0.32,1), transform 0.5s cubic-bezier(0.23,1,0.32,1)";
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
@@ -151,8 +147,8 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-surface">
-      <div className="container" ref={ref}>
+    <section id="how-it-works" className="py-24 bg-surface reveal-on-scroll" ref={ref}>
+      <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">Simple process</p>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep">
@@ -213,8 +209,8 @@ function ServicesSection() {
   ];
 
   return (
-    <section id="services" className="py-24 bg-white">
-      <div className="container" ref={ref}>
+    <section id="services" className="py-24 bg-white reveal-on-scroll" ref={ref}>
+      <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">What we offer</p>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep">
@@ -261,8 +257,8 @@ function SubjectsSection() {
   const levels = ["11+", "13+", "KS3", "GCSE / IGCSE", "A-Level", "IB"];
 
   return (
-    <section id="subjects" className="py-24 bg-surface">
-      <div className="container" ref={ref}>
+    <section id="subjects" className="py-24 bg-surface reveal-on-scroll" ref={ref}>
+      <div className="container">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">Subjects & Levels</p>
@@ -504,8 +500,8 @@ function TeamSection() {
   ];
 
   return (
-    <section id="team" className="py-24 bg-white">
-      <div className="container" ref={ref}>
+    <section id="team" className="py-24 bg-white reveal-on-scroll" ref={ref}>
+      <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">The team</p>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep">

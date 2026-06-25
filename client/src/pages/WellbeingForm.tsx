@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import { CheckCircle, Heart, Shield, Users, Smile } from "lucide-react";
+import { CheckCircle, Heart, Shield, Users, Smile, ChevronRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -24,7 +24,10 @@ const CONTACT_PREFS = [
   { id: "whatsapp", label: "WhatsApp" },
 ];
 
+type Step = 1 | 2 | 3;
+
 export default function WellbeingForm() {
+  const [step, setStep] = useState<Step>(1);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [contactPref, setContactPref] = useState<"email" | "phone" | "whatsapp" | "">("" as "");
   const [submitted, setSubmitted] = useState(false);
@@ -135,167 +138,221 @@ export default function WellbeingForm() {
         </div>
       </section>
 
-      {/* Reassurance strip */}
-      <div className="py-4 text-center text-sm font-medium" style={{ backgroundColor: "rgba(232,168,56,0.1)", color: "#281A39" }}>
-        🔒 Everything you share is completely confidential and handled with care.
-      </div>
-
       {/* Form */}
       <section className="py-16 bg-surface">
         <div className="container max-w-2xl">
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-8">
-
-            {/* Who is enquiring */}
-            <div>
-              <label className="block font-semibold text-navy-deep mb-3">Who is making this enquiry?</label>
-              <div className="flex gap-3">
-                {[
-                  { val: false, label: "I'm a student" },
-                  { val: true, label: "I'm a parent / guardian" },
-                ].map((opt) => (
-                  <button
-                    key={String(opt.val)}
-                    type="button"
-                    onClick={() => setForm({ ...form, isParent: opt.val })}
-                    className={`flex-1 py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
-                      form.isParent === opt.val
-                        ? "border-amber bg-amber/10 text-navy-deep"
-                        : "border-gray-200 text-muted-brand hover:border-amber/40"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Support type */}
-            <div>
-              <label className="block font-semibold text-navy-deep mb-3">
-                What would you like support with? <span className="text-amber">*</span>
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {SUPPORT_TYPES.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => toggleType(s.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all text-left ${
-                      selectedTypes.includes(s.id)
-                        ? "border-amber bg-amber/10 text-navy-deep"
-                        : "border-gray-200 text-muted-brand hover:border-amber/40"
-                    }`}
-                  >
-                    <span className={selectedTypes.includes(s.id) ? "text-amber" : "text-gray-400"}>{s.icon}</span>
-                    {s.label}
-                    {selectedTypes.includes(s.id) && <CheckCircle size={14} className="text-amber ml-auto flex-shrink-0" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Personal details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-navy-deep mb-1.5">
-                  {form.isParent ? "Student's Name" : "Your Name"} <span className="text-amber">*</span>
-                </label>
-                <Input
-                  required
-                  placeholder="Full name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Email Address <span className="text-amber">*</span></label>
-                <Input
-                  required
-                  type="email"
-                  placeholder="your@email.com"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                />
-              </div>
-              {form.isParent && (
-                <div>
-                  <label className="block text-sm font-semibold text-navy-deep mb-1.5">Your Name (Parent/Guardian)</label>
-                  <Input
-                    placeholder="Parent or guardian's name"
-                    value={form.parentName}
-                    onChange={(e) => setForm({ ...form, parentName: e.target.value })}
-                  />
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Phone Number <span className="text-amber">*</span></label>
-                <Input
-                  required
-                  type="tel"
-                  placeholder="+44 7700 000000"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-navy-deep mb-1.5">Year Group</label>
-                <select
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-amber/40"
-                  value={form.yearGroup}
-                  onChange={(e) => setForm({ ...form, yearGroup: e.target.value })}
+          {/* Step Indicator */}
+          <div className="flex items-center justify-between mb-8 px-4">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center flex-1 last:flex-none">
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    step >= s ? "bg-amber text-navy-deep" : "bg-gray-200 text-gray-400"
+                  }`}
                 >
-                  <option value="">Select year group</option>
-                  {YEAR_GROUPS.map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
+                  {step > s ? <CheckCircle size={16} /> : s}
+                </div>
+                {s < 3 && (
+                  <div className={`h-0.5 flex-1 mx-2 rounded-full transition-all duration-300 ${
+                    step > s ? "bg-amber" : "bg-gray-200"
+                  }`} />
+                )}
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Preferred contact */}
-            <div>
-              <label className="block font-semibold text-navy-deep mb-3">Preferred way to be contacted</label>
-              <div className="flex flex-wrap gap-3">
-                {CONTACT_PREFS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setContactPref(p.id as "email" | "phone" | "whatsapp")}
-                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                      contactPref === p.id
-                        ? "border-amber bg-amber/10 text-navy-deep"
-                        : "border-gray-200 text-muted-brand hover:border-amber/40"
-                    }`}
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-8 animate-fade-in">
+            {step === 1 && (
+              <div className="space-y-6 animate-slide-in-right">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-navy-deep mb-4 text-center">How can we help?</h2>
+                  <div className="flex gap-3 mb-6">
+                    {[
+                      { val: false, label: "I'm a student" },
+                      { val: true, label: "I'm a parent / guardian" },
+                    ].map((opt) => (
+                      <button
+                        key={String(opt.val)}
+                        type="button"
+                        onClick={() => setForm({ ...form, isParent: opt.val })}
+                        className={`flex-1 py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
+                          form.isParent === opt.val
+                            ? "border-amber bg-amber/10 text-navy-deep"
+                            : "border-gray-200 text-muted-brand hover:border-amber/40"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {SUPPORT_TYPES.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggleType(s.id)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all text-left ${
+                          selectedTypes.includes(s.id)
+                            ? "border-amber bg-amber/10 text-navy-deep"
+                            : "border-gray-200 text-muted-brand hover:border-amber/40"
+                        }`}
+                      >
+                        <span className={selectedTypes.includes(s.id) ? "text-amber" : "text-gray-400"}>{s.icon}</span>
+                        {s.label}
+                        {selectedTypes.includes(s.id) && <CheckCircle size={14} className="text-amber ml-auto flex-shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    type="button" 
+                    onClick={() => {
+                      if (selectedTypes.length === 0) {
+                        toast.error("Please select at least one area.");
+                        return;
+                      }
+                      setStep(2);
+                    }}
+                    style={{ backgroundColor: "#281A39", color: "white" }}
                   >
-                    {p.label}
-                  </button>
-                ))}
+                    Next Step <ChevronRight size={16} className="ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6 animate-slide-in-right">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-navy-deep mb-2 text-center">A bit more context</h2>
+                  <p className="text-muted-brand text-sm mb-6 text-center">Feel free to share as much or as little as you'd like.</p>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-deep mb-1.5">Year Group</label>
+                      <select
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-amber/40"
+                        value={form.yearGroup}
+                        onChange={(e) => setForm({ ...form, yearGroup: e.target.value })}
+                      >
+                        <option value="">Select year group</option>
+                        {YEAR_GROUPS.map((y) => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-deep mb-1.5">Your message (optional)</label>
+                      <Textarea
+                        rows={4}
+                        placeholder="Tell us about your situation..."
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <Button variant="ghost" type="button" onClick={() => setStep(1)}>Back</Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => setStep(3)}
+                    style={{ backgroundColor: "#281A39", color: "white" }}
+                  >
+                    Next Step <ChevronRight size={16} className="ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6 animate-slide-in-right">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-navy-deep mb-2 text-center">How should we reach you?</h2>
+                  <p className="text-muted-brand text-sm mb-6 text-center">We'll be in touch within 24 hours.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-deep mb-1.5">
+                        {form.isParent ? "Student's Name" : "Your Name"} <span className="text-amber">*</span>
+                      </label>
+                      <Input
+                        required
+                        placeholder="Full name"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-deep mb-1.5">Email Address <span className="text-amber">*</span></label>
+                      <Input
+                        required
+                        type="email"
+                        placeholder="your@email.com"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      />
+                    </div>
+                    {form.isParent && (
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-semibold text-navy-deep mb-1.5">Your Name (Parent/Guardian)</label>
+                        <Input
+                          placeholder="Parent or guardian's name"
+                          value={form.parentName}
+                          onChange={(e) => setForm({ ...form, parentName: e.target.value })}
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-deep mb-1.5">Phone Number <span className="text-amber">*</span></label>
+                      <Input
+                        required
+                        type="tel"
+                        placeholder="+44 7700 000000"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-deep mb-1.5">Preferred Contact <span className="text-amber">*</span></label>
+                      <div className="flex flex-wrap gap-2">
+                        {CONTACT_PREFS.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setContactPref(p.id as any)}
+                            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                              contactPref === p.id ? "border-amber bg-amber/10 text-navy-deep" : "border-gray-200 text-muted-brand"
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <Button variant="ghost" type="button" onClick={() => setStep(2)}>Back</Button>
+                  <Button
+                    type="submit"
+                    className="btn-press font-semibold"
+                    style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                    disabled={contactMutation.isPending}
+                  >
+                    {contactMutation.isPending ? "Sending..." : "Send My Enquiry"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="text-center space-y-4">
+              <p className="text-xs text-muted-brand">
+                We'll respond within 24 hours. Your information is kept confidential.
+              </p>
+              <div className="p-4 rounded-xl bg-red-50 border border-red-100">
+                <p className="text-[10px] text-red-600 leading-tight">
+                  <strong>Important:</strong> If you are in immediate danger or need urgent help, please contact emergency services or a dedicated crisis line like Childline (0800 1111) or Samaritans (116 123).
+                </p>
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-navy-deep mb-1.5">
-                Would you like to share anything else? <span className="text-muted-brand font-normal">(optional)</span>
-              </label>
-              <Textarea
-                rows={4}
-                placeholder="You don't have to share anything you're not comfortable with. Any context you can give helps us match you with the right person..."
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full btn-press font-semibold text-base"
-              style={{ backgroundColor: "#E8A838", color: "#281A39" }}
-              disabled={contactMutation.isPending}
-            >
-              {contactMutation.isPending ? "Sending..." : "Send My Enquiry"}
-            </Button>
-
-            <p className="text-center text-xs text-muted-brand">
-              All enquiries are treated with complete confidentiality. We'll respond within 24 hours.
-            </p>
           </form>
         </div>
       </section>

@@ -33,6 +33,17 @@
   --radius: 0.5rem;
   --font-sans: "DM Sans", sans-serif;
   --font-serif: "Playfair Display", serif;
+
+  /* Dark Mode Tokens */
+  --color-dark-background: oklch(0.15 0.02 300);
+  --color-dark-foreground: oklch(0.95 0.01 300);
+  --color-dark-card: oklch(0.18 0.03 300);
+  --color-dark-card-foreground: oklch(0.95 0.01 300);
+  --color-dark-primary: oklch(0.75 0.14 75); /* Use amber as primary in dark mode */
+  --color-dark-primary-foreground: oklch(0.15 0.02 300);
+  --color-dark-muted: oklch(0.25 0.03 300);
+  --color-dark-muted-foreground: oklch(0.7 0.02 300);
+  --color-dark-border: oklch(0.25 0.03 300);
 }
 
 /* ─── Brand tokens ──────────────────────────────────────────────────────────── */
@@ -55,7 +66,10 @@
     scroll-padding-top: 80px;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-500;
+  }
+  .dark body {
+    @apply bg-dark-background text-dark-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
@@ -104,7 +118,17 @@
 
 /* ─── Scroll-triggered animations ────────────────────────────────────────────── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -129,7 +153,42 @@
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dark .bg-surface {
+  background-color: #1a1a1a;
+}
+
+.dark .bg-white {
+  background-color: #222222;
+}
+
+.dark .text-navy-deep, .dark .text-navy {
+  color: #f5f5f5;
+}
+
+.dark .text-muted-brand {
+  color: #a0a0a0;
+}
+
+.dark .border-gray-100, .dark .border-gray-200 {
+  border-color: #333333;
 }
 
 .animate-fade-in {

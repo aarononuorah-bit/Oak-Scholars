@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -29,6 +30,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => { window.location.href = "/"; },
   });
@@ -93,6 +95,19 @@ export default function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-2 shrink-0">
+            {toggleTheme && (
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-full transition-colors mr-2 ${
+                  scrolled 
+                    ? "text-gray-500 hover:bg-gray-100 hover:text-amber" 
+                    : "text-white/70 hover:bg-white/10 hover:text-amber"
+                }`}
+                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            )}
             <Link href="/tutor-apply">
               <Button
                 variant="outline"
@@ -164,15 +179,27 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu toggle */}
-          <button
-            className={`lg:hidden p-2 transition-colors ${
-              scrolled ? "text-gray-700" : "text-white"
-            }`}
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="lg:hidden flex items-center gap-2">
+            {toggleTheme && (
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-full transition-colors ${
+                  scrolled ? "text-gray-700" : "text-white"
+                }`}
+              >
+                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            )}
+            <button
+              className={`p-2 transition-colors ${
+                scrolled ? "text-gray-700" : "text-white"
+              }`}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 
