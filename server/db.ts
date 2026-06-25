@@ -231,6 +231,12 @@ export async function getAllOrders() {
 }
 
 // ─── User profile ───────────────────────────────────────────────────────────────
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.createdAt));
+}
+
 export async function updateUserProfile(id: number, data: { name?: string; email?: string; phone?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

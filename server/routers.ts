@@ -39,6 +39,7 @@ import {
   getOrdersByEmail,
   updateUserProfile,
   getAllOrders,
+  getAllUsers,
 } from "./db";
 import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";
@@ -374,6 +375,97 @@ const accountRouter = router({
     }),
 });
 
+// ─── Admin overview router ────────────────────────────────────────────────────────
+const adminRouter = router({
+  overview: adminProcedure.query(async () => {
+    const [allBookings, allMessages, allApplications, allOrders, allUsers, allPushSubs] = await Promise.all([
+      getAllBookings(),
+      getAllContactMessages(),
+      getAllTutorApplications(),
+      getAllOrders(),
+      getAllUsers(),
+      getAllPushSubscriptions(),
+    ]);
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const recentBookings = allBookings.filter(b => new Date(b.createdAt) >= thirtyDaysAgo);
+    const recentMessages = allMessages.filter(m => new Date(m.createdAt) >= thirtyDaysAgo);
+    const recentApplications = allApplications.filter(a => new Date(a.createdAt) >= thirtyDaysAgo);
+    const recentOrders = allOrders.filter(o => new Date(o.createdAt) >= thirtyDaysAgo);
+    const recentUsers = allUsers.filter(u => new Date(u.createdAt) >= thirtyDaysAgo);
+
+    const paidOrders = allOrders.filter(o => o.status === 'paid');
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + o.amountTotal, 0);
+    const recentRevenue = recentOrders.filter(o => o.status === 'paid').reduce((sum, o) => sum + o.amountTotal, 0);
+
+    const cvUploads = allApplications.filter(a => a.cvFileUrl);
+
+    // Recent activity feed (last 7 days, mixed)
+    type ActivityItem = { type: string; label: string; detail: string; date: Date; status?: string };
+    const activity: ActivityItem[] = [
+      ...allBookings.filter(b => new Date(b.createdAt) >= sevenDaysAgo).map(b => ({
+        type: 'booking', label: `${b.firstName} ${b.lastName}`, detail: `${b.subject} · ${b.level}`, date: new Date(b.createdAt), status: b.status
+      })),
+      ...allMessages.filter(m => new Date(m.createdAt) >= sevenDaysAgo).map(m => ({
+        type: 'message', label: m.name, detail: m.subject, date: new Date(m.createdAt), status: m.status
+      })),
+      ...allApplications.filter(a => new Date(a.createdAt) >= sevenDaysAgo).map(a => ({
+        type: 'application', label: `${a.firstName} ${a.lastName}`, detail: `${a.university} · ${a.degreeSubject}`, date: new Date(a.createdAt), status: a.status
+      })),
+      ...allOrders.filter(o => new Date(o.createdAt) >= sevenDaysAgo).map(o => ({
+        type: 'order', label: o.email, detail: `${o.packageName} · £${(o.amountTotal / 100).toFixed(2)}`, date: new Date(o.createdAt), status: o.status
+      })),
+      ...allUsers.filter(u => new Date(u.createdAt) >= sevenDaysAgo).map(u => ({
+        type: 'user', label: u.name || u.email || 'New user', detail: `Signed up via ${u.loginMethod || 'unknown'}`, date: new Date(u.createdAt)
+      })),
+    ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 20);
+
+    return {
+      stats: {
+        totalBookings: allBookings.length,
+        newBookings: allBookings.filter(b => b.status === 'new').length,
+        recentBookings: recentBookings.length,
+        totalMessages: allMessages.length,
+        unreadMessages: allMessages.filter(m => m.status === 'new').length,
+        recentMessages: recentMessages.length,
+        totalApplications: allApplications.length,
+        newApplications: allApplications.filter(a => a.status === 'new').length,
+        recentApplications: recentApplications.length,
+        cvUploads: cvUploads.length,
+        acceptedTutors: allApplications.filter(a => a.status === 'accepted').length,
+        totalOrders: allOrders.length,
+        paidOrders: paidOrders.length,
+        recentOrders: recentOrders.length,
+        totalRevenue,
+        recentRevenue,
+        totalUsers: allUsers.length,
+        adminUsers: allUsers.filter(u => u.role === 'admin').length,
+        recentUsers: recentUsers.length,
+        pushSubscribers: allPushSubs.length,
+      },
+      recentActivity: activity,
+    };
+  }),
+
+  users: adminProcedure.query(async () => getAllUsers()),
+
+  orders: adminProcedure.query(async () => getAllOrders()),
+
+  updateUserRole: adminProcedure
+    .input(z.object({ id: z.number(), role: z.enum(['user', 'admin']) }))
+    .mutation(async ({ input }) => {
+      const db = await (await import('./db')).getDb();
+      if (!db) throw new Error('Database not available');
+      const { users: usersTable } = await import('../drizzle/schema');
+      const { eq } = await import('drizzle-orm');
+      await db.update(usersTable).set({ role: input.role }).where(eq(usersTable.id, input.id));
+      return { success: true };
+    }),
+});
+
 // ─── App router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -393,6 +485,7 @@ export const appRouter = router({
   banners: bannersRouter,
   push: pushRouter,
   account: accountRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;
