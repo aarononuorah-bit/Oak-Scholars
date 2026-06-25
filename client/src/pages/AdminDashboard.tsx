@@ -643,7 +643,7 @@ function UsersTab() {
         <div>
           <h2 className="font-serif text-xl font-bold text-navy-deep">Accounts ({users.length})</h2>
           <p className="text-xs text-muted-brand mt-0.5">
-            {users.filter((u) => u.role === "admin").length} admin · {users.filter((u) => u.role === "user").length} users
+            {users.filter((u) => u.role === "admin").length} admin · {users.filter((u) => u.role === "tutor").length} tutors · {users.filter((u) => u.role === "user").length} students · {users.filter((u) => u.role === "parent").length} parents
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -653,13 +653,13 @@ function UsersTab() {
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 text-xs w-48"
           />
-          {["all", "user", "admin"].map((r) => (
+          {["all", "user", "tutor", "parent", "admin"].map((r) => (
             <button
               key={r}
               onClick={() => setFilter(r)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filter === r ? "bg-navy text-white border-navy" : "border-gray-200 text-muted-brand hover:border-gray-300"}`}
             >
-              {r === "all" ? `All (${users.length})` : `${r} (${users.filter((u) => u.role === r).length})`}
+              {r === "all" ? `All (${users.length})` : r === "user" ? `Students (${users.filter((u) => u.role === r).length})` : `${r === "tutor" ? "Tutors" : "Parents"} (${users.filter((u) => u.role === r).length})`}
             </button>
           ))}
         </div>
@@ -701,11 +701,13 @@ function UsersTab() {
                 <div>
                   <Select
                     value={u.role}
-                    onValueChange={(v) => updateRole.mutate({ id: u.id, role: v as "user" | "admin" })}
+                    onValueChange={(v) => updateRole.mutate({ id: u.id, role: v as "user" | "admin" | "tutor" | "parent" })}
                   >
-                    <SelectTrigger className="w-24 h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-28 h-7 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="user">Student</SelectItem>
+                      <SelectItem value="tutor">Tutor</SelectItem>
+                      <SelectItem value="parent">Parent</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
@@ -896,6 +898,130 @@ function BannersTab() {
   );
 }
 
+// ─── Tutoring Relationships Tab ──────────────────────────────────────────────
+function TutoringRelationshipsTab() {
+  const { data: relationships = [], isLoading, refetch } = trpc.admin.tutoringRelationships.useQuery();
+  const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const removeTutorRole = trpc.admin.updateUserRole.useMutation({
+    onSuccess: () => { toast.success("Tutor role removed"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const filtered = relationships
+    .filter((r) => filter === "all" || r.status === filter)
+    .filter((r) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        (r.tutor?.name?.toLowerCase().includes(q)) ||
+        (r.tutor?.email?.toLowerCase().includes(q)) ||
+        (r.student?.name?.toLowerCase().includes(q)) ||
+        (r.student?.email?.toLowerCase().includes(q))
+      );
+    });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 className="font-serif text-xl font-bold text-navy-deep">Tutoring Pairs ({relationships.length})</h2>
+          <p className="text-xs text-muted-brand mt-0.5">
+            {relationships.filter((r) => r.status === "active").length} active · {relationships.filter((r) => r.status === "paused").length} paused · {relationships.filter((r) => r.status === "completed").length} completed
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input
+            placeholder="Search by tutor or student name…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 text-xs w-56"
+          />
+          {["all", "active", "paused", "completed"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filter === s ? "bg-navy text-white border-navy" : "border-gray-200 text-muted-brand hover:border-gray-300"}`}
+            >
+              {s === "all" ? `All (${relationships.length})` : `${s.charAt(0).toUpperCase() + s.slice(1)} (${relationships.filter((r) => r.status === s).length})`}
+            </button>
+          ))}
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 h-16 animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-brand text-sm">No tutoring pairs found.</p>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="hidden md:grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr_1fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-muted-brand uppercase tracking-wide">
+            <span>Tutor</span>
+            <span>Student</span>
+            <span>Subject & Level</span>
+            <span>Status</span>
+            <span>Started</span>
+            <span>Action</span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {filtered.map((r) => (
+              <div
+                key={r.id}
+                className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1.5fr_1fr_1fr_1fr] gap-2 md:gap-4 px-5 py-4 items-center hover:bg-gray-50/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
+                    {(r.tutor?.name || r.tutor?.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-navy-deep block">
+                      {r.tutor?.name || <span className="text-muted-brand italic font-normal">No name</span>}
+                    </span>
+                    <span className="text-xs text-muted-brand">{r.tutor?.email}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-600 shrink-0">
+                    {(r.student?.name || r.student?.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-navy-deep block">
+                      {r.student?.name || <span className="text-muted-brand italic font-normal">No name</span>}
+                    </span>
+                    <span className="text-xs text-muted-brand">{r.student?.email}</span>
+                  </div>
+                </div>
+                <span className="text-sm text-muted-brand">
+                  {r.subjects} • {r.level}
+                </span>
+                <StatusBadge status={r.status} />
+                <span className="text-xs text-muted-brand">
+                  {new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => {
+                      if (confirm(`Remove tutor role from ${r.tutor?.name}? They will become a regular student.`)) {
+                        removeTutorRole.mutate({ id: r.tutor!.id, role: "user" });
+                      }
+                    }}
+                    className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                  >
+                    Remove Tutor
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Push Tab ─────────────────────────────────────────────────────────────────
 function PushTab() {
   const { data: countData } = trpc.push.subscriberCount.useQuery();
@@ -993,6 +1119,7 @@ export default function AdminDashboard() {
     { value: "bookings", label: "Bookings", icon: Calendar },
     { value: "contact", label: "Messages", icon: Mail },
     { value: "tutors", label: "Applications", icon: GraduationCap },
+    { value: "tutoring", label: "Tutoring Pairs", icon: Users },
     { value: "orders", label: "Orders", icon: ShoppingCart },
     { value: "users", label: "Users", icon: Users },
     { value: "banners", label: "Banners", icon: Megaphone },
@@ -1032,6 +1159,7 @@ export default function AdminDashboard() {
           <TabsContent value="bookings"><BookingsTab /></TabsContent>
           <TabsContent value="contact"><ContactTab /></TabsContent>
           <TabsContent value="tutors"><TutorApplicationsTab /></TabsContent>
+          <TabsContent value="tutoring"><TutoringRelationshipsTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
           <TabsContent value="banners"><BannersTab /></TabsContent>

@@ -301,6 +301,21 @@ export async function getTutoringRelationshipsByStudentId(studentId: number) {
   return db.select().from(tutoringRelationships).where(eq(tutoringRelationships.studentId, studentId));
 }
 
+export async function getAllTutoringRelationships() {
+  const db = await getDb();
+  if (!db) return [];
+  const relationships = await db.select().from(tutoringRelationships);
+  // Enrich with tutor and student data
+  const enriched = await Promise.all(
+    relationships.map(async (rel) => {
+      const tutor = await getUserById(rel.tutorId);
+      const student = await getUserById(rel.studentId);
+      return { ...rel, tutor, student };
+    })
+  );
+  return enriched;
+}
+
 export async function updateTutoringRelationshipStatus(id: number, status: "active" | "paused" | "completed") {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

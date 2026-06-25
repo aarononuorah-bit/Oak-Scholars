@@ -45,6 +45,7 @@ import {
   createTutoringRelationship,
   getTutoringRelationshipsByTutorId,
   getTutoringRelationshipsByStudentId,
+  getAllTutoringRelationships,
   updateTutoringRelationshipStatus,
   createTutoringSession,
   getTutoringSessionsByTutorId,
@@ -505,6 +506,8 @@ const adminRouter = router({
       const userId = await approveTutorByEmail(input.email);
       return { success: true, userId };
     }),
+
+  tutoringRelationships: adminProcedure.query(async () => getAllTutoringRelationships()),
 });
 
 // ─── Tutoring router ──────────────────────────────────────────────────────────
