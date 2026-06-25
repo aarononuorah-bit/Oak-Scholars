@@ -32,8 +32,12 @@ import {
   updateBookingStatus,
   updateContactStatus,
   updateTutorApplicationStatus,
+  getOrdersByUserId,
+  getOrdersByEmail,
+  updateUserProfile,
+  getAllOrders,
 } from "./db";
-import { stripe } from "./stripe";
+import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";
 
 // ─── Admin guard ──────────────────────────────────────────────────────────────
@@ -290,6 +294,46 @@ const pushRouter = router({
   }),
 });
 
+// ─── Account router ─────────────────────────────────────────────────────────
+const accountRouter = router({
+  me: protectedProcedure.query(async ({ ctx }) => ctx.user),
+
+  updateProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await updateUserProfile(ctx.user.id, input);
+      return { success: true };
+    }),
+
+  orders: protectedProcedure.query(async ({ ctx }) => {
+    // Try by userId first, fall back to email
+    const byId = await getOrdersByUserId(ctx.user.id);
+    if (byId.length > 0) return byId;
+    if (ctx.user.email) return getOrdersByEmail(ctx.user.email);
+    return [];
+  }),
+
+  stripePortal: protectedProcedure
+    .input(z.object({ origin: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.email) throw new Error("Email required for billing portal");
+      const customerId = await getOrCreateStripeCustomer(
+        ctx.user.id,
+        ctx.user.email,
+        ctx.user.name,
+        ctx.user.stripeCustomerId
+      );
+      const url = await createStripePortalSession(customerId, `${input.origin}/account`);
+      return { url };
+    }),
+});
+
 // ─── App router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -307,6 +351,7 @@ export const appRouter = router({
   payments: paymentsRouter,
   banners: bannersRouter,
   push: pushRouter,
+  account: accountRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -4,24 +4,24 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: oklch(0.98 0.005 85);
-  --color-foreground: oklch(0.13 0.03 270);
+  --color-background: oklch(0.98 0.005 80);
+  --color-foreground: oklch(0.15 0.04 295);
   --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.13 0.03 270);
+  --color-card-foreground: oklch(0.15 0.04 295);
   --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.13 0.03 270);
-  --color-primary: oklch(0.22 0.06 270);
-  --color-primary-foreground: oklch(0.98 0 0);
-  --color-secondary: oklch(0.96 0.01 85);
-  --color-secondary-foreground: oklch(0.22 0.06 270);
-  --color-muted: oklch(0.96 0.01 85);
-  --color-muted-foreground: oklch(0.55 0.02 270);
-  --color-accent: oklch(0.75 0.14 75);
-  --color-accent-foreground: oklch(0.22 0.06 270);
+  --color-popover-foreground: oklch(0.15 0.04 295);
+  --color-primary: oklch(0.72 0.14 75);
+  --color-primary-foreground: oklch(0.18 0.05 295);
+  --color-secondary: oklch(0.96 0.008 80);
+  --color-secondary-foreground: oklch(0.18 0.05 295);
+  --color-muted: oklch(0.94 0.008 80);
+  --color-muted-foreground: oklch(0.52 0.03 295);
+  --color-accent: oklch(0.72 0.14 75);
+  --color-accent-foreground: oklch(0.18 0.05 295);
   --color-destructive: oklch(0.577 0.245 27.325);
-  --color-border: oklch(0.92 0.005 85);
-  --color-input: oklch(0.92 0.005 85);
-  --color-ring: oklch(0.75 0.14 75);
+  --color-border: oklch(0.90 0.006 80);
+  --color-input: oklch(0.90 0.006 80);
+  --color-ring: oklch(0.72 0.14 75);
   --radius: 0.5rem;
   --font-sans: "DM Sans", sans-serif;
   --font-serif: "Playfair Display", serif;
@@ -29,11 +29,11 @@
 
 /* ─── Brand tokens ──────────────────────────────────────────────────────────── */
 :root {
-  --navy: #0F1B35;
-  --navy-deep: #281A39;
+  --navy: #281A39;
+  --navy-deep: #1a1028;
   --amber: #E8A838;
-  --surface: #F8F6F1;
-  --text-dark: #1A1A2E;
+  --surface: #F9F7F2;
+  --text-dark: #281A39;
   --text-muted: #6B7280;
 }
 

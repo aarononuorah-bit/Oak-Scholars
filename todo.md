@@ -45,3 +45,12 @@
 ## Pending Actions
 - [ ] Register Stripe webhook at dashboard.stripe.com/webhooks → /api/stripe/webhook
 - [ ] Claim Stripe sandbox at dashboard.stripe.com/claim_sandbox/...
+
+## Brand Update & User Account (new)
+- [x] Update live Stripe keys (pk_live + secret) — user to enter in Settings → Payment
+- [x] Update CSS theme to match original: deep purple #281A39 hero, cream #F9F7F2 body, amber #E8A838 accent
+- [x] Replace logo in Navbar with original oak tree logo image
+- [x] Update DB schema: add stripe_customer_id to users, add orders table
+- [x] Build /account page: profile, order history, saved cards
+- [x] Wire Stripe Customer Portal for saved card management
+- [x] Add login/auth flow visible in Navbar (Login button → Manus OAuth)

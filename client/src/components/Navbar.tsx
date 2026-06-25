@@ -1,7 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
+import { trpc } from "@/lib/trpc";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const LOGO_URL = "/manus-storage/oak-logo_35a8e9ad.webp";
 
 const navLinks = [
   { label: "Services", href: "/#services" },
@@ -15,6 +27,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [location] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onSuccess: () => { window.location.href = "/"; },
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -34,10 +50,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl">🌳</span>
+            <img
+              src={LOGO_URL}
+              alt="Oak Scholars"
+              className="h-8 w-auto object-contain"
+            />
             <span
-              className="font-serif font-bold text-xl tracking-wide uppercase"
-              style={{ color: scrolled ? "#E8A838" : "#E8A838" }}
+              className="font-serif font-bold text-xl tracking-wide uppercase hidden sm:inline"
+              style={{ color: "#E8A838" }}
             >
               Oak Scholars
             </span>
@@ -67,11 +87,52 @@ export default function Navbar() {
                 Become a Tutor
               </Button>
             </Link>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                  >
+                    <User size={15} />
+                    {user?.name?.split(" ")[0] ?? "Account"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/account">My Account</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/account/orders">My Orders</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => logoutMutation.mutate(undefined)}
+                  >
+                    <LogOut size={14} className="mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <a href={getLoginUrl()}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                >
+                  <User size={15} />
+                  Login
+                </Button>
+              </a>
+            )}
             <Link href="/booking">
               <Button
                 size="sm"
                 className="btn-press font-semibold"
-                style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 Book a Session
               </Button>
@@ -108,8 +169,30 @@ export default function Navbar() {
                   Become a Tutor
                 </Button>
               </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/account">
+                    <Button variant="outline" className="w-full border-white/30 text-white bg-transparent hover:bg-white/10">
+                      My Account
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full border-white/30 text-white bg-transparent hover:bg-white/10"
+                    onClick={() => logoutMutation.mutate(undefined)}
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <a href={getLoginUrl()} className="w-full">
+                  <Button variant="outline" className="w-full border-white/30 text-white bg-transparent hover:bg-white/10">
+                    Login
+                  </Button>
+                </a>
+              )}
               <Link href="/booking">
-                <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}>
+                <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
                   Book a Session
                 </Button>
               </Link>

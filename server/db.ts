@@ -7,9 +7,11 @@ import {
   InsertAnnouncementBanner,
   InsertBooking,
   InsertContactMessage,
+  InsertOrder,
   InsertPushSubscription,
   InsertTutorApplication,
   InsertUser,
+  orders,
   pushSubscriptions,
   tutorApplications,
   users,
@@ -193,4 +195,57 @@ export async function deletePushSubscription(endpoint: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+export async function createOrder(data: InsertOrder) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(orders).values(data);
+}
+
+export async function getOrdersByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).where(eq(orders.email, email)).orderBy(desc(orders.createdAt));
+}
+
+export async function getOrdersByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+}
+
+export async function updateOrderStatus(stripeSessionId: string, status: "pending" | "paid" | "cancelled" | "refunded", paymentIntentId?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, unknown> = { status };
+  if (paymentIntentId) updateData.stripePaymentIntentId = paymentIntentId;
+  await db.update(orders).set(updateData).where(eq(orders.stripeSessionId, stripeSessionId));
+}
+
+export async function getAllOrders() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).orderBy(desc(orders.createdAt));
+}
+
+// ─── User profile ───────────────────────────────────────────────────────────────
+export async function updateUserProfile(id: number, data: { name?: string; email?: string; phone?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set(data).where(eq(users.id, id));
+}
+
+export async function updateStripeCustomerId(id: number, stripeCustomerId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ stripeCustomerId }).where(eq(users.id, id));
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result[0] ?? undefined;
 }

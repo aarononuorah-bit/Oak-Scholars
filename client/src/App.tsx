@@ -11,6 +11,7 @@ import TutorApply from "./pages/TutorApply";
 import AdminDashboard from "./pages/AdminDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import Account from "./pages/Account";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import CookieConsent from "./components/CookieConsent";
 
@@ -24,6 +25,8 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
+      <Route path="/account" component={Account} />
+      <Route path="/account/:tab" component={Account} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
