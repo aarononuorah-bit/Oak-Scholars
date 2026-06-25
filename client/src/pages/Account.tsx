@@ -308,40 +308,52 @@ function DashboardTab() {
   const { user } = useAuth();
   
   const { data: referralData } = trpc.referral.getStats.useQuery();
-  
-  const stats = [
-    { label: "Hours Completed", value: "12", icon: <Calendar size={18} />, color: "bg-blue-100 text-blue-700" },
-    { label: "Target Grade", value: "A*", icon: <TrendingUp size={18} />, color: "bg-amber/20 text-amber" },
-    { label: "Referral Rewards", value: referralData ? (referralData.pendingRewards.asReferrer.length + referralData.pendingRewards.asReferee.length).toString() : "0", icon: <TrendingUp size={18} />, color: "bg-amber/20 text-amber" },
-  ];
+  const { data: sessions = [], isLoading: sessionsLoading } = trpc.session.studentSessions.useQuery();
+  const { data: feedback = [], isLoading: feedbackLoading } = trpc.feedback.received.useQuery();
 
-  const upcomingSessions = [
-    { id: 1, subject: "A-Level Mathematics", scholar: "Sam (LSE)", date: "Tomorrow, 4:00 PM", status: "Confirmed" },
-    { id: 2, subject: "GCSE Physics", scholar: "Emma (Oxford)", date: "Friday, 5:30 PM", status: "Pending" },
-  ];
-
-  const recentNotes = [
-    { id: 1, from: "Sam (Oak Scholar)", text: "Great progress on calculus today! Make sure to review the integration by parts worksheet.", date: "2 days ago" },
-    { id: 2, from: "Emma (Oak Scholar)", text: "Strong understanding of kinematics. Focus on energy conservation next session.", date: "Last week" },
-  ];
+  const now = new Date();
+  const upcomingSessions = sessions.filter((s) => new Date(s.scheduledAt) > now);
+  const completedSessions = sessions.filter((s) => s.status === "completed");
+  const hoursCompleted = completedSessions.reduce((sum, s) => sum + Math.round((s.duration || 60) / 60), 0);
+  const referralRewards = referralData ? (referralData.pendingRewards.asReferrer.length + referralData.pendingRewards.asReferee.length) : 0;
 
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.color}`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
-                <p className="text-xl font-bold text-navy-deep">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-700">
+              <Calendar size={18} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Hours Completed</p>
+              <p className="text-xl font-bold text-navy-deep">{hoursCompleted}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-amber/20 text-amber">
+              <BookOpen size={18} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Sessions Completed</p>
+              <p className="text-xl font-bold text-navy-deep">{completedSessions.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-amber/20 text-amber">
+              <TrendingUp size={18} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Referral Rewards</p>
+              <p className="text-xl font-bold text-navy-deep">{referralRewards}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -354,21 +366,32 @@ function DashboardTab() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {upcomingSessions.map((session) => (
-              <div key={session.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                <div>
-                  <p className="font-bold text-sm text-navy-deep">{session.subject}</p>
-                  <p className="text-xs text-muted-brand">with {session.scholar}</p>
-                  <p className="text-xs font-medium text-amber mt-1">{session.date}</p>
-                </div>
-                <Badge variant="outline" className="bg-white text-[10px]">{session.status}</Badge>
+            {sessionsLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
               </div>
-            ))}
-            <Button variant="outline" className="w-full text-xs h-9 border-navy/10">View Full Schedule</Button>
+            ) : upcomingSessions.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar size={32} className="text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-muted-brand">No upcoming sessions yet.</p>
+                <p className="text-xs text-muted-brand mt-1">Sessions will appear here once your tutor schedules them.</p>
+              </div>
+            ) : (
+              upcomingSessions.map((session) => (
+                <div key={session.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                  <div>
+                    <p className="font-bold text-sm text-navy-deep">{session.subject}</p>
+                    <p className="text-xs font-medium text-amber mt-1">{new Date(session.scheduledAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                  <Badge variant="outline" className="bg-white text-[10px] capitalize">{session.status}</Badge>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
-        {/* Scholar Notes */}
+        {/* Scholar Feedback */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -377,16 +400,28 @@ function DashboardTab() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentNotes.map((note) => (
-              <div key={note.id} className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                <div className="flex justify-between items-start mb-1">
-                  <p className="text-xs font-bold text-navy-deep">{note.from}</p>
-                  <span className="text-[10px] text-muted-brand">{note.date}</span>
-                </div>
-                <p className="text-xs text-muted-brand italic leading-relaxed">"{note.text}"</p>
+            {feedbackLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
               </div>
-            ))}
-            <Button variant="outline" className="w-full text-xs h-9 border-navy/10">Message Your Scholar</Button>
+            ) : feedback.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare size={32} className="text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-muted-brand">No feedback yet.</p>
+                <p className="text-xs text-muted-brand mt-1">Your tutor's session notes will appear here.</p>
+              </div>
+            ) : (
+              feedback.slice(0, 3).map((note) => (
+                <div key={note.id} className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-xs font-bold text-navy-deep">{note.fromUser?.name || "Your Tutor"}</p>
+                    <span className="text-[10px] text-muted-brand">{new Date(note.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                  </div>
+                  {note.comment && <p className="text-xs text-muted-brand italic leading-relaxed">"{note.comment}"</p>}
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

@@ -769,7 +769,13 @@ const sessionRouter = router({
 // ─── Feedback router ──────────────────────────────────────────────────────────
 const feedbackRouter = router({
   received: protectedProcedure.query(async ({ ctx }) => {
-    return getFeedbackReceivedByUser(ctx.user.id);
+    const items = await getFeedbackReceivedByUser(ctx.user.id);
+    return Promise.all(
+      items.map(async (item) => {
+        const fromUser = await getUserById(item.fromUserId);
+        return { ...item, fromUser: fromUser ? { id: fromUser.id, name: fromUser.name } : null };
+      })
+    );
   }),
 
   forSession: protectedProcedure
