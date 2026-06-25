@@ -10,7 +10,7 @@ export function ParentDashboard() {
   // Fetch parent's children (students linked to parent account)
   // This would require a new API endpoint to get children for a parent
   // For now, we'll show a placeholder
-  const children = []; // Would be populated from API
+  const children: any[] = []; // Would be populated from API
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">

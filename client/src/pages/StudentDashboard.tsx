@@ -150,7 +150,7 @@ export function StudentDashboard() {
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-semibold text-slate-900">
-                              {rel.tutor?.firstName} {rel.tutor?.lastName}
+                              {rel.tutor?.name}
                             </h4>
                             <p className="text-sm text-slate-600 mt-1">
                               <BookOpen className="w-4 h-4 inline mr-1" />

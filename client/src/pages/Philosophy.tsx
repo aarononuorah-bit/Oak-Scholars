@@ -87,7 +87,7 @@ export default function Philosophy() {
         <div
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: "url('/philosophy-hero.jpg')",
+            backgroundImage: "url('/manus-storage/philosophy-hero_a1878ad6.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center 30%",
           }}
@@ -148,7 +148,7 @@ export default function Philosophy() {
             {/* Image */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="/philosophy-hero.jpg"
+                src="/manus-storage/philosophy-hero_a1878ad6.jpg"
                 alt="Two students studying together in a library"
                 className="w-full h-full object-cover"
               />
