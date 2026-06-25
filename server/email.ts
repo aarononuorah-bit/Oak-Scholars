@@ -41,8 +41,8 @@ async function getTransporter(): Promise<Transporter> {
   return _transporter;
 }
 
-const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <hello@oakscholars.co.uk>';
-const ADMIN_EMAIL = "hello@oakscholars.co.uk";
+const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <team@oakscholars.com>';
+const ADMIN_EMAIL = "team@oakscholars.com";
 
 function baseTemplate(content: string, preheader?: string): string {
   return `<!DOCTYPE html>
@@ -228,7 +228,7 @@ export async function sendBookingConfirmation(data: {
     </div>
 
     <p style="color:#999;font-size:13px;line-height:1.7;margin:0;text-align:center;">
-      Any questions? Just reply to this email or reach us at <a href="mailto:hello@oakscholars.co.uk" style="color:${BRAND_AMBER};text-decoration:none;font-weight:600;">hello@oakscholars.co.uk</a>
+      Any questions? Just reply to this email or reach us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};text-decoration:none;font-weight:600;">team@oakscholars.com</a>
     </p>
   `, `We've received your booking, ${data.firstName}!`);
   const info = await transporter.sendMail({
@@ -413,4 +413,42 @@ export async function sendLessonFollowUp(data: {
     html,
   });
   console.log("[Email] Lesson follow-up sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}
+
+export async function sendParentLinkCode(data: {
+  studentName: string;
+  studentEmail: string;
+  parentName: string;
+  confirmCode: string;
+}) {
+  const transporter = await getTransporter();
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Parent Link Request</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.studentName}</strong>,</p>
+    <p style="color:#666;margin:0 0 24px;font-size:16px;line-height:1.6;">
+      <strong>${data.parentName || "A parent"}</strong> has requested to link their account to yours on Oak Scholars. This will allow them to view your tutoring sessions and progress.
+    </p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">
+      If you know this person and would like to grant them access, share the confirmation code below with them. They will enter it on their Parent Dashboard to complete the link.
+    </p>
+    
+    <div style="background:rgba(232,168,56,0.08);border:2px solid ${BRAND_AMBER};border-radius:16px;padding:32px;text-align:center;margin-bottom:32px;">
+      <p style="margin:0 0 12px;color:${BRAND_PURPLE};font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Your Confirmation Code</p>
+      <p style="margin:0;color:${BRAND_PURPLE};font-size:42px;font-weight:900;font-family:monospace;letter-spacing:0.2em;">${data.confirmCode}</p>
+      <p style="margin:12px 0 0;color:#999;font-size:13px;">This code expires in 24 hours.</p>
+    </div>
+
+    <p style="color:#999;font-size:14px;line-height:1.7;margin:0;text-align:center;">
+      If you did not expect this request, you can safely ignore this email. Your account will not be linked without the code being entered.
+    </p>
+  `, `Parent link request — confirmation code: ${data.confirmCode}`);
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.studentEmail,
+    subject: `Your Oak Scholars parent link confirmation code`,
+    html,
+  });
+  console.log("[Email] Parent link code sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }

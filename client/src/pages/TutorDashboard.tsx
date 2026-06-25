@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
@@ -12,7 +12,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, User,
-  Shield, GraduationCap, CheckCircle,
+  Shield, GraduationCap, CheckCircle, Banknote, TrendingUp,
+  Upload, Camera, Building2, BookMarked,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -36,16 +37,35 @@ export function TutorDashboard() {
   const [linkedin, setLinkedin] = useState(user?.linkedin || "");
   const [tutorSubjects, setTutorSubjects] = useState(user?.tutorSubjects || "");
   const [tutorLevel, setTutorLevel] = useState(user?.tutorLevel || "");
+  const [tutorUniversity, setTutorUniversity] = useState((user as any)?.tutorUniversity || "");
+  const [tutorCourse, setTutorCourse] = useState((user as any)?.tutorCourse || "");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState((user as any)?.profilePhotoUrl || "");
+  // Banking details
+  const [bankAccountName, setBankAccountName] = useState((user as any)?.bankAccountName || "");
+  const [bankSortCode, setBankSortCode] = useState((user as any)?.bankSortCode || "");
+  const [bankAccountNumber, setBankAccountNumber] = useState((user as any)?.bankAccountNumber || "");
+  const [bankPaypalEmail, setBankPaypalEmail] = useState((user as any)?.bankPaypalEmail || "");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: students = [], isLoading: studentsLoading } = trpc.tutoring.myStudents.useQuery();
   const { data: sessions = [], isLoading: sessionsLoading } = trpc.session.tutorSessions.useQuery();
   const { data: feedbackReceived = [], isLoading: feedbackLoading } = trpc.feedback.received.useQuery();
+  const { data: orders = [] } = trpc.orders.mine.useQuery();
   const utils = trpc.useUtils();
 
   const updateProfile = trpc.tutorProfile.update.useMutation({
     onSuccess: () => {
       toast.success("Profile updated successfully!");
       utils.auth.me.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const uploadFile = trpc.storage.upload.useMutation({
+    onSuccess: (data) => {
+      setProfilePhotoUrl(data.url);
+      toast.success("Photo uploaded!");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -72,6 +92,22 @@ export function TutorDashboard() {
   const avgRating = feedbackReceived.length > 0
     ? (feedbackReceived.reduce((sum, f) => sum + f.rating, 0) / feedbackReceived.length).toFixed(1)
     : "—";
+
+  // Earnings calculation: £25/hr assumed per completed session (can be adjusted)
+  const SESSION_RATE_PER_HOUR = 25;
+  const totalEarnings = completedSessions.reduce((sum, s) => sum + ((s.duration || 60) / 60) * SESSION_RATE_PER_HOUR, 0);
+  const nextSession = upcomingSessions.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0];
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(",")[1];
+      uploadFile.mutate({ filename: file.name, contentType: file.type, base64 });
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="min-h-screen bg-[#F9F7F2]">
@@ -103,12 +139,13 @@ export function TutorDashboard() {
               { value: "students", label: "My Students", icon: Users },
               { value: "sessions", label: "Sessions", icon: Calendar },
               { value: "feedback", label: "Feedback", icon: Star },
+              { value: "earnings", label: "Earnings", icon: TrendingUp },
               { value: "profile", label: "My Profile", icon: User },
             ].map((t) => (
               <TabsTrigger
                 key={t.value}
                 value={t.value}
-                className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#281A39] data-[state=active]:text-white rounded-lg px-3 py-2"
+                className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#281A39] data-[state=active]:text-white data-[state=active]:shadow-none rounded-lg px-3 py-2 text-gray-600 hover:text-[#281A39]"
               >
                 <t.icon size={14} />
                 {t.label}
@@ -155,9 +192,18 @@ export function TutorDashboard() {
                           <p className="text-xs text-gray-400 mb-0.5">Level</p>
                           <p className="text-sm font-semibold text-[#281A39]">{rel.level || "—"}</p>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-xs text-gray-400 mb-0.5">Started</p>
-                          <p className="text-sm font-semibold text-[#281A39]">{formatDistanceToNow(new Date(rel.createdAt), { addSuffix: true })}</p>
+                        <div className="bg-amber-50 rounded-lg p-3">
+                          <p className="text-xs text-gray-400 mb-0.5">Next Session</p>
+                          <p className="text-sm font-semibold text-[#281A39]">
+                            {(() => {
+                              const studentSessions = sessions.filter(
+                                (s) => s.studentId === rel.student?.id && new Date(s.scheduledAt) > new Date()
+                              ).sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+                              return studentSessions[0]
+                                ? format(new Date(studentSessions[0].scheduledAt), "d MMM, p")
+                                : "Not scheduled";
+                            })()}
+                          </p>
                         </div>
                         {rel.student?.bio && (
                           <div className="col-span-2 md:col-span-3 bg-blue-50 rounded-lg p-3">
@@ -259,60 +305,259 @@ export function TutorDashboard() {
             </div>
           </TabsContent>
 
+          {/* Earnings Tab */}
+          <TabsContent value="earnings">
+            <div className="space-y-6">
+              {/* Summary cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Total Earned</p>
+                  <p className="text-3xl font-bold text-[#281A39]">£{totalEarnings.toFixed(2)}</p>
+                  <p className="text-xs text-gray-400 mt-1">Based on completed sessions</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Sessions Completed</p>
+                  <p className="text-3xl font-bold text-[#281A39]">{completedSessions.length}</p>
+                  <p className="text-xs text-gray-400 mt-1">All time</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Next Session</p>
+                  <p className="text-lg font-bold text-[#281A39]">
+                    {nextSession ? format(new Date(nextSession.scheduledAt), "d MMM, p") : "None scheduled"}
+                  </p>
+                  {nextSession && <p className="text-xs text-gray-400 mt-1">{nextSession.subject}</p>}
+                </div>
+              </div>
+
+              {/* Earnings breakdown */}
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Earnings Breakdown</h2>
+                <p className="text-xs text-gray-500 mb-5">A record of your completed sessions and estimated earnings.</p>
+                {completedSessions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Banknote size={40} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm">No completed sessions yet. Your earnings will appear here once sessions are marked as completed.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-3">Date</th>
+                          <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-3">Subject</th>
+                          <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-3">Duration</th>
+                          <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide pb-3">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {completedSessions
+                          .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())
+                          .map((s) => {
+                            const earned = ((s.duration || 60) / 60) * SESSION_RATE_PER_HOUR;
+                            return (
+                              <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="py-3 text-gray-600">{format(new Date(s.scheduledAt), "d MMM yyyy")}</td>
+                                <td className="py-3 font-medium text-[#281A39]">{s.subject}</td>
+                                <td className="py-3 text-gray-500">{s.duration} min</td>
+                                <td className="py-3 text-right font-semibold text-green-700">£{earned.toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-gray-200">
+                          <td colSpan={3} className="pt-3 text-sm font-bold text-[#281A39]">Total</td>
+                          <td className="pt-3 text-right text-lg font-bold text-[#281A39]">£{totalEarnings.toFixed(2)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-4 border-t border-gray-100 pt-4">
+                  Earnings shown are estimates based on session duration. Actual payments are processed by Oak Scholars and transferred to your registered bank account. For payment queries, contact <a href="mailto:team@oakscholars.com" className="text-[#E8A838] hover:underline">team@oakscholars.com</a>.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Profile Tab */}
           <TabsContent value="profile">
-            <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-xl">
-              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Your Tutor Profile</h2>
-              <p className="text-xs text-gray-500 mb-5">This information is visible to your students and Oak Scholars admin.</p>
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-[#281A39]">Bio / About You</Label>
-                  <Textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell students a bit about yourself, your teaching style, and experience..."
-                    rows={4}
-                    className="text-sm"
-                  />
+            <div className="space-y-6">
+              {/* Profile photo */}
+              <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-xl">
+                <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Profile Photo</h2>
+                <p className="text-xs text-gray-500 mb-5">
+                  Upload a photo that will be visible to your students. A <strong>professional headshot</strong> is strongly recommended — it builds trust and makes a great first impression.
+                </p>
+                <div className="flex items-center gap-5">
+                  <div className="w-20 h-20 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                    {profilePhotoUrl ? (
+                      <img src={profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera size={28} className="text-gray-300" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 text-xs"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadFile.isPending}
+                    >
+                      <Upload size={13} />
+                      {uploadFile.isPending ? "Uploading..." : "Upload Photo"}
+                    </Button>
+                    <p className="text-xs text-gray-400">JPG, PNG or WebP. Max 5MB.</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-[#281A39] flex items-center gap-1.5">
-                    <Linkedin size={13} /> LinkedIn URL
-                  </Label>
-                  <Input
-                    value={linkedin}
-                    onChange={(e) => setLinkedin(e.target.value)}
-                    placeholder="https://linkedin.com/in/yourprofile"
-                    className="text-sm"
-                  />
+              </div>
+
+              {/* Profile details */}
+              <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-xl">
+                <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Your Tutor Profile</h2>
+                <p className="text-xs text-gray-500 mb-5">This information is visible to your students and Oak Scholars admin.</p>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#281A39]">Bio / About You</Label>
+                    <Textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell students a bit about yourself, your teaching style, and experience..."
+                      rows={4}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#281A39] flex items-center gap-1.5">
+                      <Linkedin size={13} /> LinkedIn URL
+                    </Label>
+                    <Input
+                      value={linkedin}
+                      onChange={(e) => setLinkedin(e.target.value)}
+                      placeholder="https://linkedin.com/in/yourprofile"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#281A39] flex items-center gap-1.5">
+                        <Building2 size={13} /> University
+                      </Label>
+                      <Input
+                        value={tutorUniversity}
+                        onChange={(e) => setTutorUniversity(e.target.value)}
+                        placeholder="e.g. University of Oxford"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#281A39] flex items-center gap-1.5">
+                        <BookMarked size={13} /> Course / Degree
+                      </Label>
+                      <Input
+                        value={tutorCourse}
+                        onChange={(e) => setTutorCourse(e.target.value)}
+                        placeholder="e.g. Mathematics (BSc)"
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#281A39] flex items-center gap-1.5">
+                      <GraduationCap size={13} /> Subjects You Teach
+                    </Label>
+                    <Input
+                      value={tutorSubjects}
+                      onChange={(e) => setTutorSubjects(e.target.value)}
+                      placeholder="e.g. Maths, Physics, Chemistry"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#281A39]">Level(s) You Teach</Label>
+                    <Input
+                      value={tutorLevel}
+                      onChange={(e) => setTutorLevel(e.target.value)}
+                      placeholder="e.g. GCSE, A-Level, University"
+                      className="text-sm"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => updateProfile.mutate({ bio, linkedin, tutorSubjects, tutorLevel, tutorUniversity, tutorCourse, profilePhotoUrl })}
+                    disabled={updateProfile.isPending}
+                    className="bg-[#E8A838] hover:bg-[#c8881a] text-[#281A39] font-semibold"
+                  >
+                    {updateProfile.isPending ? "Saving..." : "Save Profile"}
+                  </Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-[#281A39] flex items-center gap-1.5">
-                    <GraduationCap size={13} /> Subjects You Teach
-                  </Label>
-                  <Input
-                    value={tutorSubjects}
-                    onChange={(e) => setTutorSubjects(e.target.value)}
-                    placeholder="e.g. Maths, Physics, Chemistry"
-                    className="text-sm"
-                  />
+              </div>
+
+              {/* Banking details */}
+              <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-xl">
+                <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1 flex items-center gap-2">
+                  <Banknote size={18} className="text-[#E8A838]" /> Banking Details
+                </h2>
+                <p className="text-xs text-gray-500 mb-5">
+                  Provide your banking details so Oak Scholars can process your payments. Your details are stored securely and only used for payment purposes.
+                </p>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#281A39]">Account Holder Name</Label>
+                    <Input
+                      value={bankAccountName}
+                      onChange={(e) => setBankAccountName(e.target.value)}
+                      placeholder="Full name as it appears on your bank account"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#281A39]">Sort Code</Label>
+                      <Input
+                        value={bankSortCode}
+                        onChange={(e) => setBankSortCode(e.target.value)}
+                        placeholder="00-00-00"
+                        maxLength={8}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#281A39]">Account Number</Label>
+                      <Input
+                        value={bankAccountNumber}
+                        onChange={(e) => setBankAccountNumber(e.target.value)}
+                        placeholder="12345678"
+                        maxLength={8}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#281A39]">PayPal Email (optional)</Label>
+                    <Input
+                      type="email"
+                      value={bankPaypalEmail}
+                      onChange={(e) => setBankPaypalEmail(e.target.value)}
+                      placeholder="your@paypal.com"
+                      className="text-sm"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => updateProfile.mutate({ bankAccountName, bankSortCode, bankAccountNumber, bankPaypalEmail })}
+                    disabled={updateProfile.isPending}
+                    className="bg-[#281A39] hover:bg-[#160D22] text-white font-semibold"
+                  >
+                    {updateProfile.isPending ? "Saving..." : "Save Banking Details"}
+                  </Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-[#281A39]">Level(s) You Teach</Label>
-                  <Input
-                    value={tutorLevel}
-                    onChange={(e) => setTutorLevel(e.target.value)}
-                    placeholder="e.g. GCSE, A-Level, University"
-                    className="text-sm"
-                  />
-                </div>
-                <Button
-                  onClick={() => updateProfile.mutate({ bio, linkedin, tutorSubjects, tutorLevel })}
-                  disabled={updateProfile.isPending}
-                  className="bg-[#E8A838] hover:bg-[#c8881a] text-[#281A39] font-semibold"
-                >
-                  {updateProfile.isPending ? "Saving..." : "Save Profile"}
-                </Button>
               </div>
             </div>
           </TabsContent>

@@ -148,9 +148,10 @@ export default function Philosophy() {
             {/* Image */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop"
-                alt="Two students studying together in a library"
-                className="w-full h-full object-cover"
+                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop"
+                alt="Students collaborating and studying together"
+                className="w-full h-full object-cover object-center"
+                style={{ transform: "scale(0.92)", transformOrigin: "center" }}
               />
               <div
                 className="absolute inset-0"

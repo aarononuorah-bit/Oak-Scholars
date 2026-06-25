@@ -18,11 +18,13 @@ import {
   sendTutorApplicationConfirmation,
   sendSessionReminder,
   sendSessionCancellationNotice,
+  sendParentLinkCode,
 } from "./email";
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
 import {
   createParentLinkRequest,
+  confirmLinkByCode,
   getPendingLinkRequestsForStudent,
   respondToLinkRequest,
   getLinkedStudentForParent,
@@ -573,6 +575,15 @@ const adminRouter = router({
     const all = await getAllUsers();
     return all.filter(u => u.role === 'user' || u.accountType === 'student');
   }),
+
+  // Get full profile of any user (for admin profile viewing)
+  getUserProfile: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const user = await getUserById(input.id);
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      return user;
+    }),
 });
 
 // ─── Tutoring router ──────────────────────────────────────────────────────────
@@ -805,12 +816,31 @@ const parentRouter = router({
     return getLinkedChildrenForParent(ctx.user.id);
   }),
 
-  // Send a link request to a student by email (alias for requestLink)
+  // Send a link request to a student by email — generates a 6-digit code sent to the student
   sendLinkRequest: parentProcedure
     .input(z.object({ studentEmail: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
       const result = await createParentLinkRequest(ctx.user.id, input.studentEmail);
-      return { success: true, ...result };
+      // Send the confirmation code to the student by email
+      try {
+        await sendParentLinkCode({
+          studentName: result.studentName || "Student",
+          studentEmail: result.studentEmail || input.studentEmail,
+          parentName: ctx.user.name || "A parent",
+          confirmCode: result.confirmCode,
+        });
+      } catch (e) {
+        console.error("[Parent Link] Failed to send code email:", e);
+      }
+      return { success: true, studentName: result.studentName };
+    }),
+
+  // Parent enters the 6-digit code to confirm the link
+  confirmLink: parentProcedure
+    .input(z.object({ code: z.string().min(6).max(6) }))
+    .mutation(async ({ input, ctx }) => {
+      const result = await confirmLinkByCode(ctx.user.id, input.code);
+      return result;
     }),
 
   // Get a specific child's dashboard data
@@ -880,6 +910,13 @@ const tutorProfileRouter = router({
       linkedin: z.string().url().optional().or(z.literal('')),
       tutorSubjects: z.string().optional(),
       tutorLevel: z.string().optional(),
+      tutorUniversity: z.string().optional(),
+      tutorCourse: z.string().optional(),
+      profilePhotoUrl: z.string().optional(),
+      bankAccountName: z.string().optional(),
+      bankSortCode: z.string().optional(),
+      bankAccountNumber: z.string().optional(),
+      bankPaypalEmail: z.string().email().optional().or(z.literal('')),
     }))
     .mutation(async ({ input, ctx }) => {
       await updateTutorProfile(ctx.user.id, input);
@@ -891,7 +928,17 @@ const tutorProfileRouter = router({
     .query(async ({ input }) => {
       const tutor = await getUserById(input.tutorId);
       if (!tutor) throw new Error('Tutor not found');
-      return { id: tutor.id, name: tutor.name, bio: tutor.bio, linkedin: tutor.linkedin, tutorSubjects: tutor.tutorSubjects, tutorLevel: tutor.tutorLevel };
+      return {
+        id: tutor.id,
+        name: tutor.name,
+        bio: tutor.bio,
+        linkedin: tutor.linkedin,
+        tutorSubjects: tutor.tutorSubjects,
+        tutorLevel: tutor.tutorLevel,
+        tutorUniversity: tutor.tutorUniversity,
+        tutorCourse: tutor.tutorCourse,
+        profilePhotoUrl: tutor.profilePhotoUrl,
+      };
     }),
 });
 

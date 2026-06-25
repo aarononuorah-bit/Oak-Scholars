@@ -33,6 +33,9 @@ export function ParentDashboard() {
   const { user } = useAuth();
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
   const [linkEmail, setLinkEmail] = useState("");
+  const [linkStep, setLinkStep] = useState<"email" | "code">("email");
+  const [linkedStudentName, setLinkedStudentName] = useState("");
+  const [confirmCode, setConfirmCode] = useState("");
 
   const { data: children = [], isLoading: childrenLoading, refetch: refetchChildren } = trpc.parent.myChildren.useQuery();
   const { data: pendingRequests = [], refetch: refetchRequests } = trpc.parent.pendingRequests.useQuery();
@@ -48,9 +51,22 @@ export function ParentDashboard() {
   });
 
   const sendLinkRequest = trpc.parent.sendLinkRequest.useMutation({
-    onSuccess: () => {
-      toast.success("Link request sent! The student will need to approve it from their account.");
+    onSuccess: (data) => {
+      toast.success(`Confirmation code sent to your child's email!`);
+      setLinkedStudentName(data.studentName || "");
+      setLinkStep("code");
+      refetchRequests();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const confirmLink = trpc.parent.confirmLink.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Successfully linked to ${data.studentName || "your child"}!`);
+      setLinkStep("email");
       setLinkEmail("");
+      setConfirmCode("");
+      refetchChildren();
       refetchRequests();
     },
     onError: (e) => toast.error(e.message),
@@ -254,43 +270,82 @@ export function ParentDashboard() {
           {/* Link a Child Tab */}
           <TabsContent value="link">
             <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-md">
-              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Link Your Child's Account</h2>
-              <p className="text-sm text-gray-500 mb-5">
-                Enter your child's registered email address. They will receive a notification and must approve the link from their account page. Once approved, you can view their tutoring dashboard.
-              </p>
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-[#281A39]">Child's Email Address</Label>
-                  <Input
-                    type="email"
-                    value={linkEmail}
-                    onChange={(e) => setLinkEmail(e.target.value)}
-                    placeholder="student@example.com"
-                    className="text-sm"
-                  />
-                </div>
-                <Button
-                  onClick={() => sendLinkRequest.mutate({ studentEmail: linkEmail })}
-                  disabled={sendLinkRequest.isPending || !linkEmail}
-                  className="bg-[#E8A838] hover:bg-[#c8881a] text-[#281A39] font-semibold flex items-center gap-2"
-                >
-                  <Send size={14} />
-                  {sendLinkRequest.isPending ? "Sending..." : "Send Link Request"}
-                </Button>
-              </div>
-
-              {pendingRequests.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-semibold text-[#281A39] mb-3">Pending Requests</h3>
-                  <div className="space-y-2">
-                    {pendingRequests.map((req: any) => (
-                      <div key={req.id} className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                        <p className="text-sm text-[#281A39]">{req.student?.email}</p>
-                        <span className="text-xs text-amber-600 font-semibold">Awaiting approval</span>
-                      </div>
-                    ))}
+              {linkStep === "email" ? (
+                <>
+                  <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Link Your Child's Account</h2>
+                  <p className="text-sm text-gray-500 mb-5">
+                    Enter your child's registered email address. We will send them a 6-digit confirmation code. Once you have the code from your child, enter it to complete the link.
+                  </p>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#281A39]">Child's Email Address</Label>
+                      <Input
+                        type="email"
+                        value={linkEmail}
+                        onChange={(e) => setLinkEmail(e.target.value)}
+                        placeholder="student@example.com"
+                        className="text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && linkEmail && sendLinkRequest.mutate({ studentEmail: linkEmail })}
+                      />
+                    </div>
+                    <Button
+                      onClick={() => sendLinkRequest.mutate({ studentEmail: linkEmail })}
+                      disabled={sendLinkRequest.isPending || !linkEmail}
+                      className="bg-[#E8A838] hover:bg-[#c8881a] text-[#281A39] font-semibold flex items-center gap-2"
+                    >
+                      <Send size={14} />
+                      {sendLinkRequest.isPending ? "Sending code..." : "Send Confirmation Code"}
+                    </Button>
                   </div>
-                </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <button onClick={() => setLinkStep("email")} className="text-xs text-gray-400 hover:text-[#281A39] flex items-center gap-1">
+                      &larr; Back
+                    </button>
+                  </div>
+                  <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Enter Confirmation Code</h2>
+                  <p className="text-sm text-gray-500 mb-5">
+                    A 6-digit code has been sent to your child's email address{linkedStudentName ? ` (${linkedStudentName})` : ""}. Ask them to share the code with you, then enter it below to complete the link.
+                  </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+                    <p className="text-xs text-amber-800 font-semibold">How it works:</p>
+                    <ol className="text-xs text-amber-700 mt-1 space-y-1 list-decimal list-inside">
+                      <li>Your child checks their email for the code</li>
+                      <li>They share the 6-digit code with you</li>
+                      <li>You enter the code below to complete the link</li>
+                    </ol>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#281A39]">6-Digit Confirmation Code</Label>
+                      <Input
+                        value={confirmCode}
+                        onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="text-sm text-center text-2xl font-mono tracking-widest"
+                        onKeyDown={(e) => e.key === "Enter" && confirmCode.length === 6 && confirmLink.mutate({ code: confirmCode })}
+                      />
+                    </div>
+                    <Button
+                      onClick={() => confirmLink.mutate({ code: confirmCode })}
+                      disabled={confirmLink.isPending || confirmCode.length !== 6}
+                      className="bg-[#E8A838] hover:bg-[#c8881a] text-[#281A39] font-semibold flex items-center gap-2 w-full"
+                    >
+                      <CheckCircle size={14} />
+                      {confirmLink.isPending ? "Confirming..." : "Confirm Link"}
+                    </Button>
+                    <button
+                      onClick={() => sendLinkRequest.mutate({ studentEmail: linkEmail })}
+                      disabled={sendLinkRequest.isPending}
+                      className="text-xs text-gray-400 hover:text-[#281A39] w-full text-center"
+                    >
+                      {sendLinkRequest.isPending ? "Resending..." : "Resend code"}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </TabsContent>

@@ -81,7 +81,7 @@ export default function CtaBanner() {
 
         {/* Trust micro-copy */}
         <p className="text-white/30 text-xs mt-8">
-          No credit card required · Cancel anytime · Secure payment via Stripe
+          Secure payment via Stripe · Cancel anytime
         </p>
       </div>
     </section>

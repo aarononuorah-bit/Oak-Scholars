@@ -13,14 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const LOGO_URL = "https://framerusercontent.com/images/V6mG3N1n6Kz8Z2z5H8f0y3w.png"; // Placeholder for the actual logo
+const LOGO_URL = "/manus-storage/oak-logo_feb9f1bb.webp";
 
 const navLinks = [
   { label: "Tuition", href: "/booking" },
   { label: "Study Resources", href: "/study-resources" },
   { label: "Support", href: "/support-guidance" },
   { label: "How It Works", href: "/#how-it-works" },
-  { label: "Philosophy", href: "/philosophy" },
+  { label: "Our Philosophy", href: "/philosophy" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -79,11 +79,7 @@ export default function Navbar() {
                 Oak Scholars
               </span>
             </Link>
-            <div 
-              className={`hidden lg:block h-6 w-px transition-colors duration-300 ${
-                scrolled ? "bg-gray-200" : "bg-white/20"
-              }`} 
-            />
+
           </div>
 
           {/* Desktop nav - centered */}
@@ -119,8 +115,8 @@ export default function Navbar() {
 
           {/* Desktop CTA - right side */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            {/* Divider */}
-            <div className="hidden xl:block h-6 w-px bg-gray-200 mx-1" />
+            {/* Divider - separates nav links from CTA buttons */}
+            <div className={`h-5 w-px transition-colors duration-300 ${scrolled ? "bg-gray-200" : "bg-white/20"}`} />
 
             {/* Become an Oak Scholar - subtle outline so Book a Session stands out */}
             <Link href="/tutor-apply">
@@ -146,6 +142,9 @@ export default function Navbar() {
                 Book a Session
               </Button>
             </Link>
+
+            {/* Divider - separates CTA buttons from account/auth */}
+            <div className={`h-5 w-px transition-colors duration-300 ${scrolled ? "bg-gray-200" : "bg-white/20"}`} />
 
             {/* Auth buttons or user menu */}
             {isAuthenticated ? (
@@ -354,6 +353,62 @@ export default function Navbar() {
               </Link>
               {isAuthenticated ? (
                 <>
+                  {user?.role === "admin" && (
+                    <Link href="/admin" className="w-full">
+                      <Button
+                        variant="outline"
+                        className={`w-full ${
+                          scrolled
+                            ? "border-[#281A39] text-[#281A39] bg-transparent hover:bg-[#281A39]/10"
+                            : "border-amber-300 text-amber-200 bg-transparent hover:bg-white/10"
+                        }`}
+                      >
+                        Admin Dashboard
+                      </Button>
+                    </Link>
+                  )}
+                  {user?.role === "tutor" && (
+                    <Link href="/tutor-dashboard" className="w-full">
+                      <Button
+                        variant="outline"
+                        className={`w-full ${
+                          scrolled
+                            ? "border-[#281A39] text-[#281A39] bg-transparent hover:bg-[#281A39]/10"
+                            : "border-amber-300 text-amber-200 bg-transparent hover:bg-white/10"
+                        }`}
+                      >
+                        My Dashboard
+                      </Button>
+                    </Link>
+                  )}
+                  {user?.role === "user" && (
+                    <Link href="/student-dashboard" className="w-full">
+                      <Button
+                        variant="outline"
+                        className={`w-full ${
+                          scrolled
+                            ? "border-[#281A39] text-[#281A39] bg-transparent hover:bg-[#281A39]/10"
+                            : "border-amber-300 text-amber-200 bg-transparent hover:bg-white/10"
+                        }`}
+                      >
+                        My Dashboard
+                      </Button>
+                    </Link>
+                  )}
+                  {user?.role === "parent" && (
+                    <Link href="/parent-dashboard" className="w-full">
+                      <Button
+                        variant="outline"
+                        className={`w-full ${
+                          scrolled
+                            ? "border-[#281A39] text-[#281A39] bg-transparent hover:bg-[#281A39]/10"
+                            : "border-amber-300 text-amber-200 bg-transparent hover:bg-white/10"
+                        }`}
+                      >
+                        My Dashboard
+                      </Button>
+                    </Link>
+                  )}
                   <Link href="/account" className="w-full">
                     <Button
                       variant="outline"

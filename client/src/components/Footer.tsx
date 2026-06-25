@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-const LOGO_URL = "https://framerusercontent.com/images/V6mG3N1n6Kz8Z2z5H8f0y3w.png";
+const LOGO_URL = "/manus-storage/oak-logo_feb9f1bb.webp";
 
 export default function Footer() {
   return (
@@ -27,11 +27,11 @@ export default function Footer() {
             <ul className="space-y-2 mb-6">
               <li>
                 <a
-                  href="mailto:hello@oakscholars.co.uk"
+                  href="mailto:team@oakscholars.com"
                   className="flex items-center gap-2 text-sm text-white/60 hover:text-amber transition-colors duration-200 group"
                 >
                   <Mail size={14} className="flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
-                  hello@oakscholars.co.uk
+                  team@oakscholars.com
                 </a>
               </li>
               <li>

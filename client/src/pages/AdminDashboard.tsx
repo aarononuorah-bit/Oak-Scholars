@@ -615,6 +615,150 @@ function OrdersTab() {
   );
 }
 
+// ─── User Profile Modal ───────────────────────────────────────────────────────
+function UserProfileModal({ userId, onClose }: { userId: number; onClose: () => void }) {
+  const { data: profile, isLoading } = trpc.admin.getUserProfile.useQuery({ id: userId });
+
+  const roleLabel = (role: string) => {
+    if (role === "user") return "Student";
+    if (role === "admin") return "Admin";
+    if (role === "tutor") return "Tutor";
+    if (role === "parent") return "Parent";
+    return role;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-serif text-xl font-bold text-navy-deep">User Profile</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          </div>
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />)}
+            </div>
+          ) : !profile ? (
+            <p className="text-muted-brand text-sm">Profile not found.</p>
+          ) : (
+            <div className="space-y-5">
+              {/* Avatar + name */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {(profile as any).profilePhotoUrl ? (
+                    <img src={(profile as any).profilePhotoUrl} alt={profile.name || ""} className="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-navy/10 flex items-center justify-center text-2xl font-bold text-navy-deep">
+                      {(profile.name || profile.email || "?").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold text-navy-deep text-lg">{profile.name || <span className="italic text-muted-brand">No name</span>}</p>
+                  <p className="text-sm text-muted-brand">{profile.email}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      profile.role === "admin" ? "bg-purple-100 text-purple-700" :
+                      profile.role === "tutor" ? "bg-blue-100 text-blue-700" :
+                      profile.role === "parent" ? "bg-green-100 text-green-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>{roleLabel(profile.role)}</span>
+                    {profile.loginMethod && <span className="text-xs text-muted-brand capitalize">{profile.loginMethod}</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Basic info */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Joined</p>
+                  <p className="text-sm font-semibold text-navy-deep">{new Date(profile.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Last Sign-in</p>
+                  <p className="text-sm font-semibold text-navy-deep">{new Date(profile.lastSignedIn).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                </div>
+                {profile.accountType && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-0.5">Account Type</p>
+                    <p className="text-sm font-semibold text-navy-deep capitalize">{profile.accountType}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Tutor-specific fields */}
+              {(profile.role === "tutor" || profile.bio || (profile as any).tutorUniversity) && (
+                <div>
+                  <h3 className="text-xs font-semibold text-navy-deep uppercase tracking-wide mb-2">Tutor Profile</h3>
+                  <div className="space-y-2">
+                    {profile.bio && (
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Bio</p>
+                        <p className="text-sm text-navy-deep">{profile.bio}</p>
+                      </div>
+                    )}
+                    {((profile as any).tutorUniversity || (profile as any).tutorCourse) && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {(profile as any).tutorUniversity && (
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-400 mb-0.5">University</p>
+                            <p className="text-sm font-semibold text-navy-deep">{(profile as any).tutorUniversity}</p>
+                          </div>
+                        )}
+                        {(profile as any).tutorCourse && (
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-400 mb-0.5">Course</p>
+                            <p className="text-sm font-semibold text-navy-deep">{(profile as any).tutorCourse}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {profile.tutorSubjects && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Subjects</p>
+                        <p className="text-sm font-semibold text-navy-deep">{profile.tutorSubjects}</p>
+                      </div>
+                    )}
+                    {profile.tutorLevel && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Level(s)</p>
+                        <p className="text-sm font-semibold text-navy-deep">{profile.tutorLevel}</p>
+                      </div>
+                    )}
+                    {profile.linkedin && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">LinkedIn</p>
+                        <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">{profile.linkedin}</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Banking details (admin only) */}
+              {((profile as any).bankAccountName || (profile as any).bankAccountNumber) && (
+                <div>
+                  <h3 className="text-xs font-semibold text-navy-deep uppercase tracking-wide mb-2">Banking Details</h3>
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 space-y-1">
+                    {(profile as any).bankAccountName && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">Name: </span>{(profile as any).bankAccountName}</p>}
+                    {(profile as any).bankSortCode && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">Sort Code: </span>{(profile as any).bankSortCode}</p>}
+                    {(profile as any).bankAccountNumber && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">Account: </span>{(profile as any).bankAccountNumber}</p>}
+                    {(profile as any).bankPaypalEmail && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">PayPal: </span>{(profile as any).bankPaypalEmail}</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Users Tab ────────────────────────────────────────────────────────────────
 function UsersTab() {
   const { data: users = [], isLoading, refetch } = trpc.admin.users.useQuery();
@@ -624,9 +768,21 @@ function UsersTab() {
   });
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [viewProfileId, setViewProfileId] = useState<number | null>(null);
+
+  // Exclude admins from the parent/student/tutor counts; show them separately
+  const nonAdminUsers = users.filter((u) => u.role !== "admin");
+  const adminUsers = users.filter((u) => u.role === "admin");
 
   const filtered = users
-    .filter((u) => filter === "all" || u.role === filter)
+    .filter((u) => {
+      if (filter === "all") return true;
+      if (filter === "admin") return u.role === "admin";
+      if (filter === "tutor") return u.role === "tutor";
+      if (filter === "parent") return u.role === "parent";
+      if (filter === "user") return u.role === "user";
+      return true;
+    })
     .filter((u) => {
       if (!search) return true;
       const q = search.toLowerCase();
@@ -637,13 +793,24 @@ function UsersTab() {
       );
     });
 
+  const roleLabel = (role: string) => {
+    if (role === "user") return "Student";
+    if (role === "admin") return "Admin";
+    if (role === "tutor") return "Tutor";
+    if (role === "parent") return "Parent";
+    return role;
+  };
+
   return (
     <div>
+      {viewProfileId !== null && (
+        <UserProfileModal userId={viewProfileId} onClose={() => setViewProfileId(null)} />
+      )}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="font-serif text-xl font-bold text-navy-deep">Accounts ({users.length})</h2>
           <p className="text-xs text-muted-brand mt-0.5">
-            {users.filter((u) => u.role === "admin").length} admin · {users.filter((u) => u.role === "tutor").length} tutors · {users.filter((u) => u.role === "user").length} students · {users.filter((u) => u.role === "parent").length} parents
+            {adminUsers.length} admin{adminUsers.length !== 1 ? "s" : ""} · {users.filter((u) => u.role === "tutor").length} tutors · {users.filter((u) => u.role === "user").length} students · {users.filter((u) => u.role === "parent").length} parents
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -659,7 +826,11 @@ function UsersTab() {
               onClick={() => setFilter(r)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filter === r ? "bg-navy text-white border-navy" : "border-gray-200 text-muted-brand hover:border-gray-300"}`}
             >
-              {r === "all" ? `All (${users.length})` : r === "user" ? `Students (${users.filter((u) => u.role === r).length})` : `${r === "tutor" ? "Tutors" : "Parents"} (${users.filter((u) => u.role === r).length})`}
+              {r === "all" ? `All (${users.length})` :
+               r === "user" ? `Students (${users.filter((u) => u.role === "user").length})` :
+               r === "tutor" ? `Tutors (${users.filter((u) => u.role === "tutor").length})` :
+               r === "parent" ? `Parents (${users.filter((u) => u.role === "parent").length})` :
+               `Admins (${adminUsers.length})`}
             </button>
           ))}
         </div>
@@ -674,22 +845,28 @@ function UsersTab() {
         <p className="text-muted-brand text-sm">No accounts found.</p>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <div className="hidden md:grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-muted-brand uppercase tracking-wide">
+          <div className="hidden md:grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-muted-brand uppercase tracking-wide">
             <span>Name</span>
             <span>Email</span>
             <span>Login Method</span>
             <span>Role</span>
             <span>Joined</span>
             <span>Last Sign-in</span>
+            <span>Profile</span>
           </div>
           <div className="divide-y divide-gray-50">
             {filtered.map((u) => (
               <div
                 key={u.id}
-                className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr] gap-2 md:gap-4 px-5 py-4 items-center hover:bg-gray-50/50 transition-colors"
+                className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] gap-2 md:gap-4 px-5 py-4 items-center hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-xs font-bold text-navy-deep shrink-0">
+                  <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                    u.role === "admin" ? "bg-purple-100 text-purple-700" :
+                    u.role === "tutor" ? "bg-blue-100 text-blue-700" :
+                    u.role === "parent" ? "bg-green-100 text-green-700" :
+                    "bg-navy/10 text-navy-deep"
+                  }`}>
                     {(u.name || u.email || "?").charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm font-semibold text-navy-deep truncate">
@@ -718,6 +895,12 @@ function UsersTab() {
                 <span className="text-xs text-muted-brand">
                   {new Date(u.lastSignedIn).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
                 </span>
+                <button
+                  onClick={() => setViewProfileId(u.id)}
+                  className="px-2.5 py-1 text-xs bg-[#281A39] text-white rounded-lg hover:bg-[#160D22] transition-colors whitespace-nowrap"
+                >
+                  View
+                </button>
               </div>
             ))}
           </div>
@@ -1249,7 +1432,7 @@ export default function AdminDashboard() {
               <TabsTrigger
                 key={t.value}
                 value={t.value}
-                className="flex items-center gap-1.5 text-xs data-[state=active]:bg-navy data-[state=active]:text-white rounded-lg px-3 py-2"
+                className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#281A39] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-transparent rounded-lg px-3 py-2 text-gray-600 hover:text-[#281A39]"
               >
                 <t.icon size={14} />
                 {t.label}

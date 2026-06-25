@@ -509,16 +509,25 @@ export async function createParentLinkRequest(parentId: number, studentEmail: st
   if (!db) throw new Error("Database not available");
   const student = await db.select().from(users).where(eq(users.email, studentEmail)).limit(1);
   if (!student[0]) throw new Error("No account found with that email address.");
-  if (student[0].accountType !== "student") throw new Error("That account is not registered as a student.");
   const studentId = student[0].id;
   const existing = await db.select().from(parentLinkRequests)
     .where(and(eq(parentLinkRequests.parentId, parentId), eq(parentLinkRequests.studentId, studentId))).limit(1);
   if (existing[0]) {
     if (existing[0].status === "accepted") throw new Error("You are already linked to this student.");
-    if (existing[0].status === "pending") throw new Error("A link request is already pending for this student.");
+    // If pending, regenerate the code and resend
+    if (existing[0].status === "pending") {
+      const confirmCode = String(Math.floor(100000 + Math.random() * 900000));
+      const codeExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await db.update(parentLinkRequests)
+        .set({ confirmCode, codeExpiresAt, updatedAt: new Date() })
+        .where(eq(parentLinkRequests.id, existing[0].id));
+      return { studentId, studentName: student[0].name, studentEmail: student[0].email, confirmCode };
+    }
   }
-  await db.insert(parentLinkRequests).values({ parentId, studentId });
-  return { studentId, studentName: student[0].name };
+  const confirmCode = String(Math.floor(100000 + Math.random() * 900000));
+  const codeExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await db.insert(parentLinkRequests).values({ parentId, studentId, confirmCode, codeExpiresAt });
+  return { studentId, studentName: student[0].name, studentEmail: student[0].email, confirmCode };
 }
 
 export async function getPendingLinkRequestsForStudent(studentId: number) {
@@ -548,6 +557,22 @@ export async function respondToLinkRequest(requestId: number, studentId: number,
   return { success: true };
 }
 
+export async function confirmLinkByCode(parentId: number, code: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const requests = await db.select().from(parentLinkRequests)
+    .where(and(eq(parentLinkRequests.parentId, parentId), eq(parentLinkRequests.status, "pending"))).limit(10);
+  const match = requests.find((r) => r.confirmCode === code);
+  if (!match) throw new Error("Invalid confirmation code. Please check the code and try again.");
+  if (match.codeExpiresAt && new Date() > match.codeExpiresAt) throw new Error("This confirmation code has expired. Please request a new one.");
+  await db.update(parentLinkRequests)
+    .set({ status: "accepted", updatedAt: new Date() })
+    .where(eq(parentLinkRequests.id, match.id));
+  await db.update(users).set({ parentOf: match.studentId }).where(eq(users.id, parentId));
+  const student = await getUserById(match.studentId);
+  return { success: true, studentName: student?.name, studentId: match.studentId };
+}
+
 export async function getLinkedChildrenForParent(parentId: number) {
   const db = await getDb();
   if (!db) return [];
@@ -572,7 +597,19 @@ export async function getLinkedStudentForParent(parentId: number) {
   return getUserById(parent.parentOf);
 }
 
-export async function updateTutorProfile(userId: number, data: { bio?: string; linkedin?: string; tutorSubjects?: string; tutorLevel?: string }) {
+export async function updateTutorProfile(userId: number, data: {
+  bio?: string;
+  linkedin?: string;
+  tutorSubjects?: string;
+  tutorLevel?: string;
+  tutorUniversity?: string;
+  tutorCourse?: string;
+  profilePhotoUrl?: string;
+  bankAccountName?: string;
+  bankSortCode?: string;
+  bankAccountNumber?: string;
+  bankPaypalEmail?: string;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, userId));

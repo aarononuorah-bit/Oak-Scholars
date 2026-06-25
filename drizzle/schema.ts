@@ -24,6 +24,14 @@ export const users = mysqlTable("users", {
   linkedin: varchar("linkedin", { length: 255 }),
   tutorSubjects: text("tutorSubjects"), // JSON array e.g. ["Maths","Physics"]
   tutorLevel: varchar("tutorLevel", { length: 100 }), // e.g. "GCSE, A-Level"
+  tutorUniversity: varchar("tutorUniversity", { length: 200 }), // University attended
+  tutorCourse: varchar("tutorCourse", { length: 200 }), // Course/degree studied
+  profilePhotoUrl: varchar("profilePhotoUrl", { length: 500 }), // Profile photo URL
+  // Banking details
+  bankAccountName: varchar("bankAccountName", { length: 200 }),
+  bankSortCode: varchar("bankSortCode", { length: 10 }),
+  bankAccountNumber: varchar("bankAccountNumber", { length: 20 }),
+  bankPaypalEmail: varchar("bankPaypalEmail", { length: 320 }),
 });
 
 export type User = typeof users.$inferSelect;
@@ -200,12 +208,14 @@ export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
 
 // ─── Parent Link Requests ─────────────────────────────────────────────────────
-// A parent sends a link request to a student; student accepts to grant view access
+// A parent sends a link request to a student; student receives a 6-digit code by email to confirm
 export const parentLinkRequests = mysqlTable("parent_link_requests", {
   id: int("id").autoincrement().primaryKey(),
   parentId: int("parentId").notNull(),
   studentId: int("studentId").notNull(),
-  status: mysqlEnum("status", ["pending", "accepted", "declined"]).default("pending").notNull(),
+  confirmCode: varchar("confirmCode", { length: 10 }), // 6-digit code sent to student
+  codeExpiresAt: timestamp("codeExpiresAt"), // Code expires after 24h
+  status: mysqlEnum("status", ["pending","accepted","declined"]).default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -162,7 +162,7 @@ function HeroSection() {
           <div className="relative hidden lg:block animate-slide-in-right" style={{ animationDelay: "200ms" }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
                 alt="A university student tutoring a secondary school student"
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
               />
@@ -340,13 +340,14 @@ function SubjectsSection() {
             </p>
             <div className="flex flex-wrap gap-2 mb-8">
               {levels.map((l) => (
-                <span
-                  key={l}
-                  className="px-3 py-1.5 rounded-full text-sm font-semibold text-navy-deep border border-navy/20 transition-all duration-200 hover:border-amber/60 hover:bg-amber/10 cursor-default"
-                  style={{ backgroundColor: "rgba(232,168,56,0.1)" }}
-                >
-                  {l}
-                </span>
+                <Link key={l} href="/booking">
+                  <span
+                    className="px-3 py-1.5 rounded-full text-sm font-semibold text-navy-deep border border-navy/20 transition-all duration-200 hover:border-amber/60 hover:bg-amber/10 cursor-pointer"
+                    style={{ backgroundColor: "rgba(232,168,56,0.1)" }}
+                  >
+                    {l}
+                  </span>
+                </Link>
               ))}
             </div>
             <Link href="/booking">
@@ -358,13 +359,14 @@ function SubjectsSection() {
 
           <div className="flex flex-wrap gap-2">
             {subjects.map((s, i) => (
-              <span
-                key={s}
-                className="px-3 py-2 rounded-lg text-sm font-medium text-navy-deep bg-white border border-gray-100 hover:border-amber/40 hover:bg-amber/5 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200 cursor-default"
-                style={{ transitionDelay: `${i * 20}ms` }}
-              >
-                {s}
-              </span>
+              <Link key={s} href="/booking">
+                <span
+                  className="px-3 py-2 rounded-lg text-sm font-medium text-navy-deep bg-white border border-gray-100 hover:border-amber/40 hover:bg-amber/5 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200 cursor-pointer"
+                  style={{ transitionDelay: `${i * 20}ms` }}
+                >
+                  {s}
+                </span>
+              </Link>
             ))}
           </div>
         </div>

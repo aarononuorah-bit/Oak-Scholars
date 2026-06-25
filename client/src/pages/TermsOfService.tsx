@@ -51,7 +51,7 @@ export default function TermsOfService() {
               },
               {
                 title: "10. Contact",
-                content: "For questions about these Terms, please contact us at hello@oakscholars.com.",
+                content: "For questions about these Terms, please contact us at team@oakscholars.com.",
               },
             ].map((section) => (
               <section key={section.title}>
