@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { User, ShoppingBag, CreditCard, LogOut, Calendar, Package, TrendingUp, Download, MessageSquare, BookOpen } from "lucide-react";
+import { User, ShoppingBag, CreditCard, LogOut, Calendar, Package, TrendingUp, Download, MessageSquare, BookOpen, Users, GraduationCap } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -47,10 +47,19 @@ function ProfileTab() {
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState((user as { phone?: string })?.phone ?? "");
+  const currentAccountType = (user as any)?.accountType ?? null;
 
   const updateProfile = trpc.account.updateProfile.useMutation({
     onSuccess: () => {
       toast.success("Profile updated successfully");
+      utils.auth.me.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateAccountType = trpc.account.updateAccountType.useMutation({
+    onSuccess: () => {
+      toast.success("Account type updated");
       utils.auth.me.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -115,6 +124,42 @@ function ProfileTab() {
             {updateProfile.isPending ? "Saving…" : "Save Changes"}
           </Button>
         </div>
+
+        {/* Account type selector — only show for regular users (not admin/tutor) */}
+        {(user as any)?.role === 'user' && (
+          <div className="border-t pt-4 mt-4">
+            <p className="text-sm font-medium mb-2">Account Type</p>
+            <p className="text-xs text-muted-foreground mb-3">Are you a student or a parent/guardian of a student?</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => updateAccountType.mutate({ accountType: 'student' })}
+                disabled={updateAccountType.isPending}
+                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-sm font-medium transition-all ${
+                  currentAccountType === 'student'
+                    ? 'border-[#281A39] bg-[#281A39]/5 text-[#281A39]'
+                    : 'border-border hover:border-[#281A39]/40'
+                }`}
+              >
+                <GraduationCap size={22} />
+                Student
+              </button>
+              <button
+                type="button"
+                onClick={() => updateAccountType.mutate({ accountType: 'parent' })}
+                disabled={updateAccountType.isPending}
+                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-sm font-medium transition-all ${
+                  currentAccountType === 'parent'
+                    ? 'border-[#281A39] bg-[#281A39]/5 text-[#281A39]'
+                    : 'border-border hover:border-[#281A39]/40'
+                }`}
+              >
+                <Users size={22} />
+                Parent / Guardian
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="border-t pt-4 mt-4">
           <p className="text-sm text-muted-foreground mb-1">Account created</p>

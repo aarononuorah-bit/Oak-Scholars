@@ -4,6 +4,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { aiRouter } from "./ai";
 import { notifyOwner } from "./_core/notification";
 import { createCalendarEvent } from "./_core/google-calendar";
@@ -21,6 +22,13 @@ import {
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
 import {
+  createParentLinkRequest,
+  getPendingLinkRequestsForStudent,
+  respondToLinkRequest,
+  getLinkedStudentForParent,
+  getLinkedChildrenForParent,
+  updateTutorProfile,
+  updateAccountType,
   createBanner,
   getAllBanners,
   getActiveBanner,
@@ -437,6 +445,13 @@ const accountRouter = router({
       const url = await createStripePortalSession(customerId, `${input.origin}/account`);
       return { url };
     }),
+
+  updateAccountType: protectedProcedure
+    .input(z.object({ accountType: z.enum(['student', 'parent']) }))
+    .mutation(async ({ ctx, input }) => {
+      await updateAccountType(ctx.user.id, input.accountType);
+      return { success: true };
+    }),
 });
 
 // ─── Admin overview router ────────────────────────────────────────────────────────
@@ -533,6 +548,31 @@ const adminRouter = router({
     }),
 
   tutoringRelationships: adminProcedure.query(async () => getAllTutoringRelationships()),
+
+  // Assign a tutor to a student (creates a tutoring relationship)
+  assignTutor: adminProcedure
+    .input(z.object({ tutorId: z.number(), studentId: z.number(), subjects: z.string(), level: z.string() }))
+    .mutation(async ({ input }) => {
+      const id = await createTutoringRelationship({
+        tutorId: input.tutorId,
+        studentId: input.studentId,
+        subjects: input.subjects,
+        level: input.level,
+        status: 'active',
+      });
+      return { success: true, id };
+    }),
+
+  // List all tutors (approved) and all students for the assignment form
+  tutors: adminProcedure.query(async () => {
+    const all = await getAllUsers();
+    return all.filter(u => u.role === 'tutor' || u.approvedAsTutor === 1);
+  }),
+
+  students: adminProcedure.query(async () => {
+    const all = await getAllUsers();
+    return all.filter(u => u.role === 'user' || u.accountType === 'student');
+  }),
 });
 
 // ─── Tutoring router ──────────────────────────────────────────────────────────
@@ -752,7 +792,102 @@ const feedbackRouter = router({
     }),
 });
 
-// ─── App router ───────────────────────────────────────────────────────────────
+// ─── Parent router ──────────────────────────────────────────────────────────
+const parentRouter = router({
+  // Get all children linked to this parent
+  myChildren: parentProcedure.query(async ({ ctx }) => {
+    return getLinkedChildrenForParent(ctx.user.id);
+  }),
+
+  // Send a link request to a student by email (alias for requestLink)
+  sendLinkRequest: parentProcedure
+    .input(z.object({ studentEmail: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const result = await createParentLinkRequest(ctx.user.id, input.studentEmail);
+      return { success: true, ...result };
+    }),
+
+  // Get a specific child's dashboard data
+  childData: parentProcedure
+    .input(z.object({ studentId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      // Verify this parent is actually linked to this student
+      const children = await getLinkedChildrenForParent(ctx.user.id);
+      const isLinked = children.some((c) => c.id === input.studentId);
+      if (!isLinked) throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this student' });
+      const [sessions, tutors] = await Promise.all([
+        getTutoringSessionsByStudentId(input.studentId),
+        getTutoringRelationshipsByStudentId(input.studentId),
+      ]);
+      const tutorsEnriched = await Promise.all(
+        tutors.map(async (rel) => {
+          const tutor = await getUserById(rel.tutorId);
+          return { ...rel, tutor };
+        })
+      );
+      return { sessions, tutors: tutorsEnriched };
+    }),
+
+  // Send a link request to a student by email
+  requestLink: parentProcedure
+    .input(z.object({ studentEmail: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const result = await createParentLinkRequest(ctx.user.id, input.studentEmail);
+      return { success: true, ...result };
+    }),
+
+  // Get the linked student's dashboard data
+  myChild: parentProcedure.query(async ({ ctx }) => {
+    const student = await getLinkedStudentForParent(ctx.user.id);
+    if (!student) return null;
+    const [sessions, tutors] = await Promise.all([
+      getTutoringSessionsByStudentId(student.id),
+      getTutoringRelationshipsByStudentId(student.id),
+    ]);
+    const tutorsEnriched = await Promise.all(
+      tutors.map(async (rel) => {
+        const tutor = await getUserById(rel.tutorId);
+        return { ...rel, tutor };
+      })
+    );
+    return { student, sessions, tutors: tutorsEnriched };
+  }),
+
+  // Student: get pending link requests from parents
+  pendingRequests: protectedProcedure.query(async ({ ctx }) => {
+    return getPendingLinkRequestsForStudent(ctx.user.id);
+  }),
+
+  // Student: accept or decline a parent link request
+  respondToRequest: protectedProcedure
+    .input(z.object({ requestId: z.number(), accept: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      return respondToLinkRequest(input.requestId, ctx.user.id, input.accept);
+    }),
+});
+
+// ─── Tutor profile router ─────────────────────────────────────────────────────
+const tutorProfileRouter = router({
+  update: tutorProcedure
+    .input(z.object({
+      bio: z.string().optional(),
+      linkedin: z.string().url().optional().or(z.literal('')),
+      tutorSubjects: z.string().optional(),
+      tutorLevel: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      await updateTutorProfile(ctx.user.id, input);
+      return { success: true };
+    }),
+
+  get: protectedProcedure
+    .input(z.object({ tutorId: z.number() }))
+    .query(async ({ input }) => {
+      const tutor = await getUserById(input.tutorId);
+      if (!tutor) throw new Error('Tutor not found');
+      return { id: tutor.id, name: tutor.name, bio: tutor.bio, linkedin: tutor.linkedin, tutorSubjects: tutor.tutorSubjects, tutorLevel: tutor.tutorLevel };
+    }),
+});
 
 // ─── Referral router ─────────────────────────────────────────────────────────
 const referralRouter = router({
@@ -779,6 +914,8 @@ const referralRouter = router({
 export const appRouter = router({
   system: systemRouter,
   referral: referralRouter,
+  parent: parentRouter,
+  tutorProfile: tutorProfileRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
 
@@ -789,6 +926,7 @@ export const appRouter = router({
           email: z.string().email("Invalid email address"),
           password: z.string().min(8, "Password must be at least 8 characters"),
           referralCode: z.string().optional(),
+          accountType: z.enum(['student', 'parent']).optional().default('student'),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -805,6 +943,7 @@ export const appRouter = router({
           email: input.email,
           passwordHash,
           role,
+          accountType: input.accountType,
         });
 
         // Handle referral code if provided

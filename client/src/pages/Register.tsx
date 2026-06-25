@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { GraduationCap, Users } from "lucide-react";
+
+type AccountType = "student" | "parent";
 
 export default function Register() {
   const [, navigate] = useLocation();
@@ -14,6 +17,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [accountType, setAccountType] = useState<AccountType>("student");
   const utils = trpc.useUtils();
 
   const registerMutation = trpc.auth.register.useMutation({
@@ -41,7 +45,7 @@ export default function Register() {
       toast.error("Password must be at least 8 characters.");
       return;
     }
-    registerMutation.mutate({ name, email, password, referralCode });
+    registerMutation.mutate({ name, email, password, referralCode, accountType });
   };
 
   return (
@@ -71,6 +75,39 @@ export default function Register() {
             <CardDescription>Fill in your details to create an account</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Account type selector */}
+            <div className="mb-5">
+              <Label className="text-[#281A39] font-medium mb-2 block">I am joining as a...</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAccountType("student")}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all duration-150 ${
+                    accountType === "student"
+                      ? "border-[#E8A838] bg-[#FDF6E8] text-[#281A39]"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  <GraduationCap className={`w-6 h-6 ${accountType === "student" ? "text-[#E8A838]" : "text-gray-400"}`} />
+                  <span className="text-sm font-semibold">Student</span>
+                  <span className="text-xs text-center leading-tight opacity-70">I want to be tutored</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType("parent")}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all duration-150 ${
+                    accountType === "parent"
+                      ? "border-[#281A39] bg-[#F0EBF8] text-[#281A39]"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  <Users className={`w-6 h-6 ${accountType === "parent" ? "text-[#281A39]" : "text-gray-400"}`} />
+                  <span className="text-sm font-semibold">Parent</span>
+                  <span className="text-xs text-center leading-tight opacity-70">Managing my child's learning</span>
+                </button>
+              </div>
+            </div>
+
             {/* Social sign-up */}
             <div className="space-y-2 mb-5">
               <a

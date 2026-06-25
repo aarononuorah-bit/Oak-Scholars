@@ -17,6 +17,13 @@ export const users = mysqlTable("users", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
   referralCode: varchar("referralCode", { length: 20 }).unique(),
+  // Account type chosen at signup (student or parent — tutors are promoted by admin)
+  accountType: mysqlEnum("accountType", ["student", "parent"]).default("student").notNull(),
+  // Tutor profile fields (populated when user is approved as tutor)
+  bio: text("bio"),
+  linkedin: varchar("linkedin", { length: 255 }),
+  tutorSubjects: text("tutorSubjects"), // JSON array e.g. ["Maths","Physics"]
+  tutorLevel: varchar("tutorLevel", { length: 100 }), // e.g. "GCSE, A-Level"
 });
 
 export type User = typeof users.$inferSelect;
@@ -189,6 +196,19 @@ export const referrals = mysqlTable("referrals", {
 
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
+
+// ─── Parent Link Requests ─────────────────────────────────────────────────────
+// A parent sends a link request to a student; student accepts to grant view access
+export const parentLinkRequests = mysqlTable("parent_link_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  parentId: int("parentId").notNull(),
+  studentId: int("studentId").notNull(),
+  status: mysqlEnum("status", ["pending", "accepted", "declined"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ParentLinkRequest = typeof parentLinkRequests.$inferSelect;
+export type InsertParentLinkRequest = typeof parentLinkRequests.$inferInsert;
 
 // ─── Tutor Availability ───────────────────────────────────────────────────────
 export const tutorAvailability = mysqlTable("tutor_availability", {

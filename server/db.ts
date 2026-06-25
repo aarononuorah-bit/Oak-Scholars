@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   announcementBanners,
@@ -19,6 +19,7 @@ import {
   InsertUser,
   orders,
   pushSubscriptions,
+  parentLinkRequests,
   referrals,
   tutorApplications,
   tutorAvailability,
@@ -469,6 +470,7 @@ export async function createUserWithPassword(data: {
   email: string;
   passwordHash: string;
   role?: "user" | "admin" | "tutor" | "parent";
+  accountType?: "student" | "parent";
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -482,6 +484,7 @@ export async function createUserWithPassword(data: {
     emailVerified: 1,
     loginMethod: "email",
     role: data.role ?? "user",
+    accountType: data.accountType ?? "student",
     lastSignedIn: new Date(),
   });
   const created = await getUserByEmail(data.email);
@@ -498,6 +501,87 @@ export async function updateUserLastSignedIn(id: number) {
   const db = await getDb();
   if (!db) return;
   await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, id));
+}
+
+// ─── Parent Link Requests ───────────────────────────────────────────────────
+export async function createParentLinkRequest(parentId: number, studentEmail: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const student = await db.select().from(users).where(eq(users.email, studentEmail)).limit(1);
+  if (!student[0]) throw new Error("No account found with that email address.");
+  if (student[0].accountType !== "student") throw new Error("That account is not registered as a student.");
+  const studentId = student[0].id;
+  const existing = await db.select().from(parentLinkRequests)
+    .where(and(eq(parentLinkRequests.parentId, parentId), eq(parentLinkRequests.studentId, studentId))).limit(1);
+  if (existing[0]) {
+    if (existing[0].status === "accepted") throw new Error("You are already linked to this student.");
+    if (existing[0].status === "pending") throw new Error("A link request is already pending for this student.");
+  }
+  await db.insert(parentLinkRequests).values({ parentId, studentId });
+  return { studentId, studentName: student[0].name };
+}
+
+export async function getPendingLinkRequestsForStudent(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const requests = await db.select().from(parentLinkRequests)
+    .where(and(eq(parentLinkRequests.studentId, studentId), eq(parentLinkRequests.status, "pending")));
+  return Promise.all(requests.map(async (r) => {
+    const parent = await getUserById(r.parentId);
+    return { ...r, parent };
+  }));
+}
+
+export async function respondToLinkRequest(requestId: number, studentId: number, accept: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const status = accept ? "accepted" : "declined";
+  await db.update(parentLinkRequests)
+    .set({ status, updatedAt: new Date() })
+    .where(and(eq(parentLinkRequests.id, requestId), eq(parentLinkRequests.studentId, studentId)));
+  if (accept) {
+    const req = await db.select().from(parentLinkRequests).where(eq(parentLinkRequests.id, requestId)).limit(1);
+    if (req[0]) {
+      await db.update(users).set({ parentOf: studentId }).where(eq(users.id, req[0].parentId));
+    }
+  }
+  return { success: true };
+}
+
+export async function getLinkedChildrenForParent(parentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const requests = await db
+    .select()
+    .from(parentLinkRequests)
+    .where(and(eq(parentLinkRequests.parentId, parentId), eq(parentLinkRequests.status, 'accepted')));
+  if (requests.length === 0) return [];
+  const studentIds = requests.map((r) => r.studentId);
+  const students = await db
+    .select({ id: users.id, name: users.name, email: users.email, accountType: users.accountType })
+    .from(users)
+    .where(inArray(users.id, studentIds));
+  return students;
+}
+
+export async function getLinkedStudentForParent(parentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const parent = await getUserById(parentId);
+  if (!parent?.parentOf) return null;
+  return getUserById(parent.parentOf);
+}
+
+export async function updateTutorProfile(userId: number, data: { bio?: string; linkedin?: string; tutorSubjects?: string; tutorLevel?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, userId));
+}
+
+export async function updateAccountType(userId: number, accountType: "student" | "parent") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ accountType, updatedAt: new Date() }).where(eq(users.id, userId));
 }
 
 export async function upsertGoogleUser(data: {

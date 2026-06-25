@@ -1022,6 +1022,107 @@ function TutoringRelationshipsTab() {
   );
 }
 
+// ─── Assign Tutor Tab ────────────────────────────────────────────────────────
+function AssignTutorTab() {
+  const { data: tutors = [], isLoading: tutorsLoading } = trpc.admin.tutors.useQuery();
+  const { data: students = [], isLoading: studentsLoading } = trpc.admin.students.useQuery();
+  const { data: relationships = [], refetch } = trpc.admin.tutoringRelationships.useQuery();
+  const [tutorId, setTutorId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [subjects, setSubjects] = useState("");
+  const [level, setLevel] = useState("");
+
+  const assignMutation = trpc.admin.assignTutor.useMutation({
+    onSuccess: () => {
+      toast.success("Tutor assigned successfully!");
+      setTutorId(""); setStudentId(""); setSubjects(""); setLevel("");
+      refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleAssign = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tutorId || !studentId || !subjects || !level) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    assignMutation.mutate({ tutorId: Number(tutorId), studentId: Number(studentId), subjects, level });
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h2 className="font-serif text-xl font-bold text-navy-deep mb-1">Assign Tutor to Student</h2>
+        <p className="text-xs text-muted-brand mb-5">Create a new tutoring relationship. One tutor can be assigned to multiple students and vice versa.</p>
+        <form onSubmit={handleAssign} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Tutor</Label>
+            <Select value={tutorId} onValueChange={setTutorId}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tutorsLoading ? "Loading..." : "Select a tutor"} /></SelectTrigger>
+              <SelectContent>
+                {tutors.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>{t.name || t.email} {t.email ? `(${t.email})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Student</Label>
+            <Select value={studentId} onValueChange={setStudentId}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={studentsLoading ? "Loading..." : "Select a student"} /></SelectTrigger>
+              <SelectContent>
+                {students.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name || s.email} {s.email ? `(${s.email})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Subject(s)</Label>
+            <Input value={subjects} onChange={(e) => setSubjects(e.target.value)} placeholder="e.g. Maths, Physics" className="h-9 text-sm" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Level</Label>
+            <Select value={level} onValueChange={setLevel}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select level" /></SelectTrigger>
+              <SelectContent>
+                {["GCSE", "A-Level", "University", "Primary", "Secondary", "Other"].map((l) => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={assignMutation.isPending} className="bg-navy text-white hover:bg-navy/90">
+              {assignMutation.isPending ? "Assigning..." : "Assign Tutor"}
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h2 className="font-serif text-lg font-bold text-navy-deep mb-1">Current Tutoring Pairs</h2>
+        <p className="text-xs text-muted-brand mb-4">Recent assignments. Manage all pairs in the Tutoring Pairs tab.</p>
+        <div className="divide-y divide-gray-50">
+          {relationships.length === 0 ? (
+            <p className="text-sm text-muted-brand py-2">No tutoring relationships yet.</p>
+          ) : relationships.slice(0, 8).map((r) => (
+            <div key={r.id} className="flex items-center justify-between py-3">
+              <div>
+                <span className="text-sm font-semibold text-navy-deep">{r.tutor?.name || r.tutor?.email}</span>
+                <span className="text-xs text-muted-brand ml-2">&#8594; {r.student?.name || r.student?.email}</span>
+                <span className="text-xs text-muted-brand ml-2">({r.subjects} &middot; {r.level})</span>
+              </div>
+              <StatusBadge status={r.status} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Push Tab ─────────────────────────────────────────────────────────────────
 function PushTab() {
   const { data: countData } = trpc.push.subscriberCount.useQuery();
@@ -1123,6 +1224,7 @@ export default function AdminDashboard() {
     { value: "orders", label: "Orders", icon: ShoppingCart },
     { value: "users", label: "Users", icon: Users },
     { value: "banners", label: "Banners", icon: Megaphone },
+    { value: "assign", label: "Assign Tutor", icon: UserCheck },
     { value: "push", label: "Push", icon: Bell },
   ];
 
@@ -1163,6 +1265,7 @@ export default function AdminDashboard() {
           <TabsContent value="orders"><OrdersTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
           <TabsContent value="banners"><BannersTab /></TabsContent>
+          <TabsContent value="assign"><AssignTutorTab /></TabsContent>
           <TabsContent value="push"><PushTab /></TabsContent>
         </Tabs>
       </div>

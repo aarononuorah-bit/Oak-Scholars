@@ -103,3 +103,19 @@
 - [x] Inject accurate Oak Scholars system prompt into AI chatbot (services, pricing, how to book, etc.)
 - [x] Add "Connect to agent" fallback option in chatbot when AI cannot answer
 - [x] Move chatbot close button to bottom-right, change from red to brand-consistent colour
+
+## Four Role-Based Dashboards
+- [x] Schema: add parent_link_requests table (consent flow for parent-student linking)
+- [x] Schema: add accountType field to users (student/parent choice at signup)
+- [x] Schema: add tutor profile fields (bio, linkedin, subjects, level) to users
+- [x] Apply DB migrations for new tables/columns
+- [x] Backend: parent router (myChild, requestLink, acceptLink, pendingRequests)
+- [x] Backend: tutor profile update procedure
+- [x] Backend: admin assign-tutor-to-student procedure
+- [x] Frontend: role selection (student/parent) on Register page and Account page
+- [x] Frontend: Admin Dashboard - wire assign tutor to student form
+- [x] Frontend: Tutor Dashboard - show student preferences, education level, subjects
+- [x] Frontend: Student Dashboard - show tutor LinkedIn/profile, real data
+- [x] Frontend: Parent Dashboard - consent flow to link to student, view real student data
+- [x] Wire /dashboard route in App.tsx
+- [x] TypeScript check — zero errors
