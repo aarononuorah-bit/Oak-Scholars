@@ -509,10 +509,10 @@ function TeamSection() {
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">The team</p>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep">
-            Meet the <span className="gold-underline">founders</span>
+            Meet the <span className="gold-underline">scholars</span>
           </h2>
           <p className="text-muted-brand mt-4 max-w-lg mx-auto">
-            Three undergraduates who aced their A-Levels and built the service they wished they'd had.
+            Our team of undergraduates from the UK's top universities who recently aced the same exams you're taking.
           </p>
         </div>
 

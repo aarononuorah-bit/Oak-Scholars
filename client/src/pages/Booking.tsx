@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, ChevronRight, ChevronLeft, CreditCard, Calendar, User, BookOpen } from "lucide-react";
+import { CheckCircle, ChevronRight, ChevronLeft, CreditCard, Calendar, User, BookOpen, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
@@ -89,6 +89,7 @@ export default function Booking() {
     subject: "", level: "", packageId: "", preferredTime: "",
     firstName: "", lastName: "", email: "", phone: "", preferredContactMethod: "", message: "", consent: false, marketingOptIn: false,
   });
+  const [subjectSearch, setSubjectSearch] = useState("");
 
   const [location] = useLocation();
 
@@ -264,22 +265,44 @@ export default function Booking() {
             <div>
               <h2 className="font-serif text-2xl font-bold text-navy-deep mb-6">What do you need help with?</h2>
               <div className="mb-6">
-                <Label className="text-sm font-semibold text-navy-deep mb-3 block">Subject</Label>
-                <div className="flex flex-wrap gap-2">
-                  {SUBJECTS.map((s) => (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <Label className="text-sm font-semibold text-navy-deep block">Subject</Label>
+                  <div className="relative w-full sm:w-64">
+                    <Input
+                      type="text"
+                      placeholder="Search subjects..."
+                      value={subjectSearch}
+                      onChange={(e) => setSubjectSearch(e.target.value)}
+                      className="h-9 text-sm pr-8"
+                    />
+                    {subjectSearch && (
+                      <button
+                        onClick={() => setSubjectSearch("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-brand hover:text-navy-deep"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 scrollbar-thin">
+                  {SUBJECTS.filter(s => s.toLowerCase().includes(subjectSearch.toLowerCase())).map((s) => (
                     <button
                       key={s}
                       onClick={() => update("subject", s)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
                         form.subject === s
-                          ? "border-amber text-navy-deep"
-                          : "border-gray-200 text-muted-brand hover:border-amber/40"
+                          ? "border-amber text-navy-deep shadow-sm"
+                          : "border-gray-100 text-muted-brand hover:border-amber/40"
                       }`}
                       style={form.subject === s ? { backgroundColor: "rgba(232,168,56,0.1)" } : {}}
                     >
                       {s}
                     </button>
                   ))}
+                  {SUBJECTS.filter(s => s.toLowerCase().includes(subjectSearch.toLowerCase())).length === 0 && (
+                    <p className="text-sm text-muted-brand py-2 italic">No subjects matching "{subjectSearch}"</p>
+                  )}
                 </div>
               </div>
               <div>

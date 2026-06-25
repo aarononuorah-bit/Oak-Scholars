@@ -1,7 +1,15 @@
 import { useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { FileText, BookOpen, ClipboardList, Presentation, CheckCircle, ChevronRight, Download, Star } from "lucide-react";
+import { FileText, BookOpen, ClipboardList, Presentation, CheckCircle, ChevronRight, Download, Star, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CtaBanner from "@/components/CtaBanner";
@@ -43,6 +51,8 @@ const resourceTypes = [
       "Common exam mistakes flagged",
       "Aligned to your exam board",
     ],
+    previewTitle: "Revision Notes Preview",
+    previewContent: "Our revision notes focus on 'Examiner Traps' and 'Common Pitfalls' — the things textbooks often miss but examiners love to test. Each pack includes subject-specific terminology and clear, structured explanations.",
   },
   {
     icon: <ClipboardList size={32} />,
@@ -56,6 +66,8 @@ const resourceTypes = [
       "Graded by difficulty",
       "Exam board specific",
     ],
+    previewTitle: "Mock Questions Preview",
+    previewContent: "These aren't just old past papers. We've analysed the last 5 years of exams to create original questions that mirror the exact style, difficulty, and phrasing you'll see on the big day.",
   },
   {
     icon: <BookOpen size={32} />,
@@ -69,6 +81,8 @@ const resourceTypes = [
       "Grade boundary guidance",
       "Technique tips included",
     ],
+    previewTitle: "Model Answers Preview",
+    previewContent: "Our model answers include 'Examiner Annotations' — side notes that explain exactly WHY a specific sentence earned marks. We show you the difference between a Grade 7 and a Grade 9 response.",
   },
   {
     icon: <Presentation size={32} />,
@@ -82,6 +96,8 @@ const resourceTypes = [
       "Summary slides per topic",
       "Printable PDF version",
     ],
+    previewTitle: "PowerPoint Pack Preview",
+    previewContent: "High-quality, visually structured slides that make complex topics easy to digest. Perfect for visual learners, each deck includes summary diagrams and key-point checklists.",
   },
 ];
 
@@ -203,12 +219,47 @@ export default function StudyResources() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/study-resources/order">
-                  <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
-                    <Download size={16} className="mr-2" />
-                    Order This Pack
-                  </Button>
-                </Link>
+                <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="flex-1 border-gray-200 text-navy-deep hover:bg-gray-50 font-semibold">
+                        <Eye size={16} className="mr-2" />
+                        Preview
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-serif text-2xl text-navy-deep">{r.previewTitle}</DialogTitle>
+                        <DialogDescription className="text-muted-brand pt-4 leading-relaxed">
+                          {r.previewContent}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="mt-6 p-4 rounded-xl bg-surface border border-amber/10">
+                        <p className="text-xs font-bold text-amber uppercase tracking-widest mb-2">What's inside</p>
+                        <ul className="space-y-2">
+                          {r.features.map((f) => (
+                            <li key={f} className="flex items-center gap-2 text-sm text-navy-deep">
+                              <CheckCircle size={14} className="text-amber" />
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Link href="/study-resources/order">
+                        <Button className="w-full mt-6 btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+                          Order Now — {r.price}
+                        </Button>
+                      </Link>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <Link href="/study-resources/order" className="flex-1">
+                    <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
+                      <Download size={16} className="mr-2" />
+                      Order
+                    </Button>
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
