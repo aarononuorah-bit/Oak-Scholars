@@ -131,7 +131,7 @@ export default function StudyResources() {
                   Browse Resources
                 </Button>
               </a>
-              <Link href="/contact">
+              <Link href="/study-resources/order">
                 <Button size="lg" variant="outline" className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-3">
                   Request a Custom Pack
                 </Button>
@@ -203,7 +203,7 @@ export default function StudyResources() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/contact">
+                <Link href="/study-resources/order">
                   <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
                     <Download size={16} className="mr-2" />
                     Order This Pack
@@ -259,7 +259,7 @@ export default function StudyResources() {
                 <p className="text-muted-brand text-sm leading-relaxed">
                   Need a resource tailored to a specific topic, chapter, or exam board? Get in touch and we'll create a bespoke pack just for you.
                 </p>
-                <Link href="/contact">
+                <Link href="/study-resources/order">
                   <Button variant="outline" size="sm" className="mt-3 border-amber/30 text-amber hover:bg-amber/10">
                     Request a Custom Pack <ChevronRight size={14} className="ml-1" />
                   </Button>

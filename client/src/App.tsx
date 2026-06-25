@@ -13,6 +13,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Account from "./pages/Account";
 import StudyResources from "./pages/StudyResources";
+import StudyResourcesBooking from "./pages/StudyResourcesBooking";
 import SupportGuidance from "./pages/SupportGuidance";
 import AcademicSupportForm from "./pages/AcademicSupportForm";
 import WellbeingForm from "./pages/WellbeingForm";
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/account" component={Account} />
       <Route path="/account/:tab" component={Account} />
       <Route path="/study-resources" component={StudyResources} />
+      <Route path="/study-resources/order" component={StudyResourcesBooking} />
       <Route path="/support-guidance" component={SupportGuidance} />
       <Route path="/academic-support" component={AcademicSupportForm} />
       <Route path="/wellbeing-support" component={WellbeingForm} />
