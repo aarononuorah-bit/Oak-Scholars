@@ -3,6 +3,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { aiRouter } from "./ai";
 import { notifyOwner } from "./_core/notification";
 import {
   sendAdminBookingAlert,
@@ -345,6 +346,7 @@ export const appRouter = router({
       return { success: true } as const;
     }),
   }),
+  ai: aiRouter,
   booking: bookingRouter,
   contact: contactRouter,
   tutor: tutorRouter,

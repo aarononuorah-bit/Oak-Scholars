@@ -19,6 +19,7 @@ import AcademicSupportForm from "./pages/AcademicSupportForm";
 import WellbeingForm from "./pages/WellbeingForm";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import CookieConsent from "./components/CookieConsent";
+import { ChatbotWidget } from "./components/ChatbotWidget";
 
 function Router() {
   return (
@@ -52,6 +53,7 @@ function App() {
           <AnnouncementBanner />
           <Router />
           <CookieConsent />
+          <ChatbotWidget />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
