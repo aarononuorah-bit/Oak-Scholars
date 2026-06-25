@@ -1,14 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, BookOpen, FileText, Heart, ChevronRight, Star, GraduationCap, Users, Award } from "lucide-react";
+import { CheckCircle, BookOpen, FileText, Heart, ChevronRight, Star, GraduationCap, Users, Award, ArrowUp, Linkedin } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TrustBar from "@/components/TrustBar";
 import CtaBanner from "@/components/CtaBanner";
 
 // ─── Intersection Observer hook for scroll animations ─────────────────────────
-function useScrollReveal() {
+function useScrollReveal(options?: IntersectionObserverInit) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -20,7 +20,7 @@ function useScrollReveal() {
           observer.unobserve(el);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.08, ...options }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -28,8 +28,63 @@ function useScrollReveal() {
   return ref;
 }
 
+// ─── Animated counter hook ────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 1200, start = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    let startTime: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [start, target, duration]);
+  return count;
+}
+
+// ─── Scroll to top button ─────────────────────────────────────────────────────
+function ScrollToTop() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (!visible) return null;
+  return (
+    <button
+      className="scroll-to-top scroll-to-top-enter"
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Scroll to top"
+      title="Back to top"
+    >
+      <ArrowUp size={18} />
+    </button>
+  );
+}
+
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection() {
+  const [statsVisible, setStatsVisible] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = statsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setStatsVisible(true); observer.unobserve(el); } },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
       className="relative min-h-screen flex items-center pt-20"
@@ -49,11 +104,16 @@ function HeroSection() {
         backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
         backgroundSize: "40px 40px"
       }} />
+      {/* Subtle radial glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 60% 50% at 20% 50%, rgba(232,168,56,0.06) 0%, transparent 70%)" }}
+      />
 
       <div className="container relative z-10 py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left — copy */}
-          <div>
+          <div className="animate-fade-in-up">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-8 h-px bg-amber" />
               <span className="text-amber text-xs font-semibold tracking-widest uppercase">Online Tutoring</span>
@@ -61,15 +121,15 @@ function HeroSection() {
 
             <h1 className="font-serif text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
               Your Oak Scholar sat{" "}
-              <em className="text-amber not-italic">the same exam</em>{" "}
+              <em className="text-amber not-italic gold-underline-instant">the same exam</em>{" "}
               two years ago.
             </h1>
 
-            <p className="text-white/70 text-lg leading-relaxed mb-10">
+            <p className="text-white/70 text-lg leading-relaxed mb-10 animate-fade-in" style={{ animationDelay: "150ms" }}>
               Oak Scholars connects students with current undergraduates who recently aced the same papers. 1:1 online support from 11+ through A-Level — tailored to you, priced fairly.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 mb-12 animate-fade-in" style={{ animationDelay: "250ms" }}>
               <Link href="/booking">
                 <Button
                   size="lg"
@@ -83,47 +143,46 @@ function HeroSection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-3"
+                  className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-3 transition-all duration-200"
                 >
                   View Pricing
                 </Button>
               </a>
             </div>
 
-            {/* Stats row */}
-            <div className="flex items-center gap-8 pt-8 border-t border-white/10">
-              <div>
-                <p className="font-serif text-3xl font-bold text-amber">50%</p>
-                <p className="text-white/60 text-xs mt-0.5">Off first lesson</p>
-              </div>
-              <div>
-                <p className="font-serif text-3xl font-bold text-white">£30</p>
-                <p className="text-white/60 text-xs mt-0.5">Per session from</p>
-              </div>
-              <div>
-                <p className="font-serif text-3xl font-bold text-white">12+</p>
-                <p className="text-white/60 text-xs mt-0.5">Subjects covered</p>
-              </div>
+            {/* Stats row — animated counters */}
+            <div ref={statsRef} className="flex items-center gap-8 pt-8 border-t border-white/10 animate-fade-in" style={{ animationDelay: "350ms" }}>
+              <HeroStat value={50} suffix="%" label="Off first lesson" started={statsVisible} />
+              <HeroStat value={30} prefix="£" label="Per session from" started={statsVisible} />
+              <HeroStat value={12} suffix="+" label="Subjects covered" started={statsVisible} />
             </div>
           </div>
 
           {/* Right — tutoring image with review card */}
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block animate-slide-in-right" style={{ animationDelay: "200ms" }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
                 src="/manus-storage/study-session_0bfc8780.webp"
                 alt="A university student tutoring a secondary school student"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
               />
               {/* Gradient overlay at bottom */}
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(40,26,57,0.6) 0%, transparent 50%)" }} />
             </div>
             {/* Review card — overlaid at bottom-left */}
             <div
-              className="absolute bottom-4 left-4 right-4 rounded-xl p-4"
-              style={{ backgroundColor: "rgba(40,26,57,0.92)", border: "1px solid rgba(232,168,56,0.2)", backdropFilter: "blur(8px)" }}
+              className="absolute bottom-4 left-4 right-4 rounded-xl p-4 animate-fade-in"
+              style={{
+                backgroundColor: "rgba(40,26,57,0.92)",
+                border: "1px solid rgba(232,168,56,0.2)",
+                backdropFilter: "blur(8px)",
+                animationDelay: "600ms",
+              }}
             >
               <p className="text-amber text-xs font-semibold tracking-widest uppercase mb-2">Recent Parent Review</p>
+              <div className="flex gap-0.5 mb-2">
+                {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="#E8A838" className="text-amber" />)}
+              </div>
               <p className="text-white/90 text-sm leading-relaxed italic">
                 "He really took time to understand strengths and weaknesses."
               </p>
@@ -133,6 +192,18 @@ function HeroSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function HeroStat({ value, prefix = "", suffix = "", label, started }: { value: number; prefix?: string; suffix?: string; label: string; started: boolean }) {
+  const count = useCountUp(value, 1000, started);
+  return (
+    <div>
+      <p className="font-serif text-3xl font-bold text-amber">
+        {prefix}{started ? count : 0}{suffix}
+      </p>
+      <p className="text-white/60 text-xs mt-0.5">{label}</p>
+    </div>
   );
 }
 
@@ -147,7 +218,7 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-surface reveal-on-scroll" ref={ref}>
+    <section id="how-it-works" className="py-24 bg-surface reveal-on-scroll reveal-stagger" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">Simple process</p>
@@ -158,12 +229,12 @@ function HowItWorksSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, i) => (
-            <div
-              key={step.num}
-              className="relative animate-fade-in-up opacity-0"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <div className="section-number mb-2">{step.num}</div>
+            <div key={step.num} className="relative group">
+              {/* Connector line between steps */}
+              {i < steps.length - 1 && (
+                <div className="hidden lg:block absolute top-10 left-full w-full h-px z-0" style={{ background: "linear-gradient(to right, rgba(232,168,56,0.3), transparent)" }} />
+              )}
+              <div className="section-number mb-2 group-hover:opacity-30 transition-opacity duration-300">{step.num}</div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{step.title}</h3>
               <p className="text-muted-brand text-sm leading-relaxed">{step.desc}</p>
             </div>
@@ -209,7 +280,7 @@ function ServicesSection() {
   ];
 
   return (
-    <section id="services" className="py-24 bg-white reveal-on-scroll" ref={ref}>
+    <section id="services" className="py-24 bg-white reveal-on-scroll reveal-stagger" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">What we offer</p>
@@ -219,23 +290,22 @@ function ServicesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((s, i) => (
+          {services.map((s) => (
             <Link
               key={s.title}
               href={s.link}
-              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline animate-fade-in-up opacity-0 hover-lift bg-white"
-              style={{ animationDelay: `${i * 80}ms` }}
+              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/40 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline card-hover bg-white"
             >
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 text-amber group-hover:scale-110 transition-transform duration-300"
+                className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 text-amber group-hover:scale-110 group-hover:bg-amber/20 transition-all duration-300"
                 style={{ backgroundColor: "rgba(232,168,56,0.1)" }}
               >
                 {s.icon}
               </div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{s.title}</h3>
               <p className="text-muted-brand text-sm leading-relaxed mb-6 flex-1">{s.desc}</p>
-              <span className="text-amber font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
-                {s.cta} <ChevronRight size={16} />
+              <span className="text-amber font-semibold text-sm flex items-center gap-1 group-hover:gap-2.5 transition-all duration-200 mt-auto">
+                {s.cta} <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </span>
             </Link>
           ))}
@@ -272,7 +342,7 @@ function SubjectsSection() {
               {levels.map((l) => (
                 <span
                   key={l}
-                  className="px-3 py-1.5 rounded-full text-sm font-semibold text-navy-deep border border-navy/20"
+                  className="px-3 py-1.5 rounded-full text-sm font-semibold text-navy-deep border border-navy/20 transition-all duration-200 hover:border-amber/60 hover:bg-amber/10 cursor-default"
                   style={{ backgroundColor: "rgba(232,168,56,0.1)" }}
                 >
                   {l}
@@ -290,8 +360,8 @@ function SubjectsSection() {
             {subjects.map((s, i) => (
               <span
                 key={s}
-                className="px-3 py-2 rounded-lg text-sm font-medium text-navy-deep bg-white border border-gray-100 hover:border-amber/40 hover:bg-amber/5 transition-colors cursor-default"
-                style={{ animationDelay: `${i * 30}ms` }}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-navy-deep bg-white border border-gray-100 hover:border-amber/40 hover:bg-amber/5 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200 cursor-default"
+                style={{ transitionDelay: `${i * 20}ms` }}
               >
                 {s}
               </span>
@@ -346,8 +416,8 @@ function PricingSection() {
   ];
 
   return (
-    <section id="pricing" className="py-24 bg-white">
-      <div className="container" ref={ref}>
+    <section id="pricing" className="py-24 bg-white reveal-on-scroll reveal-stagger" ref={ref}>
+      <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">Transparent pricing</p>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep">
@@ -359,19 +429,18 @@ function PricingSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan, i) => (
+          {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-2xl p-6 flex flex-col animate-fade-in-up opacity-0 card-hover ${
+              className={`rounded-2xl p-6 flex flex-col card-hover relative ${
                 plan.highlight
-                  ? "border-2 border-amber shadow-lg relative"
+                  ? "border-2 border-amber shadow-lg"
                   : "border border-gray-100"
               }`}
-              style={{ animationDelay: `${i * 80}ms` }}
             >
               {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-amber text-navy-deep text-xs font-bold px-3 py-1 rounded-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                  <span className="bg-amber text-navy-deep text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                     Most Popular
                   </span>
                 </div>
@@ -404,7 +473,7 @@ function PricingSection() {
               </ul>
               <Link href="/booking">
                 <Button
-                  className="w-full btn-press transition-all duration-300 ease-out hover:scale-105"
+                  className="w-full btn-press transition-all duration-300 ease-out"
                   style={plan.highlight ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
                   variant={plan.highlight ? "default" : "outline"}
                 >
@@ -441,8 +510,8 @@ function TestimonialsSection() {
   ];
 
   return (
-    <section id="testimonials" className="py-24 bg-surface">
-      <div className="container" ref={ref}>
+    <section id="testimonials" className="py-24 bg-surface reveal-on-scroll reveal-stagger" ref={ref}>
+      <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">What students say</p>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep">
@@ -454,16 +523,23 @@ function TestimonialsSection() {
           {testimonials.map((t, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 animate-fade-in-up opacity-0 card-hover"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover flex flex-col"
             >
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: t.stars }).map((_, j) => (
                   <Star key={j} size={16} fill="#E8A838" className="text-amber" />
                 ))}
               </div>
-              <p className="text-navy-deep text-sm leading-relaxed mb-6 italic">"{t.quote}"</p>
-              <p className="text-muted-brand text-xs font-semibold">— {t.author}</p>
+              <p className="text-navy-deep text-sm leading-relaxed mb-6 italic flex-1">"{t.quote}"</p>
+              <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  style={{ backgroundColor: "#281A39" }}
+                >
+                  {t.author.charAt(0)}
+                </div>
+                <p className="text-muted-brand text-xs font-semibold">— {t.author}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -500,7 +576,7 @@ function TeamSection() {
   ];
 
   return (
-    <section id="team" className="py-24 bg-white reveal-on-scroll" ref={ref}>
+    <section id="team" className="py-24 bg-white reveal-on-scroll reveal-stagger" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
           <p className="text-amber text-sm font-semibold tracking-widest uppercase mb-3">The team</p>
@@ -515,22 +591,29 @@ function TeamSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
           {team.map((member) => (
             <div key={member.name} className="text-center group">
-              <div
-                className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold font-serif text-white border-4 border-amber/20 group-hover:border-amber transition-colors duration-300"
-                style={{ backgroundColor: "#281A39" }}
-              >
-                {member.initials}
+              {/* Avatar with hover ring animation */}
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                <div
+                  className="w-full h-full rounded-full flex items-center justify-center text-2xl font-bold font-serif text-white border-4 border-amber/20 group-hover:border-amber transition-all duration-300 group-hover:shadow-lg"
+                  style={{ backgroundColor: "#281A39" }}
+                >
+                  {member.initials}
+                </div>
+                {/* Animated ring on hover */}
+                <div
+                  className="absolute inset-0 rounded-full border-2 border-amber/0 group-hover:border-amber/30 group-hover:scale-110 transition-all duration-500"
+                />
               </div>
               <h3 className="font-serif text-xl font-bold text-navy-deep">{member.name}</h3>
               <p className="text-amber text-sm font-semibold mb-2">{member.role}</p>
-              <p className="text-muted-brand text-sm leading-relaxed mb-3">{member.bio}</p>
+              <p className="text-muted-brand text-sm leading-relaxed mb-4">{member.bio}</p>
               <a
                 href={member.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-muted-brand hover:text-amber transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-200 text-muted-brand hover:text-amber hover:border-amber/40 hover:bg-amber/5 transition-all duration-200"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                 LinkedIn
               </a>
             </div>
@@ -556,6 +639,7 @@ export default function Home() {
       <TeamSection />
       <CtaBanner />
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }

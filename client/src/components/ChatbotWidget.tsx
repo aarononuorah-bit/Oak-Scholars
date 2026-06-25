@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { AIChatBox, Message } from "@/components/AIChatBox";
-import { MessageCircle, X, UserCheck } from "lucide-react";
+import { MessageCircle, X, UserCheck, Sparkles } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
@@ -14,7 +14,9 @@ import { Link } from "wouter";
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [promptDismissed, setPromptDismissed] = useState(false);
   const [showConnectAgent, setShowConnectAgent] = useState(false);
+  const [hasEntered, setHasEntered] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -25,32 +27,28 @@ export function ChatbotWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Entrance animation delay
+  useEffect(() => {
+    const t = setTimeout(() => setHasEntered(true), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   // tRPC mutation for AI chat
   const chatMutation = trpc.ai.chat.useMutation({
     onSuccess: (response) => {
       const raw = String(response.message);
-      // Detect connect-to-agent marker
       const hasAgentMarker = raw.includes("[CONNECT_TO_AGENT]");
       const cleanedMessage = raw.replace("[CONNECT_TO_AGENT]", "").trim();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: cleanedMessage,
-        },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant" as const, content: cleanedMessage }]);
       if (hasAgentMarker) setShowConnectAgent(true);
       setIsLoading(false);
     },
-    onError: (error) => {
-      console.error("Chat error:", error);
+    onError: () => {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "Sorry, I ran into an issue. You can reach our team directly at [/contact](/contact).",
+          content: "Sorry, I ran into an issue. You can reach our team directly at [/contact](/contact).",
         },
       ]);
       setShowConnectAgent(true);
@@ -58,7 +56,6 @@ export function ChatbotWidget() {
     },
   });
 
-  // Explicit user-triggered connect to agent (independent of AI marker)
   const handleConnectToAgent = () => {
     setShowConnectAgent(true);
     setMessages((prev) => [
@@ -71,17 +68,12 @@ export function ChatbotWidget() {
     ]);
   };
 
-  // Handle sending messages
   const handleSendMessage = (content: string) => {
-    setShowConnectAgent(false); // reset agent CTA on new message
+    setShowConnectAgent(false);
     const userMessage: Message = { role: "user", content };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
-
-    const apiMessages = messages
-      .filter((m) => m.role !== "system")
-      .concat(userMessage);
-
+    const apiMessages = messages.filter((m) => m.role !== "system").concat(userMessage);
     chatMutation.mutate({
       messages: apiMessages.map((m) => ({
         role: m.role as "user" | "assistant" | "system",
@@ -90,58 +82,71 @@ export function ChatbotWidget() {
     });
   };
 
-  // Close chatbot when clicking outside
+  // Show help prompt after 25s or 50% scroll — only once
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        const target = event.target as HTMLElement;
-        if (!target.closest("[data-chatbot-toggle]")) {
-          // intentionally left empty — keep open on outside click for UX
-        }
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Show "Need some help?" prompt after 30 seconds or 50% scroll
-  useEffect(() => {
-    if (isOpen) {
-      setShowPrompt(false);
-      return;
-    }
-    const timer = setTimeout(() => setShowPrompt(true), 30000);
+    if (isOpen || promptDismissed) return;
+    const timer = setTimeout(() => setShowPrompt(true), 25000);
     const handleScroll = () => {
-      const scrollPercent =
-        (window.scrollY /
-          (document.documentElement.scrollHeight - window.innerHeight)) *
-        100;
-      if (scrollPercent > 50) setShowPrompt(true);
+      const pct = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      if (pct > 50) setShowPrompt(true);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       clearTimeout(timer);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [isOpen]);
+  }, [isOpen, promptDismissed]);
+
+  const dismissPrompt = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowPrompt(false);
+    setPromptDismissed(true);
+  };
 
   return (
-    <div ref={containerRef} className="fixed bottom-4 right-4 z-50">
+    <div ref={containerRef} className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
       {/* Chat Box */}
       {isOpen && (
         <div
-          className="mb-4 w-96 max-w-[calc(100vw-2rem)] rounded-xl shadow-2xl border border-[#E8A838]/20 animate-in fade-in slide-in-from-bottom-4 duration-300 overflow-hidden relative"
-          style={{ maxHeight: "620px", background: "#FDFAF5" }}
+          className="mb-3 w-[380px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-2xl border border-amber/20 overflow-hidden"
+          style={{
+            maxHeight: "600px",
+            background: "#FDFAF5",
+            animation: "chatSlideUp 280ms cubic-bezier(0.23, 1, 0.32, 1) both",
+          }}
         >
+          {/* Chat header */}
+          <div
+            className="flex items-center justify-between px-4 py-3 border-b border-amber/15"
+            style={{ background: "#281A39" }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-amber/20 flex items-center justify-center">
+                <Sparkles size={14} className="text-amber" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold">Oak Scholars AI</p>
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-white/50 text-xs">Online · typically instant</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-white/50 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-all duration-200"
+              aria-label="Close chat"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
           <AIChatBox
             messages={messages}
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
             placeholder="Ask me anything about Oak Scholars..."
-            height="540px"
+            height="440px"
             emptyStateMessage="Welcome to Oak Scholars support!"
             suggestedPrompts={[
               "What subjects do you cover?",
@@ -152,93 +157,70 @@ export function ChatbotWidget() {
             ]}
           />
 
-          {/* Connect to Agent CTA — shown when AI triggers [CONNECT_TO_AGENT] */}
-          {showConnectAgent && (
-            <div className="px-4 pb-3 pt-1 border-t border-[#E8A838]/20 bg-[#FDFAF5]">
-              <Link href="/contact">
+          {/* Footer actions */}
+          <div className="px-3 pb-3 pt-1 bg-[#FDFAF5] border-t border-amber/10 flex items-center justify-between gap-2">
+            {showConnectAgent ? (
+              <Link href="/contact" className="flex-1">
                 <Button
-                  className="w-full gap-2 font-semibold text-sm transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-md"
+                  className="w-full gap-2 font-semibold text-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                   style={{ backgroundColor: "#281A39", color: "#E8A838" }}
                   onClick={() => setIsOpen(false)}
                 >
-                  <UserCheck className="h-4 w-4" />
+                  <UserCheck size={14} />
                   Connect to our team
                 </Button>
               </Link>
-            </div>
-          )}
-
-          {/* Always-visible talk-to-human option */}
-          {!showConnectAgent && (
-            <div className="flex justify-start px-4 pb-1 pt-0 bg-[#FDFAF5]">
+            ) : (
               <button
                 onClick={handleConnectToAgent}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 ease-out hover:scale-105"
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-105"
                 style={{ color: "#281A39", background: "rgba(40,26,57,0.06)", border: "1px solid rgba(40,26,57,0.15)" }}
               >
-                <UserCheck className="h-3 w-3" />
+                <UserCheck size={12} />
                 Talk to a human
               </button>
-            </div>
-          )}
-
-          {/* Close button — bottom-right, brand colours */}
-          <div className="flex justify-end px-4 pb-3 pt-1 bg-[#FDFAF5]">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 ease-out hover:scale-105"
-              style={{ color: "#281A39", background: "rgba(232,168,56,0.12)", border: "1px solid rgba(40,26,57,0.15)" }}
-              title="Close chat"
-              aria-label="Close chat"
-            >
-              <X className="h-3 w-3" />
-              Close
-            </button>
+            )}
           </div>
         </div>
       )}
 
       {/* Help Prompt Popup */}
-      {!isOpen && showPrompt && (
+      {!isOpen && showPrompt && !promptDismissed && (
         <div
-          className="absolute bottom-16 right-0 mb-2 w-48 bg-white p-4 rounded-2xl shadow-xl border border-[#E8A838]/30 animate-in fade-in slide-in-from-bottom-2 duration-500 cursor-pointer group"
-          onClick={() => setIsOpen(true)}
+          className="mb-3 w-52 bg-white p-4 rounded-2xl shadow-xl border border-amber/30 cursor-pointer group"
+          style={{ animation: "chatSlideUp 300ms cubic-bezier(0.23, 1, 0.32, 1) both" }}
+          onClick={() => { setIsOpen(true); setShowPrompt(false); }}
         >
-          <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-r border-b border-[#E8A838]/30 rotate-45" />
-          <p className="text-[#281A39] font-semibold text-sm flex items-center gap-2">
+          {/* Speech bubble tail */}
+          <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-r border-b border-amber/30 rotate-45" />
+          <p className="text-navy font-semibold text-sm flex items-center gap-2">
             Need some help?{" "}
-            <span className="group-hover:translate-x-1 transition-transform">
-              👋
-            </span>
+            <span className="group-hover:translate-x-0.5 transition-transform inline-block">👋</span>
           </p>
-          <p className="text-gray-500 text-xs mt-1">
+          <p className="text-gray-500 text-xs mt-1 leading-relaxed">
             I'm here to answer any questions!
           </p>
           <button
-            className="absolute -top-2 -left-2 bg-gray-100 hover:bg-gray-200 rounded-full p-1 shadow-sm transition-all duration-200 ease-out hover:scale-110"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowPrompt(false);
-            }}
+            className="absolute -top-2 -left-2 bg-gray-100 hover:bg-gray-200 rounded-full p-1 shadow-sm transition-all duration-200 hover:scale-110"
+            onClick={dismissPrompt}
+            aria-label="Dismiss"
           >
-            <X className="h-3 w-3 text-gray-500" />
+            <X size={10} className="text-gray-500" />
           </button>
         </div>
       )}
 
-      {/* Toggle Button */}
-      <Button
+      {/* Toggle Button — with entrance animation */}
+      <button
         data-chatbot-toggle
         onClick={() => {
-          setIsOpen(!isOpen);
-          if (!isOpen) setShowPrompt(false);
+          setIsOpen((v) => !v);
+          setShowPrompt(false);
         }}
-        size="lg"
         className={cn(
-          "rounded-full shadow-lg h-14 w-14 p-0 transition-all duration-300 ease-out hover:scale-110",
-          isOpen
-            ? "hover:opacity-90"
-            : "hover:opacity-90"
+          "rounded-full shadow-lg h-14 w-14 flex items-center justify-center transition-all duration-300 ease-out focus-visible:outline-2 focus-visible:outline-amber",
+          hasEntered ? "chatbot-entrance" : "opacity-0 pointer-events-none",
+          isOpen ? "hover:scale-105" : "hover:scale-110 hover:shadow-amber/30 hover:shadow-xl"
         )}
         style={
           isOpen
@@ -246,13 +228,27 @@ export function ChatbotWidget() {
             : { backgroundColor: "#E8A838", color: "#281A39" }
         }
         title={isOpen ? "Close chat" : "Open chat"}
+        aria-label={isOpen ? "Close chat" : "Open chat"}
+        aria-expanded={isOpen}
       >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <MessageCircle className="h-6 w-6" />
-        )}
-      </Button>
+        <span className="relative block w-6 h-6">
+          <MessageCircle
+            size={24}
+            className={`absolute inset-0 transition-all duration-300 ${isOpen ? "opacity-0 rotate-90 scale-75" : "opacity-100 rotate-0 scale-100"}`}
+          />
+          <X
+            size={24}
+            className={`absolute inset-0 transition-all duration-300 ${isOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-75"}`}
+          />
+        </span>
+      </button>
+
+      <style>{`
+        @keyframes chatSlideUp {
+          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 }

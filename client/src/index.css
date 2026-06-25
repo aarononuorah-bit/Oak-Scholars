@@ -114,6 +114,17 @@
   height: 3px;
   background: var(--amber);
   border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.gold-underline.is-visible::after,
+.is-visible .gold-underline::after {
+  transform: scaleX(1);
+}
+/* Immediately visible for above-fold content */
+.gold-underline-instant::after {
+  transform: scaleX(1);
 }
 
 /* ─── Scroll-triggered animations ────────────────────────────────────────────── */
@@ -152,6 +163,12 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+/* Counter animation */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
@@ -160,10 +177,12 @@
   animation: fadeInDown 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 
+/* ─── Scroll reveal — only triggers when .is-visible is added ──────────────── */
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .reveal-on-scroll.is-visible {
@@ -171,6 +190,22 @@
   transform: translateY(0);
 }
 
+/* Staggered children reveal */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.reveal-stagger.is-visible > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+.reveal-stagger.is-visible > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+.reveal-stagger.is-visible > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 200ms; }
+.reveal-stagger.is-visible > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 300ms; }
+.reveal-stagger.is-visible > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+.reveal-stagger.is-visible > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 500ms; }
+.reveal-stagger.is-visible > *:nth-child(n+7) { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+/* ─── Dark mode overrides ───────────────────────────────────────────────────── */
 .dark .bg-surface {
   background-color: #1a1a1a;
 }
@@ -225,9 +260,18 @@
 }
 
 /* ─── CTA button press ──────────────────────────────────────────────────────── */
+.btn-press {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.btn-press:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(232, 168, 56, 0.35);
+}
 .btn-press:active {
-  transform: scale(0.97);
-  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  transform: scale(0.97) translateY(0);
+  box-shadow: none;
+  transition: transform 80ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* ─── Section number anchors ────────────────────────────────────────────────── */
@@ -243,15 +287,14 @@
 }
 
 /* ─── Page transition ───────────────────────────────────────────────────────── */
-/* Wraps each page; fades in on mount */
 .page-enter {
-  animation: pageEnter 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: pageEnter 280ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
 @keyframes pageEnter {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -261,12 +304,13 @@
 
 /* ─── Card hover lift (enhanced) ───────────────────────────────────────────── */
 .card-hover {
-  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
-              box-shadow 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 240ms cubic-bezier(0.23, 1, 0.32, 1),
+              border-color 240ms ease;
 }
 .card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(40, 26, 57, 0.10);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(40, 26, 57, 0.12);
 }
 
 /* ─── Staggered list entrance ───────────────────────────────────────────────── */
@@ -284,6 +328,134 @@
   animation: subtlePulse 2.5s ease-in-out infinite;
 }
 
+/* ─── Mobile menu slide animation ──────────────────────────────────────────── */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 600px;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 600px;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideDown 300ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  overflow: hidden;
+}
+
+/* ─── Booking step transition ───────────────────────────────────────────────── */
+@keyframes stepEnter {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes stepExit {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-20px); }
+}
+
+.step-enter {
+  animation: stepEnter 300ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* ─── Scroll-to-top button ──────────────────────────────────────────────────── */
+.scroll-to-top {
+  position: fixed;
+  bottom: 5rem;
+  right: 1rem;
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--amber);
+  border: 2px solid rgba(232, 168, 56, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 240ms cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 4px 16px rgba(40, 26, 57, 0.25);
+}
+.scroll-to-top:hover {
+  background: var(--amber);
+  color: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 168, 56, 0.35);
+}
+.scroll-to-top-enter {
+  animation: scaleIn 300ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+.scroll-to-top-exit {
+  animation: scaleIn 200ms cubic-bezier(0.23, 1, 0.32, 1) reverse forwards;
+}
+
+/* ─── Nav active link indicator ────────────────────────────────────────────── */
+.nav-link-active {
+  position: relative;
+}
+.nav-link-active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--amber);
+  border-radius: 1px;
+  animation: scaleIn 200ms ease forwards;
+}
+
+/* ─── Chatbot entrance animation ────────────────────────────────────────────── */
+@keyframes chatBounceIn {
+  0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+  70% { transform: scale(1.08) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.chatbot-entrance {
+  animation: chatBounceIn 500ms cubic-bezier(0.23, 1, 0.32, 1) 1.5s both;
+}
+
+/* ─── Stat counter animation ────────────────────────────────────────────────── */
+.stat-counter {
+  display: inline-block;
+  animation: countUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* ─── Shimmer loading effect ────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(232,168,56,0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ─── Focus visible ring ────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ─── Respect reduced motion ────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
@@ -294,7 +466,12 @@
   .animate-slide-in-right,
   .animate-scale-in,
   .reveal-on-scroll,
-  .stagger-item {
+  .reveal-stagger > *,
+  .stagger-item,
+  .mobile-menu-enter,
+  .step-enter,
+  .chatbot-entrance,
+  .gold-underline::after {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -302,5 +479,8 @@
   }
   .card-hover:hover {
     transform: none;
+  }
+  .gold-underline::after {
+    transform: scaleX(1) !important;
   }
 }

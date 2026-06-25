@@ -58,7 +58,7 @@ export default function Contact() {
           {/* Info cards */}
           <div className="space-y-6">
             {[
-              { icon: Mail, title: "Email Us", desc: "team@oakscholars.com", sub: "We reply within 24 hours" },
+              { icon: Mail, title: "Email Us", desc: "hello@oakscholars.co.uk", sub: "We reply within 24 hours" },
               { icon: MessageSquare, title: "Live Chat", desc: "Available on our site", sub: "Mon–Fri, 9am–6pm" },
               { icon: Clock, title: "Response Time", desc: "Under 24 hours", sub: "Usually much faster" },
             ].map((item) => (
