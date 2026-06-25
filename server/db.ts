@@ -396,3 +396,47 @@ export async function deleteTutorAvailability(id: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(tutorAvailability).where(eq(tutorAvailability.id, id));
 }
+
+// ─── Email/Password Auth ──────────────────────────────────────────────────────
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result[0] ?? undefined;
+}
+
+export async function createUserWithPassword(data: {
+  name: string;
+  email: string;
+  passwordHash: string;
+  role?: "user" | "admin" | "tutor" | "parent";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Generate a unique openId for email/password users (prefix ep_ to distinguish from OAuth)
+  const openId = `ep_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email,
+    passwordHash: data.passwordHash,
+    emailVerified: 1,
+    loginMethod: "email",
+    role: data.role ?? "user",
+    lastSignedIn: new Date(),
+  });
+  const created = await getUserByEmail(data.email);
+  return created!;
+}
+
+export async function updateUserPasswordHash(id: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+}
+
+export async function updateUserLastSignedIn(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, id));
+}

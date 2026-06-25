@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -417,9 +416,14 @@ export default function Account() {
                 Log in to view your orders, manage your profile, and access your billing
                 information.
               </p>
-              <a href={getLoginUrl()}>
+              <a href="/login">
                 <Button style={{ backgroundColor: "#281A39", color: "#fff" }}>
                   Sign In
+                </Button>
+              </a>
+              <a href="/register" className="mt-2">
+                <Button variant="outline" style={{ borderColor: "#281A39", color: "#281A39" }}>
+                  Create Account
                 </Button>
               </a>
             </CardContent>

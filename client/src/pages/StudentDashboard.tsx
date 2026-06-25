@@ -154,7 +154,7 @@ export function StudentDashboard() {
                             </h4>
                             <p className="text-sm text-slate-600 mt-1">
                               <BookOpen className="w-4 h-4 inline mr-1" />
-                              {rel.subjects} • {rel.level}
+                              {rel.subjects} &bull; {rel.level}
                             </p>
                             <p className="text-xs text-slate-500 mt-2">
                               Email: {rel.tutor?.email}
@@ -348,3 +348,4 @@ export function StudentDashboard() {
     </div>
   );
 }
+

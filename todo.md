@@ -75,3 +75,16 @@
 - [ ] Update Support & Guidance page service card buttons to link to their specific forms
 - [ ] Remove "Group 1" and "Group 2" labels from Support & Guidance page
 - [ ] Register new routes in App.tsx
+
+## Email/Password Auth & Admin Email Fix
+- [x] Extend users table: add passwordHash, emailVerified columns
+- [x] Apply DB migration for new auth columns
+- [x] Build server auth routes: register, login, logout, me (bcrypt + JWT cookie)
+- [x] Add admin bootstrap: team@oakscholars.com auto-promoted to admin on first login
+- [x] Build /login page (email + password form)
+- [x] Build /register page (name + email + password form)
+- [x] Update Navbar: show Login/Register for guests, name + dropdown for signed-in users
+- [x] Update Account page to work with new auth
+- [x] Update all email notification targets to team@oakscholars.com
+- [x] Fix StudentDashboard Unicode bullet parse error
+- [x] TypeScript check — zero errors

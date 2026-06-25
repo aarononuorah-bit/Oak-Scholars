@@ -41,7 +41,7 @@ async function getTransporter(): Promise<Transporter> {
 }
 
 const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <team@oakscholars.com>';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "team@oakscholars.com";
+const ADMIN_EMAIL = "team@oakscholars.com";
 
 function baseTemplate(content: string): string {
   return `<!DOCTYPE html>

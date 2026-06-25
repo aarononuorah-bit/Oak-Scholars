@@ -4,7 +4,6 @@ import { Menu, X, User, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import {
   DropdownMenu,
@@ -153,19 +152,33 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <a href={getLoginUrl()}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={scrolled
-                    ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent gap-2"
-                    : "border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
-                  }
-                >
-                  <User size={15} />
-                  Login
-                </Button>
-              </a>
+              <>
+                <Link href="/login">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={scrolled
+                      ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent gap-2"
+                      : "border-white/30 text-white hover:bg-white/10 bg-transparent gap-2"
+                    }
+                  >
+                    <User size={15} />
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={scrolled
+                      ? "border-[#281A39] text-[#281A39] hover:bg-[#281A39] hover:text-white bg-transparent gap-2"
+                      : "border-amber-300 text-amber-200 hover:bg-white/10 bg-transparent gap-2"
+                    }
+                  >
+                    Register
+                  </Button>
+                </Link>
+              </>
             )}
             <Link href="/booking">
               <Button
@@ -266,18 +279,32 @@ export default function Navbar() {
                   </Button>
                 </>
               ) : (
-                <a href={getLoginUrl()} className="w-full">
-                  <Button
-                    variant="outline"
-                    className={`w-full ${
-                      scrolled
-                        ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
-                        : "border-white/30 text-white bg-transparent hover:bg-white/10"
-                    }`}
-                  >
-                    Login
-                  </Button>
-                </a>
+                <>
+                  <Link href="/login" className="w-full">
+                    <Button
+                      variant="outline"
+                      className={`w-full ${
+                        scrolled
+                          ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
+                          : "border-white/30 text-white bg-transparent hover:bg-white/10"
+                      }`}
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register" className="w-full">
+                    <Button
+                      variant="outline"
+                      className={`w-full ${
+                        scrolled
+                          ? "border-[#281A39] text-[#281A39] bg-transparent hover:bg-[#281A39] hover:text-white"
+                          : "border-amber-300 text-amber-200 bg-transparent hover:bg-white/10"
+                      }`}
+                    >
+                      Register
+                    </Button>
+                  </Link>
+                </>
               )}
               <Link href="/booking">
                 <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>

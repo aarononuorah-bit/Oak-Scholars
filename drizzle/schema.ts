@@ -11,6 +11,8 @@ export const users = mysqlTable("users", {
   parentOf: int("parentOf"), // if role is 'parent', this is the student user ID
   approvedAsTutor: int("approvedAsTutor").default(0).notNull(), // 1 if admin approved as tutor
   stripeCustomerId: varchar("stripeCustomerId", { length: 100 }),
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  emailVerified: int("emailVerified").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
