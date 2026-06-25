@@ -148,6 +148,30 @@ export default function Navbar() {
                       <DropdownMenuSeparator />
                     </>
                   )}
+                  {user?.role === "tutor" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/tutor-dashboard">My Dashboard</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  {(user?.role === "user") && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/student-dashboard">My Dashboard</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  {user?.role === "parent" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/parent-dashboard">My Dashboard</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/account">My Account</Link>
                   </DropdownMenuItem>
