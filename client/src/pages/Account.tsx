@@ -307,9 +307,9 @@ function BillingTab() {
 function DashboardTab() {
   const { user } = useAuth();
   
-  const { data: referralData } = trpc.referral.getStats.useQuery();
-  const { data: sessions = [], isLoading: sessionsLoading } = trpc.session.studentSessions.useQuery();
-  const { data: feedback = [], isLoading: feedbackLoading } = trpc.feedback.received.useQuery();
+  const { data: referralData } = trpc.referral.getStats.useQuery(undefined, { enabled: user?.role === "user" || user?.role === "parent" });
+  const { data: sessions = [], isLoading: sessionsLoading } = trpc.session.studentSessions.useQuery(undefined, { enabled: user?.role === "user" });
+  const { data: feedback = [], isLoading: feedbackLoading } = trpc.feedback.received.useQuery(undefined, { enabled: user?.role === "user" });
 
   const now = new Date();
   const upcomingSessions = sessions.filter((s) => new Date(s.scheduledAt) > now);
@@ -607,12 +607,14 @@ export default function Account() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="dashboard">
+          <Tabs defaultValue={user?.role === "user" ? "dashboard" : "profile"}>
             <TabsList className="mb-6">
-              <TabsTrigger value="dashboard" className="gap-2">
-                <TrendingUp size={14} />
-                My Progress
-              </TabsTrigger>
+              {user?.role === "user" && (
+                <TabsTrigger value="dashboard" className="gap-2">
+                  <TrendingUp size={14} />
+                  My Progress
+                </TabsTrigger>
+              )}
               <TabsTrigger value="profile" className="gap-2">
                 <User size={14} />
                 Profile
@@ -627,9 +629,11 @@ export default function Account() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="dashboard">
-              <DashboardTab />
-            </TabsContent>
+            {user?.role === "user" && (
+              <TabsContent value="dashboard">
+                <DashboardTab />
+              </TabsContent>
+            )}
 
             <TabsContent value="profile">
               <ProfileTab />
