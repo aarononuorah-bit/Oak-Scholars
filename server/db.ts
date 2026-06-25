@@ -499,3 +499,43 @@ export async function updateUserLastSignedIn(id: number) {
   if (!db) return;
   await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, id));
 }
+
+export async function upsertGoogleUser(data: {
+  googleId: string;
+  name: string;
+  email: string;
+  picture?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const ADMIN_EMAIL = "team@oakscholars.com";
+  // Check if a user with this email already exists (could be email/password user)
+  const existing = await getUserByEmail(data.email);
+  if (existing) {
+    // Update last signed in and link Google openId if not already set
+    await db.update(users)
+      .set({
+        lastSignedIn: new Date(),
+        loginMethod: existing.loginMethod ?? "google",
+        // If openId starts with ep_ it was email/password — update to google openId
+        openId: existing.openId.startsWith("ep_") ? `google_${data.googleId}` : existing.openId,
+      })
+      .where(eq(users.id, existing.id));
+    const updated = await getUserByEmail(data.email);
+    return updated!;
+  }
+  // New user — create with google openId
+  const openId = `google_${data.googleId}`;
+  const role = data.email.toLowerCase() === ADMIN_EMAIL ? "admin" : "user";
+  await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email,
+    loginMethod: "google",
+    emailVerified: 1,
+    role,
+    lastSignedIn: new Date(),
+  });
+  const created = await getUserByEmail(data.email);
+  return created!;
+}

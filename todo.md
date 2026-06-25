@@ -88,3 +88,11 @@
 - [x] Update all email notification targets to team@oakscholars.com
 - [x] Fix StudentDashboard Unicode bullet parse error
 - [x] TypeScript check — zero errors
+
+## Direct Google OAuth (Independent of Manus)
+- [x] Create Google OAuth app in Google Cloud Console and get CLIENT_ID + CLIENT_SECRET
+- [x] Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET as project secrets
+- [x] Build server-side /api/auth/google and /api/auth/google/callback routes
+- [x] Handle new user creation and existing user login via Google profile
+- [x] Add Google sign-in button back to Login.tsx and Register.tsx
+- [x] Google OAuth secrets test — 3/3 passing
