@@ -44,8 +44,11 @@ export default function Navbar() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-navy/95 backdrop-blur-md shadow-lg" : "bg-transparent"
+        scrolled
+          ? "shadow-lg"
+          : ""
       }`}
+      style={{ backgroundColor: "#281A39" }}
     >
       <div className="container">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -65,7 +68,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => (
               <a
                 key={link.href}

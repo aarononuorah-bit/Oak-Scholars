@@ -179,7 +179,7 @@ export default function SupportGuidance() {
         </div>
       </section>
 
-      {/* ─── Group 1: Academic Support ────────────────────────────────────────── */}
+      {/* ─── Academic Support ────────────────────────────────────────── */}
       <section id="academic" className="py-24 bg-white">
         <div className="container" ref={academicRef}>
           <div className="mb-14">
@@ -187,7 +187,7 @@ export default function SupportGuidance() {
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-amber" style={{ backgroundColor: "rgba(232,168,56,0.1)" }}>
                 <Award size={20} />
               </div>
-              <p className="text-amber text-sm font-semibold tracking-widest uppercase">Group 1</p>
+              <p className="text-amber text-sm font-semibold tracking-widest uppercase">Academic Support</p>
             </div>
             <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep mb-4">
               Academic <span className="gold-underline">Support</span>
@@ -224,7 +224,7 @@ export default function SupportGuidance() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/contact">
+                <Link href="/academic-support">
                   <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
                     Book a Session <ChevronRight size={16} className="ml-1" />
                   </Button>
@@ -235,7 +235,7 @@ export default function SupportGuidance() {
         </div>
       </section>
 
-      {/* ─── Group 2: Wellbeing Support ───────────────────────────────────────── */}
+      {/* ─── Wellbeing Support ───────────────────────────────────────── */}
       <section id="wellbeing" className="py-24 bg-surface">
         <div className="container" ref={wellbeingRef}>
           <div className="mb-14">
@@ -243,7 +243,7 @@ export default function SupportGuidance() {
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-amber" style={{ backgroundColor: "rgba(232,168,56,0.1)" }}>
                 <Heart size={20} />
               </div>
-              <p className="text-amber text-sm font-semibold tracking-widest uppercase">Group 2</p>
+              <p className="text-amber text-sm font-semibold tracking-widest uppercase">Wellbeing Support</p>
             </div>
             <h2 className="font-serif text-4xl md:text-5xl font-bold text-navy-deep mb-4">
               Wellbeing <span className="gold-underline">Support</span>
@@ -280,7 +280,7 @@ export default function SupportGuidance() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/contact">
+                <Link href="/wellbeing-support">
                   <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#281A39", color: "white" }}>
                     Get in Touch <ChevronRight size={16} className="ml-1" />
                   </Button>
@@ -296,7 +296,7 @@ export default function SupportGuidance() {
             <p className="text-muted-brand text-sm leading-relaxed mb-4">
               All wellbeing sessions are completely confidential. Our mentors are trained to listen without judgement and help you find a way forward — whatever you're going through.
             </p>
-            <Link href="/contact">
+            <Link href="/wellbeing-support">
               <Button className="btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
                 Reach Out Today
               </Button>

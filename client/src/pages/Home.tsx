@@ -224,9 +224,10 @@ function ServicesSection() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((s) => (
-            <div
+            <Link
               key={s.title}
-              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
+              href={s.link}
+              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline"
             >
               <div
                 className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 text-amber group-hover:scale-110 transition-transform duration-300"
@@ -236,10 +237,10 @@ function ServicesSection() {
               </div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{s.title}</h3>
               <p className="text-muted-brand text-sm leading-relaxed mb-6 flex-1">{s.desc}</p>
-              <Link href={s.link} className="text-amber font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all mt-auto">
+              <span className="text-amber font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
                 {s.cta} <ChevronRight size={16} />
-              </Link>
-            </div>
+              </span>
+            </Link>
           ))}
         </div>
       </div>

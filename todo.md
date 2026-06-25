@@ -39,8 +39,8 @@
 - [x] TypeScript check — zero errors
 
 ## Phase 4: GitHub
-- [ ] Save checkpoint
-- [ ] Connect to GitHub and push code (deferred by user)
+- [x] Save checkpoint
+- [x] Connect to GitHub and push code — pushed to aarononuorah-bit/Oak-Scholars
 
 ## Pending Actions
 - [ ] Register Stripe webhook at dashboard.stripe.com/webhooks → /api/stripe/webhook
@@ -65,3 +65,13 @@
 - [x] Create /support-guidance page split into two groups: (1) Academic Support: personal statement help, EPQ support, CV writing, interview prep; (2) Wellbeing: support for students with mental health concerns, bullying, general wellbeing
 - [x] Update all service card CTAs to link to their correct dedicated pages (not all to booking)
 - [x] Register new routes in App.tsx
+
+## UI/UX Fixes (Round 4)
+- [ ] Space out navbar links so they are less clumped
+- [ ] Fix navbar background on scroll — use solid colour so text is always readable (not transparent over white)
+- [ ] Make entire service card clickable (not just the "Find out more" link)
+- [ ] Build dedicated Academic Support enquiry form at /academic-support
+- [ ] Build dedicated Wellbeing Support enquiry form at /wellbeing-support
+- [ ] Update Support & Guidance page service card buttons to link to their specific forms
+- [ ] Remove "Group 1" and "Group 2" labels from Support & Guidance page
+- [ ] Register new routes in App.tsx
