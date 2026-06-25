@@ -73,7 +73,7 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+                className={`text-sm font-medium whitespace-nowrap transition-smooth ${
                   scrolled
                     ? "text-gray-700 hover:text-[#281A39]"
                     : "text-white/80 hover:text-amber"

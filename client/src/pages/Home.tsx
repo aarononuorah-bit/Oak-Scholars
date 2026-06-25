@@ -164,8 +164,8 @@ function HowItWorksSection() {
           {steps.map((step, i) => (
             <div
               key={step.num}
-              className="relative"
-              style={{ animationDelay: `${i * 80}ms` }}
+              className="relative animate-fade-in-up opacity-0"
+              style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="section-number mb-2">{step.num}</div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{step.title}</h3>
@@ -223,11 +223,12 @@ function ServicesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((s) => (
+          {services.map((s, i) => (
             <Link
               key={s.title}
               href={s.link}
-              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline"
+              className="group rounded-2xl border border-gray-100 p-8 hover:border-amber/30 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col no-underline animate-fade-in-up opacity-0 hover-lift"
+              style={{ animationDelay: `${i * 80}ms` }}
             >
               <div
                 className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 text-amber group-hover:scale-110 transition-transform duration-300"
@@ -362,14 +363,15 @@ function PricingSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan) => (
+          {plans.map((plan, i) => (
             <div
               key={plan.name}
-              className={`rounded-2xl p-6 flex flex-col transition-all duration-300 hover:shadow-xl ${
+              className={`rounded-2xl p-6 flex flex-col transition-all duration-300 hover:shadow-xl animate-fade-in-up opacity-0 hover-lift ${
                 plan.highlight
                   ? "border-2 border-amber shadow-lg relative"
                   : "border border-gray-100"
               }`}
+              style={{ animationDelay: `${i * 80}ms` }}
             >
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -406,7 +408,7 @@ function PricingSection() {
               </ul>
               <Link href="/booking">
                 <Button
-                  className="w-full btn-press"
+                  className="w-full btn-press transition-smooth hover:scale-105"
                   style={plan.highlight ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
                   variant={plan.highlight ? "default" : "outline"}
                 >
@@ -456,7 +458,8 @@ function TestimonialsSection() {
           {testimonials.map((t, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300 animate-fade-in-up opacity-0 hover-lift"
+              style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: t.stars }).map((_, j) => (
