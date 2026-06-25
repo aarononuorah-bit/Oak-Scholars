@@ -9,6 +9,7 @@ import nodemailer, { Transporter } from "nodemailer";
 
 const BRAND_PURPLE = "#281A39";
 const BRAND_AMBER = "#E8A838";
+const BRAND_SURFACE = "#F9F7F2";
 
 let _transporter: Transporter | null = null;
 
@@ -40,10 +41,10 @@ async function getTransporter(): Promise<Transporter> {
   return _transporter;
 }
 
-const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <team@oakscholars.com>';
-const ADMIN_EMAIL = "team@oakscholars.com";
+const FROM_ADDRESS = process.env.SMTP_FROM || '"Oak Scholars" <hello@oakscholars.co.uk>';
+const ADMIN_EMAIL = "hello@oakscholars.co.uk";
 
-function baseTemplate(content: string): string {
+function baseTemplate(content: string, preheader?: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,24 +52,51 @@ function baseTemplate(content: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oak Scholars</title>
 </head>
-<body style="margin:0;padding:0;background:#f5f4f0;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f0;padding:40px 0;">
+<body style="margin:0;padding:0;background:${BRAND_SURFACE};font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  ${preheader ? `<span style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">${preheader}</span>` : ""}
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND_SURFACE};padding:40px 0;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(40,26,57,0.05);">
+          <!-- Header -->
           <tr>
-            <td style="background:${BRAND_PURPLE};padding:32px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.02em;">
-                🌳 <span style="color:${BRAND_AMBER};">Oak</span> Scholars
-              </h1>
+            <td style="background:${BRAND_PURPLE};padding:40px;text-align:center;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <img src="https://framerusercontent.com/images/V6mG3N1n6Kz8Z2z5H8f0y3w.png" alt="Oak Scholars" width="160" style="display:block;margin-bottom:12px;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <h1 style="margin:0;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">
+                      <span style="color:${BRAND_AMBER};">Oak</span> Scholars
+                    </h1>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
-          <tr><td style="padding:40px;">${content}</td></tr>
+          <!-- Content -->
           <tr>
-            <td style="background:#f9f8f5;padding:24px 40px;text-align:center;border-top:1px solid #eee;">
-              <p style="margin:0;color:#999;font-size:12px;line-height:1.6;">
-                Oak Scholars · Online Tutoring · UK-wide<br/>
-                <a href="https://oakscholars.com" style="color:${BRAND_AMBER};text-decoration:none;">oakscholars.com</a>
+            <td style="padding:48px 40px;">
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background:#fcfbf9;padding:40px;text-align:center;border-top:1px solid rgba(40,26,57,0.05);">
+              <p style="margin:0 0 16px;color:${BRAND_PURPLE};font-size:14px;font-weight:600;">
+                Empowering the next generation of learners.
+              </p>
+              <div style="margin-bottom:24px;">
+                <a href="https://instagram.com/oakscholars" style="display:inline-block;margin:0 8px;color:${BRAND_PURPLE};text-decoration:none;font-size:12px;font-weight:600;">Instagram</a>
+                <a href="https://tiktok.com/@oakscholars" style="display:inline-block;margin:0 8px;color:${BRAND_PURPLE};text-decoration:none;font-size:12px;font-weight:600;">TikTok</a>
+                <a href="https://linkedin.com/company/oakscholars" style="display:inline-block;margin:0 8px;color:${BRAND_PURPLE};text-decoration:none;font-size:12px;font-weight:600;">LinkedIn</a>
+              </div>
+              <p style="margin:0;color:#999;font-size:11px;line-height:1.6;letter-spacing:0.02em;">
+                &copy; ${new Date().getFullYear()} Oak Scholars Ltd. Online Tutoring Nationwide.<br/>
+                <a href="https://oakscholars.co.uk" style="color:${BRAND_AMBER};text-decoration:none;font-weight:600;">oakscholars.co.uk</a>
               </p>
             </td>
           </tr>
@@ -86,22 +114,24 @@ export async function sendAdminBookingAlert(data: {
 }) {
   const transporter = await getTransporter();
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">New Booking Request</h2>
-    <p style="color:#666;margin:0 0 24px;font-size:14px;">A new session booking has been submitted.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;width:140px;">Student</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;font-weight:600;">${data.firstName} ${data.lastName}</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;"><a href="mailto:${data.email}" style="color:${BRAND_AMBER};">${data.email}</a></td></tr>
-      ${data.phone ? `<tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Phone</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.phone}</td></tr>` : ""}
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Subject</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.subject}</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Level</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.level}</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Session Type</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.sessionType}</td></tr>
-      <tr><td style="padding:10px 0;${data.message ? "border-bottom:1px solid #f0f0f0;" : ""}color:#999;font-size:13px;">Preferred Time</td><td style="padding:10px 0;${data.message ? "border-bottom:1px solid #f0f0f0;" : ""}color:#281A39;">${data.preferredTime}</td></tr>
-      ${data.message ? `<tr><td style="padding:10px 0;color:#999;font-size:13px;vertical-align:top;">Note</td><td style="padding:10px 0;color:#281A39;">${data.message}</td></tr>` : ""}
-    </table>
-    <div style="margin-top:28px;text-align:center;">
-      <a href="https://oakscholars.com/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:600;font-size:14px;">View in Dashboard →</a>
+    <h2 style="color:${BRAND_PURPLE};font-size:24px;margin:0 0 12px;font-family:serif;">New Booking Request</h2>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">A new student has requested a tutoring session.</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Student</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.firstName} ${data.lastName}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);"><a href="mailto:${data.email}" style="color:${BRAND_AMBER};font-weight:600;text-decoration:none;">${data.email}</a></td></tr>
+        ${data.phone ? `<tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Phone</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.phone}</td></tr>` : ""}
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.subject} (${data.level})</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Package</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.sessionType}</td></tr>
+        <tr><td style="padding:12px 0;${data.message ? "border-bottom:1px solid rgba(40,26,57,0.05);" : ""}color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Preferred Time</td><td style="padding:12px 0;${data.message ? "border-bottom:1px solid rgba(40,26,57,0.05);" : ""}color:${BRAND_PURPLE};font-weight:600;">${data.preferredTime}</td></tr>
+        ${data.message ? `<tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;vertical-align:top;">Message</td><td style="padding:12px 0;color:${BRAND_PURPLE};line-height:1.6;">${data.message}</td></tr>` : ""}
+      </table>
     </div>
-  `);
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;box-shadow:0 4px 12px rgba(40,26,57,0.15);">Manage Booking →</a>
+    </div>
+  `, `New booking from ${data.firstName} ${data.lastName}`);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: ADMIN_EMAIL,
     subject: `📚 New Booking — ${data.firstName} ${data.lastName} (${data.subject})`, html,
@@ -114,21 +144,24 @@ export async function sendAdminContactAlert(data: {
 }) {
   const transporter = await getTransporter();
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">New Contact Message</h2>
-    <p style="color:#666;margin:0 0 24px;font-size:14px;">Someone has sent a message through the contact form.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;width:100px;">From</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;font-weight:600;">${data.name}</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;"><a href="mailto:${data.email}" style="color:${BRAND_AMBER};">${data.email}</a></td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Subject</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.subject}</td></tr>
-    </table>
-    <div style="margin-top:20px;background:#f9f8f5;border-left:3px solid ${BRAND_AMBER};padding:16px 20px;border-radius:0 6px 6px 0;">
-      <p style="margin:0;color:#444;font-size:14px;line-height:1.7;">${data.message.replace(/\n/g, "<br/>")}</p>
+    <h2 style="color:${BRAND_PURPLE};font-size:24px;margin:0 0 12px;font-family:serif;">New Inquiry</h2>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">You have a new message from the contact form.</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:100px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">From</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.name}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);"><a href="mailto:${data.email}" style="color:${BRAND_AMBER};font-weight:600;text-decoration:none;">${data.email}</a></td></tr>
+        <tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:600;">${data.subject}</td></tr>
+      </table>
+      <div style="margin-top:20px;background:#ffffff;border:1px solid rgba(40,26,57,0.05);padding:20px;border-radius:8px;">
+        <p style="margin:0;color:${BRAND_PURPLE};font-size:15px;line-height:1.7;white-space:pre-wrap;">${data.message}</p>
+      </div>
     </div>
-    <div style="margin-top:24px;text-align:center;">
-      <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject)}" style="display:inline-block;background:${BRAND_AMBER};color:${BRAND_PURPLE};text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:700;font-size:14px;margin-right:12px;">Reply by Email</a>
-      <a href="https://oakscholars.com/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:600;font-size:14px;">View Dashboard</a>
+    <div style="text-align:center;">
+      <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject)}" style="display:inline-block;background:${BRAND_AMBER};color:${BRAND_PURPLE};text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:800;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;margin-right:12px;">Reply Now</a>
+      <a href="https://oakscholars.co.uk/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Admin View</a>
     </div>
-  `);
+  `, `Message from ${data.name}`);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: ADMIN_EMAIL,
     subject: `💬 New Message — ${data.name}: ${data.subject}`, html,
@@ -142,19 +175,21 @@ export async function sendAdminTutorAlert(data: {
 }) {
   const transporter = await getTransporter();
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">New Tutor Application</h2>
-    <p style="color:#666;margin:0 0 24px;font-size:14px;">A new tutor has applied to join the Oak Scholars team.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;width:140px;">Applicant</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;font-weight:600;">${data.firstName} ${data.lastName}</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;"><a href="mailto:${data.email}" style="color:${BRAND_AMBER};">${data.email}</a></td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">University</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.university}</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#999;font-size:13px;">Degree</td><td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#281A39;">${data.degreeSubject} (Year ${data.yearOfStudy})</td></tr>
-      <tr><td style="padding:10px 0;color:#999;font-size:13px;">Subjects</td><td style="padding:10px 0;color:#281A39;">${data.subjects}</td></tr>
-    </table>
-    <div style="margin-top:28px;text-align:center;">
-      <a href="https://oakscholars.com/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:600;font-size:14px;">Review Application →</a>
+    <h2 style="color:${BRAND_PURPLE};font-size:24px;margin:0 0 12px;font-family:serif;">Tutor Application</h2>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">A new undergraduate has applied to join the Oak Scholars team.</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Applicant</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.firstName} ${data.lastName}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">University</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.university}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Degree</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.degreeSubject} (${data.yearOfStudy})</td></tr>
+        <tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;vertical-align:top;">Subjects</td><td style="padding:12px 0;color:${BRAND_PURPLE};line-height:1.6;">${data.subjects}</td></tr>
+      </table>
     </div>
-  `);
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Review Application →</a>
+    </div>
+  `, `New application from ${data.firstName}`);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: ADMIN_EMAIL,
     subject: `🎓 New Tutor Application — ${data.firstName} ${data.lastName} (${data.university})`, html,
@@ -168,20 +203,34 @@ export async function sendBookingConfirmation(data: {
 }) {
   const transporter = await getTransporter();
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Booking Request Received ✓</h2>
-    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.firstName}</strong>, thank you for booking with Oak Scholars! We've received your request and will be in touch within 24 hours to confirm your tutor and session time.</p>
-    <div style="background:#f9f8f5;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-      <p style="margin:0 0 12px;color:#999;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Your Booking Summary</p>
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Booking Request Received ✓</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.firstName}</strong>, thank you for choosing Oak Scholars!</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">We've received your request and our team is currently matching you with the best-suited undergraduate scholar. We'll be in touch within <strong>24 hours</strong> to confirm your tutor and schedule your first session.</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:16px;padding:32px;margin-bottom:32px;border:1px solid rgba(40,26,57,0.03);">
+      <p style="margin:0 0 20px;color:#999;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Booking Summary</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-        <tr><td style="padding:6px 0;color:#999;font-size:13px;width:130px;">Subject</td><td style="padding:6px 0;color:#281A39;font-weight:600;">${data.subject}</td></tr>
-        <tr><td style="padding:6px 0;color:#999;font-size:13px;">Level</td><td style="padding:6px 0;color:#281A39;font-weight:600;">${data.level}</td></tr>
-        <tr><td style="padding:6px 0;color:#999;font-size:13px;">Session Type</td><td style="padding:6px 0;color:#281A39;font-weight:600;">${data.sessionType}</td></tr>
-        <tr><td style="padding:6px 0;color:#999;font-size:13px;">Preferred Time</td><td style="padding:6px 0;color:#281A39;font-weight:600;">${data.preferredTime}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;width:130px;">Subject</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.subject}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Level</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.level}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Session Type</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.sessionType}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Preferred Time</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.preferredTime}</td></tr>
       </table>
     </div>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 24px;">Your first session is <strong style="color:${BRAND_AMBER};">50% off</strong>. We'll send you payment details when we confirm your tutor match.</p>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">Any questions? Reply to this email or contact us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};">team@oakscholars.com</a></p>
-  `);
+
+    <div style="background:rgba(232,168,56,0.1);border-radius:12px;padding:20px;margin-bottom:32px;text-align:center;">
+      <p style="margin:0;color:${BRAND_PURPLE};font-size:14px;font-weight:600;line-height:1.5;">
+        You've secured your <span style="color:${BRAND_AMBER};">50% discount</span> for this trial session. Our scholars are excited to help you excel!
+      </p>
+    </div>
+
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="https://oakscholars.co.uk/dashboard" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">View My Dashboard</a>
+    </div>
+
+    <p style="color:#999;font-size:13px;line-height:1.7;margin:0;text-align:center;">
+      Any questions? Just reply to this email or reach us at <a href="mailto:hello@oakscholars.co.uk" style="color:${BRAND_AMBER};text-decoration:none;font-weight:600;">hello@oakscholars.co.uk</a>
+    </p>
+  `, `We've received your booking, ${data.firstName}!`);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: data.email,
     subject: `Your Oak Scholars booking is confirmed 🌳`, html,
@@ -192,10 +241,15 @@ export async function sendBookingConfirmation(data: {
 export async function sendContactConfirmation(data: { name: string; email: string; subject: string }) {
   const transporter = await getTransporter();
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Message Received ✓</h2>
-    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.name}</strong>, thanks for getting in touch! We've received your message about <em>"${data.subject}"</em> and will get back to you within 24 hours.</p>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">In the meantime, feel free to <a href="https://oakscholars.com/booking" style="color:${BRAND_AMBER};font-weight:600;">book a trial session</a> — your first lesson is 50% off.</p>
-  `);
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Message Received ✓</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.name}</strong>, thanks for reaching out!</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">We've received your inquiry regarding <em>"${data.subject}"</em>. One of our team members will review your message and get back to you personally within <strong>24 hours</strong>.</p>
+    
+    <div style="border:2px dashed rgba(232,168,56,0.3);border-radius:16px;padding:32px;text-align:center;">
+      <p style="margin:0 0 20px;color:${BRAND_PURPLE};font-size:16px;font-weight:600;">Ready to get started?</p>
+      <a href="https://oakscholars.co.uk/booking" style="display:inline-block;background:${BRAND_AMBER};color:${BRAND_PURPLE};text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:800;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Book a Trial Session (50% Off)</a>
+    </div>
+  `, `We've received your message — Oak Scholars`);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: data.email,
     subject: `We've received your message — Oak Scholars`, html,
@@ -208,18 +262,22 @@ export async function sendTutorApplicationConfirmation(data: {
 }) {
   const transporter = await getTransporter();
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Application Received ✓</h2>
-    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.firstName}</strong>, thank you for applying to become an Oak Scholars tutor! We've received your application from <strong>${data.university}</strong> and our team will review it within 3–5 working days.</p>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 16px;">We'll be in touch about next steps, which may include a short interview and a trial session observation.</p>
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0;">Questions? Email us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};">team@oakscholars.com</a></p>
-  `);
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Application Received ✓</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.firstName}</strong>, thank you for applying!</p>
+    <p style="color:#666;margin:0 0 24px;font-size:16px;line-height:1.6;">We've received your application to join the Oak Scholars team as an undergraduate tutor from <strong>${data.university}</strong>.</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">Our recruitment team will review your profile and experience over the next <strong>3–5 working days</strong>. If your background is a good match, we'll reach out to schedule a short introductory interview.</p>
+    
+    <div style="background:${BRAND_PURPLE};border-radius:16px;padding:32px;color:#ffffff;text-align:center;">
+      <p style="margin:0 0 12px;font-size:14px;color:rgba(255,255,255,0.7);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;">Next Steps</p>
+      <p style="margin:0;font-size:16px;line-height:1.6;">Profile Review &rarr; Short Interview &rarr; Trial Observation &rarr; Onboarding</p>
+    </div>
+  `, `Tutor application received — Oak Scholars`);
   const info = await transporter.sendMail({
     from: FROM_ADDRESS, to: data.email,
     subject: `Your Oak Scholars tutor application has been received 🌳`, html,
   });
   console.log("[Email] Tutor confirmation sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }
-
 
 export async function sendSessionReminder(data: {
   studentName: string;
@@ -241,22 +299,27 @@ export async function sendSessionReminder(data: {
   });
 
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Upcoming Session Reminder 🎓</h2>
-    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.studentName}</strong>, this is a friendly reminder about your upcoming tutoring session!</p>
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Upcoming Session 🎓</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.studentName}</strong>, your lesson is coming up!</p>
     
-    <div style="background-color:#f5f5f5;border-left:4px solid ${BRAND_AMBER};padding:16px;margin:0 0 20px;border-radius:4px;">
-      <p style="color:#333;margin:0 0 8px;font-weight:600;">Session Details:</p>
-      <p style="color:#555;margin:0 0 4px;"><strong>Tutor:</strong> ${data.tutorName}</p>
-      <p style="color:#555;margin:0 0 4px;"><strong>Subject:</strong> ${data.subject}</p>
-      <p style="color:#555;margin:0;"><strong>Date & Time:</strong> ${sessionTime}</p>
+    <div style="background:${BRAND_SURFACE};border-radius:16px;padding:32px;margin-bottom:32px;border:1px solid rgba(40,26,57,0.03);">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;width:130px;">Tutor</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.tutorName}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Subject</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.subject}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Date & Time</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${sessionTime}</td></tr>
+      </table>
     </div>
 
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 16px;">Make sure you're in a quiet space with a stable internet connection. Have any questions or materials ready to discuss!</p>
-    
-    ${data.sessionLink ? `<p style="margin:0 0 20px;"><a href="${data.sessionLink}" style="display:inline-block;background-color:${BRAND_AMBER};color:${BRAND_PURPLE};padding:12px 24px;text-decoration:none;border-radius:4px;font-weight:600;">Join Session</a></p>` : ''}
+    ${data.sessionLink ? `
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="${data.sessionLink}" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Join Session Now</a>
+    </div>
+    ` : ''}
 
-    <p style="color:#999;font-size:13px;line-height:1.6;margin:0;">Need to reschedule or cancel? You can do so up to 7 days before your session through your account dashboard.</p>
-  `);
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/dashboard" style="color:${BRAND_PURPLE};text-decoration:underline;font-size:14px;font-weight:600;">Manage Booking / Reschedule</a>
+    </div>
+  `, `Reminder: Your lesson with ${data.tutorName} is coming up!`);
 
   const info = await transporter.sendMail({
     from: FROM_ADDRESS,
@@ -287,19 +350,27 @@ export async function sendSessionCancellationNotice(data: {
   });
 
   const html = baseTemplate(`
-    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Session Cancelled</h2>
-    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.recipientName}</strong>, your tutoring session with <strong>${data.otherPartyName}</strong> has been cancelled.</p>
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Session Cancelled</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.recipientName}</strong>, your lesson has been cancelled.</p>
     
-    <div style="background-color:#f5f5f5;border-left:4px solid #e74c3c;padding:16px;margin:0 0 20px;border-radius:4px;">
-      <p style="color:#333;margin:0 0 8px;font-weight:600;">Cancelled Session:</p>
-      <p style="color:#555;margin:0 0 4px;"><strong>Subject:</strong> ${data.subject}</p>
-      <p style="color:#555;margin:0;"><strong>Date & Time:</strong> ${sessionTime}</p>
-      ${data.reason ? `<p style="color:#555;margin:8px 0 0;"><strong>Reason:</strong> ${data.reason}</p>` : ''}
+    <div style="background:#fff5f5;border:1px solid #feb2b2;border-radius:16px;padding:32px;margin-bottom:32px;">
+      <p style="margin:0 0 16px;color:#c53030;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Cancelled Details</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;width:130px;">With</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.otherPartyName}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Subject</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.subject}</td></tr>
+        <tr><td style="padding:8px 0;color:#777;font-size:14px;">Was For</td><td style="padding:8px 0;color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${sessionTime}</td></tr>
+      </table>
+      ${data.reason ? `
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid #feb2b2;">
+        <p style="margin:0;color:#777;font-size:14px;"><strong>Reason:</strong> ${data.reason}</p>
+      </div>
+      ` : ''}
     </div>
 
-    <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 16px;">If you'd like to reschedule or have questions, please contact us or reach out to your tutor directly.</p>
-    <p style="color:#999;font-size:13px;line-height:1.6;margin:0;">Questions? Email us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};">team@oakscholars.com</a></p>
-  `);
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/dashboard" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Reschedule Lesson</a>
+    </div>
+  `, `Session Cancelled: ${data.subject}`);
 
   const info = await transporter.sendMail({
     from: FROM_ADDRESS,
@@ -308,4 +379,38 @@ export async function sendSessionCancellationNotice(data: {
     html,
   });
   console.log("[Email] Cancellation notice sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}
+
+export async function sendLessonFollowUp(data: {
+  studentName: string;
+  studentEmail: string;
+  tutorName: string;
+  subject: string;
+  sessionId: number;
+}) {
+  const transporter = await getTransporter();
+  const feedbackLink = `https://oakscholars.co.uk/dashboard?tab=feedback&sessionId=${data.sessionId}`;
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">How was your lesson? ✨</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.studentName}</strong>, thank you for completing your lesson with <strong>${data.tutorName}</strong>!</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">We hope you found the session valuable. Your feedback helps our scholars improve and ensures we provide the best possible support for your academic journey.</p>
+    
+    <div style="background:rgba(232,168,56,0.05);border:2px solid ${BRAND_AMBER};border-radius:16px;padding:32px;text-align:center;margin-bottom:32px;">
+      <p style="margin:0 0 24px;color:${BRAND_PURPLE};font-size:16px;font-weight:700;">Please take 30 seconds to let us know how it went:</p>
+      <a href="${feedbackLink}" style="display:inline-block;background:${BRAND_AMBER};color:${BRAND_PURPLE};text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:800;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Share My Feedback</a>
+    </div>
+
+    <p style="color:#999;font-size:14px;line-height:1.7;margin:0;text-align:center;">
+      Need to book your next session? <a href="https://oakscholars.co.uk/booking" style="color:${BRAND_AMBER};font-weight:600;">Click here to schedule &rarr;</a>
+    </p>
+  `, `How was your lesson with ${data.tutorName}?`);
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.studentEmail,
+    subject: `Thank you for completing your lesson — Oak Scholars 🌳`,
+    html,
+  });
+  console.log("[Email] Lesson follow-up sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }

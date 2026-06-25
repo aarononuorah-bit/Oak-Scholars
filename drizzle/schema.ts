@@ -160,6 +160,8 @@ export const tutoringSessions = mysqlTable("tutoring_sessions", {
   status: mysqlEnum("status", ["scheduled", "completed", "cancelled", "no-show"]).default("scheduled").notNull(),
   notes: text("notes"), // tutor notes from the session
   completedAt: timestamp("completedAt"),
+  reminderSentAt: timestamp("reminderSentAt"),
+  followUpSentAt: timestamp("followUpSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

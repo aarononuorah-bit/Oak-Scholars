@@ -186,12 +186,56 @@ export function StudentDashboard() {
                               <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
                               <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP p")} &middot; {s.duration} min</p>
                             </div>
-                            <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+	                            <div className="flex items-center gap-2">
+	                              <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
+	                              <div className="flex items-center gap-1">
+	                                <Button
+	                                  size="sm"
+	                                  variant="ghost"
+	                                  className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]"
+	                                  onClick={() => {
+	                                    const reason = window.prompt("Reason for cancellation (optional):");
+	                                    if (reason !== null) {
+	                                      trpc.session.updateStatus.mutate({ id: s.id, status: "cancelled", notes: reason || undefined }, {
+	                                        onSuccess: () => {
+	                                          toast.success("Session cancelled");
+	                                          utils.session.studentSessions.invalidate();
+	                                        },
+	                                        onError: (e) => toast.error(e.message)
+	                                      });
+	                                    }
+	                                  }}
+	                                >
+	                                  Cancel
+	                                </Button>
+	                                <Button
+	                                  size="sm"
+	                                  variant="ghost"
+	                                  className="h-8 px-2 text-[10px] text-[#E8A838] hover:bg-amber-50"
+	                                  onClick={() => {
+	                                    const newDateStr = window.prompt("Enter new date/time (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm"));
+	                                    if (newDateStr) {
+	                                      const newDate = new Date(newDateStr);
+	                                      if (isNaN(newDate.getTime())) return toast.error("Invalid date format");
+	                                      trpc.session.rescheduleSession.mutate({ id: s.id, newDate }, {
+	                                        onSuccess: () => {
+	                                          toast.success("Reschedule request sent");
+	                                          utils.session.studentSessions.invalidate();
+	                                        },
+	                                        onError: (e) => toast.error(e.message)
+	                                      });
+	                                    }
+	                                  }}
+	                                >
+	                                  Reschedule
+	                                </Button>
+	                              </div>
+	                            </div>
+	                          </div>
+	                        ))}
+	                      </div>
+	                    </div>
+	                  )}
                   {completedSessions.length > 0 && (
                     <div>
                       <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3">
