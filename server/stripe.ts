@@ -7,6 +7,10 @@ import {
   getUserByOpenId,
   updateStripeCustomerId,
   getDb,
+  getReferralByRefereeId,
+  updateReferralStatus,
+  markReferrerRewardUsed,
+  markRefereeRewardUsed,
 } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -133,6 +137,30 @@ async function handleStripeEvent(event: Stripe.Event) {
           status: "paid",
         });
         console.log(`[Webhook] Order created for session ${session.id} (${email})`);
+
+        // ─── Referral Reward Logic ─────────────────────────────────────────────
+        if (userId) {
+          // 1. If this is the referee's first purchase, complete the referral
+          const referral = await getReferralByRefereeId(userId);
+          if (referral && referral.status === "pending") {
+            await updateReferralStatus(referral.id, "completed");
+            console.log(`[Referral] Referral ${referral.id} completed for referee ${userId}`);
+          }
+
+          // 2. If a reward was used in this session, mark it as used in DB
+          const rewardId = session.metadata?.reward_id;
+          const rewardType = session.metadata?.reward_type; // "referrer" or "referee"
+          if (rewardId) {
+            const rid = parseInt(rewardId);
+            if (rewardType === "referrer") {
+              await markReferrerRewardUsed(rid);
+              console.log(`[Referral] Referrer reward ${rid} marked as used`);
+            } else if (rewardType === "referee") {
+              await markRefereeRewardUsed(rid);
+              console.log(`[Referral] Referee reward ${rid} marked as used`);
+            }
+          }
+        }
       } catch (e: unknown) {
         // Duplicate session — already recorded
         const msg = e instanceof Error ? e.message : String(e);

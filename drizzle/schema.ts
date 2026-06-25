@@ -16,6 +16,7 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  referralCode: varchar("referralCode", { length: 20 }).unique(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -173,6 +174,21 @@ export const feedback = mysqlTable("feedback", {
 
 export type Feedback = typeof feedback.$inferSelect;
 export type InsertFeedback = typeof feedback.$inferInsert;
+
+// ─── Referrals ────────────────────────────────────────────────────────────────
+export const referrals = mysqlTable("referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  referrerId: int("referrerId").notNull(),
+  refereeId: int("refereeId").notNull(),
+  status: mysqlEnum("status", ["pending", "completed"]).default("pending").notNull(), // completed when referee makes first purchase
+  referrerRewardUsed: int("referrerRewardUsed").default(0).notNull(), // 1 if used
+  refereeRewardUsed: int("refereeRewardUsed").default(0).notNull(), // 1 if used
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
 
 // ─── Tutor Availability ───────────────────────────────────────────────────────
 export const tutorAvailability = mysqlTable("tutor_availability", {

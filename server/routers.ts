@@ -15,6 +15,8 @@ import {
   sendBookingConfirmation,
   sendContactConfirmation,
   sendTutorApplicationConfirmation,
+  sendSessionReminder,
+  sendSessionCancellationNotice,
 } from "./email";
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
@@ -59,7 +61,14 @@ import {
   getUserByEmail,
   createUserWithPassword,
   updateUserLastSignedIn,
+  getDb,
+  getUserByReferralCode,
+  updateUserReferralCode,
+  createReferral,
+  getPendingRewardsForUser,
 } from "./db";
+import { tutoringSessions } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";
 
@@ -267,11 +276,27 @@ const paymentsRouter = router({
         origin: z.string().url(),
         customerEmail: z.string().email().optional(),
         customerName: z.string().optional(),
+        rewardId: z.number().optional(),
+        rewardType: z.enum(["referrer", "referee"]).optional(),
       })
     )
     .mutation(async ({ input }) => {
       const product = PRODUCTS.find((p) => p.id === input.productId);
       if (!product) throw new Error("Invalid product");
+
+      let unitAmount: number = product.priceInPence;
+      const metadata: Record<string, string> = {
+        product_id: input.productId,
+        customer_email: input.customerEmail ?? "",
+        customer_name: input.customerName ?? "",
+      };
+
+      if (input.rewardId && input.rewardType) {
+        // Apply 20% discount
+        unitAmount = Math.round(unitAmount * 0.8);
+        metadata.reward_id = String(input.rewardId);
+        metadata.reward_type = input.rewardType;
+      }
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -280,10 +305,10 @@ const paymentsRouter = router({
             price_data: {
               currency: "gbp",
               product_data: {
-                name: `Oak Scholars — ${product.name}`,
+                name: `Oak Scholars — ${product.name}${input.rewardId ? " (20% Referral Discount)" : ""}`,
                 description: product.description,
               },
-              unit_amount: product.priceInPence,
+              unit_amount: unitAmount,
             },
             quantity: 1,
           },
@@ -292,11 +317,7 @@ const paymentsRouter = router({
         allow_promotion_codes: true,
         customer_email: input.customerEmail,
         client_reference_id: input.customerEmail ?? undefined,
-        metadata: {
-          product_id: input.productId,
-          customer_email: input.customerEmail ?? "",
-          customer_name: input.customerName ?? "",
-        },
+        metadata,
         success_url: `${input.origin}/booking?payment=success`,
         cancel_url: `${input.origin}/booking?payment=cancelled`,
       });
@@ -594,6 +615,115 @@ const sessionRouter = router({
       await updateTutoringSessionStatus(input.id, input.status, input.notes);
       return { success: true };
     }),
+
+  cancelSession: protectedProcedure
+    .input(z.object({ id: z.number(), reason: z.string().optional() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const sessions = await db.select().from(tutoringSessions).where(eq(tutoringSessions.id, input.id));
+      if (!sessions || sessions.length === 0) throw new Error("Session not found");
+      
+      const sess = sessions[0];
+      if (sess.studentId !== ctx.user.id && sess.tutorId !== ctx.user.id) {
+        throw new Error("Unauthorized: you cannot cancel this session");
+      }
+      
+      const now = new Date();
+      const scheduledTime = new Date(sess.scheduledAt);
+      const daysUntilSession = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (daysUntilSession < 0) {
+        throw new Error("Cannot cancel a session that has already passed");
+      }
+      
+      await updateTutoringSessionStatus(input.id, 'cancelled', input.reason || 'Cancelled by user');
+      
+      // Get tutor and student details for notification
+      const tutor = await getUserById(sess.tutorId);
+      const student = await getUserById(sess.studentId);
+      
+      // Send cancellation notices to both parties
+      if (student?.email) {
+        await sendSessionCancellationNotice({
+          recipientName: student.name || 'Student',
+          recipientEmail: student.email,
+          otherPartyName: tutor?.name || 'Your Tutor',
+          subject: sess.subject,
+          scheduledAt: sess.scheduledAt,
+          reason: input.reason,
+        }).catch(err => console.error('[Email] Failed to send cancellation notice to student:', err));
+      }
+      
+      if (tutor?.email) {
+        await sendSessionCancellationNotice({
+          recipientName: tutor.name || 'Tutor',
+          recipientEmail: tutor.email,
+          otherPartyName: student?.name || 'Your Student',
+          subject: sess.subject,
+          scheduledAt: sess.scheduledAt,
+          reason: input.reason,
+        }).catch(err => console.error('[Email] Failed to send cancellation notice to tutor:', err));
+      }
+      
+      if (daysUntilSession < 7) {
+        return { success: true, message: "Session cancelled. Note: cancellations within 7 days may affect your booking privileges." };
+      } else {
+        return { success: true, message: "Session cancelled successfully." };
+      }
+    }),
+
+  rescheduleSession: protectedProcedure
+    .input(z.object({ id: z.number(), newScheduledAt: z.date() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const sessions = await db.select().from(tutoringSessions).where(eq(tutoringSessions.id, input.id));
+      if (!sessions || sessions.length === 0) throw new Error("Session not found");
+      
+      const sess = sessions[0];
+      if (sess.studentId !== ctx.user.id && sess.tutorId !== ctx.user.id) {
+        throw new Error("Unauthorized: you cannot reschedule this session");
+      }
+      
+      const now = new Date();
+      const scheduledTime = new Date(sess.scheduledAt);
+      const daysUntilSession = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (daysUntilSession < 0) {
+        throw new Error("Cannot reschedule a session that has already passed");
+      }
+      
+      if (daysUntilSession < 7) {
+        throw new Error("Sessions can only be rescheduled more than 7 days in advance. Please contact support for urgent changes.");
+      }
+      
+      const daysUntilNewSession = (input.newScheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysUntilNewSession < 7) {
+        throw new Error("New session must be scheduled at least 7 days in advance");
+      }
+      
+      await db.update(tutoringSessions).set({ scheduledAt: input.newScheduledAt }).where(eq(tutoringSessions.id, input.id));
+      
+      // Get tutor and student details for notification
+      const tutor = await getUserById(sess.tutorId);
+      const student = await getUserById(sess.studentId);
+      
+      // Send reminder to both parties about new time
+      if (student?.email) {
+        await sendSessionReminder({
+          studentName: student.name || 'Student',
+          studentEmail: student.email,
+          tutorName: tutor?.name || 'Your Tutor',
+          subject: sess.subject,
+          scheduledAt: input.newScheduledAt,
+        }).catch(err => console.error('[Email] Failed to send reschedule reminder:', err));
+      }
+      
+      return { success: true, message: "Session rescheduled successfully." };
+    }),
 });
 
 // ─── Feedback router ──────────────────────────────────────────────────────────
@@ -624,9 +754,31 @@ const feedbackRouter = router({
 
 // ─── App router ───────────────────────────────────────────────────────────────
 
+// ─── Referral router ─────────────────────────────────────────────────────────
+const referralRouter = router({
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    let user = await getUserById(ctx.user.id);
+    if (!user) throw new Error("User not found");
+
+    // Generate referral code if not exists
+    if (!user.referralCode) {
+      const code = `OAK-${ctx.user.id}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      await updateUserReferralCode(ctx.user.id, code);
+      user.referralCode = code;
+    }
+
+    const rewards = await getPendingRewardsForUser(ctx.user.id);
+    return {
+      referralCode: user.referralCode,
+      pendingRewards: rewards,
+    };
+  }),
+});
+
 // ─── App router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
+  referral: referralRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
 
@@ -636,6 +788,7 @@ export const appRouter = router({
           name: z.string().min(1, "Name is required"),
           email: z.string().email("Invalid email address"),
           password: z.string().min(8, "Password must be at least 8 characters"),
+          referralCode: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -653,6 +806,19 @@ export const appRouter = router({
           passwordHash,
           role,
         });
+
+        // Handle referral code if provided
+        if (input.referralCode) {
+          const referrer = await getUserByReferralCode(input.referralCode);
+          if (referrer && referrer.id !== user.id) {
+            await createReferral({
+              referrerId: referrer.id,
+              refereeId: user.id,
+              status: "pending",
+            });
+          }
+        }
+
         // Create session cookie
         const { sdk } = await import("./_core/sdk");
         const token = await sdk.createSessionToken(user.openId, { name: user.name || "" });

@@ -336,8 +336,8 @@ function PricingSection() {
     },
     {
       name: "8-Session Bundle",
-      price: "£200",
-      save: "Save £40",
+      price: "£190",
+      save: "Save £50",
       desc: "Maximum progress — our best value package.",
       features: ["8 × 1 hour sessions", "Any subject", "Any level", "Progress tracking"],
       highlight: false,

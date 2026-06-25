@@ -122,9 +122,20 @@ export function ChatbotWidget() {
       {/* Chat Box */}
       {isOpen && (
         <div
-          className="mb-4 w-96 max-w-[calc(100vw-2rem)] rounded-lg shadow-2xl border border-border animate-in fade-in slide-in-from-bottom-4 duration-300"
+          className="mb-4 w-96 max-w-[calc(100vw-2rem)] rounded-xl shadow-2xl border border-border animate-in fade-in slide-in-from-bottom-4 duration-300 overflow-hidden relative"
           style={{ maxHeight: "600px" }}
         >
+          {/* Close button - softer styling, top-right */}
+          <div className="absolute top-3 right-3 z-10">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1.5 rounded-full bg-gray-100/80 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-all duration-200 ease-out hover:scale-110 backdrop-blur-sm"
+              title="Close chat"
+              aria-label="Close chat"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
           <AIChatBox
             messages={messages}
             onSendMessage={handleSendMessage}
@@ -137,6 +148,7 @@ export function ChatbotWidget() {
               "How much do sessions cost?",
               "How does the booking process work?",
               "Do you offer wellbeing support?",
+              "Connect me with a team member",
             ]}
           />
         </div>
@@ -154,7 +166,7 @@ export function ChatbotWidget() {
           </p>
           <p className="text-muted-brand text-xs mt-1">I'm here to answer any questions!</p>
           <button 
-            className="absolute -top-2 -left-2 bg-gray-100 hover:bg-gray-200 rounded-full p-1 shadow-sm"
+            className="absolute -top-2 -left-2 bg-gray-100 hover:bg-gray-200 rounded-full p-1 shadow-sm transition-all duration-200 ease-out hover:scale-110"
             onClick={(e) => {
               e.stopPropagation();
               setShowPrompt(false);
@@ -174,7 +186,7 @@ export function ChatbotWidget() {
         }}
         size="lg"
         className={cn(
-          "rounded-full shadow-lg h-14 w-14 p-0 transition-all duration-300",
+          "rounded-full shadow-lg h-14 w-14 p-0 transition-all duration-300 ease-out hover:scale-110",
           isOpen
             ? "bg-destructive hover:bg-destructive/90"
             : "bg-primary hover:bg-primary/90"

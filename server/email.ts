@@ -219,3 +219,93 @@ export async function sendTutorApplicationConfirmation(data: {
   });
   console.log("[Email] Tutor confirmation sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }
+
+
+export async function sendSessionReminder(data: {
+  studentName: string;
+  studentEmail: string;
+  tutorName: string;
+  subject: string;
+  scheduledAt: Date;
+  sessionLink?: string;
+}) {
+  const transporter = await getTransporter();
+  const sessionTime = data.scheduledAt.toLocaleString('en-GB', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/London'
+  });
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Upcoming Session Reminder 🎓</h2>
+    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.studentName}</strong>, this is a friendly reminder about your upcoming tutoring session!</p>
+    
+    <div style="background-color:#f5f5f5;border-left:4px solid ${BRAND_AMBER};padding:16px;margin:0 0 20px;border-radius:4px;">
+      <p style="color:#333;margin:0 0 8px;font-weight:600;">Session Details:</p>
+      <p style="color:#555;margin:0 0 4px;"><strong>Tutor:</strong> ${data.tutorName}</p>
+      <p style="color:#555;margin:0 0 4px;"><strong>Subject:</strong> ${data.subject}</p>
+      <p style="color:#555;margin:0;"><strong>Date & Time:</strong> ${sessionTime}</p>
+    </div>
+
+    <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 16px;">Make sure you're in a quiet space with a stable internet connection. Have any questions or materials ready to discuss!</p>
+    
+    ${data.sessionLink ? `<p style="margin:0 0 20px;"><a href="${data.sessionLink}" style="display:inline-block;background-color:${BRAND_AMBER};color:${BRAND_PURPLE};padding:12px 24px;text-decoration:none;border-radius:4px;font-weight:600;">Join Session</a></p>` : ''}
+
+    <p style="color:#999;font-size:13px;line-height:1.6;margin:0;">Need to reschedule or cancel? You can do so up to 7 days before your session through your account dashboard.</p>
+  `);
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.studentEmail,
+    subject: `Reminder: Your tutoring session with ${data.tutorName} is coming up! 🌳`,
+    html,
+  });
+  console.log("[Email] Session reminder sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}
+
+export async function sendSessionCancellationNotice(data: {
+  recipientName: string;
+  recipientEmail: string;
+  otherPartyName: string;
+  subject: string;
+  scheduledAt: Date;
+  reason?: string;
+}) {
+  const transporter = await getTransporter();
+  const sessionTime = data.scheduledAt.toLocaleString('en-GB', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/London'
+  });
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:20px;margin:0 0 8px;">Session Cancelled</h2>
+    <p style="color:#444;margin:0 0 20px;font-size:15px;line-height:1.6;">Hi <strong>${data.recipientName}</strong>, your tutoring session with <strong>${data.otherPartyName}</strong> has been cancelled.</p>
+    
+    <div style="background-color:#f5f5f5;border-left:4px solid #e74c3c;padding:16px;margin:0 0 20px;border-radius:4px;">
+      <p style="color:#333;margin:0 0 8px;font-weight:600;">Cancelled Session:</p>
+      <p style="color:#555;margin:0 0 4px;"><strong>Subject:</strong> ${data.subject}</p>
+      <p style="color:#555;margin:0;"><strong>Date & Time:</strong> ${sessionTime}</p>
+      ${data.reason ? `<p style="color:#555;margin:8px 0 0;"><strong>Reason:</strong> ${data.reason}</p>` : ''}
+    </div>
+
+    <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 16px;">If you'd like to reschedule or have questions, please contact us or reach out to your tutor directly.</p>
+    <p style="color:#999;font-size:13px;line-height:1.6;margin:0;">Questions? Email us at <a href="mailto:team@oakscholars.com" style="color:${BRAND_AMBER};">team@oakscholars.com</a></p>
+  `);
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.recipientEmail,
+    subject: `Session Cancelled: ${data.subject} on ${new Date(data.scheduledAt).toLocaleDateString()}`,
+    html,
+  });
+  console.log("[Email] Cancellation notice sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}

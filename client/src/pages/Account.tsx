@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -261,10 +262,12 @@ function BillingTab() {
 function DashboardTab() {
   const { user } = useAuth();
   
+  const { data: referralData } = trpc.referral.getStats.useQuery();
+  
   const stats = [
     { label: "Hours Completed", value: "12", icon: <Calendar size={18} />, color: "bg-blue-100 text-blue-700" },
     { label: "Target Grade", value: "A*", icon: <TrendingUp size={18} />, color: "bg-amber/20 text-amber" },
-    { label: "Resources Unlocked", value: "8", icon: <BookOpen size={18} />, color: "bg-green-100 text-green-700" },
+    { label: "Referral Rewards", value: referralData ? (referralData.pendingRewards.asReferrer.length + referralData.pendingRewards.asReferee.length).toString() : "0", icon: <TrendingUp size={18} />, color: "bg-amber/20 text-amber" },
   ];
 
   const upcomingSessions = [
@@ -342,6 +345,71 @@ function DashboardTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Referral Program Section */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp size={18} className="text-amber" />
+            Referral Program
+          </CardTitle>
+          <CardDescription>Share your code and both of you get 20% off your next purchase!</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-amber/5 border border-amber/10 rounded-xl p-6 text-center">
+            <p className="text-sm text-muted-brand mb-2">Your Referral Code</p>
+            <div className="flex items-center justify-center gap-3">
+              <code className="bg-white border border-amber/20 px-4 py-2 rounded-lg text-lg font-bold text-navy-deep tracking-wider">
+                {referralData?.referralCode || "Generating..."}
+              </code>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => {
+                  if (referralData?.referralCode) {
+                    navigator.clipboard.writeText(referralData.referralCode);
+                    toast.success("Referral code copied!");
+                  }
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-navy-deep">Available Rewards</h4>
+            {referralData && (referralData.pendingRewards.asReferrer.length > 0 || referralData.pendingRewards.asReferee.length > 0) ? (
+              <div className="space-y-3">
+                {referralData.pendingRewards.asReferrer.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between p-3 rounded-xl border border-green-100 bg-green-50/50">
+                    <div>
+                      <p className="text-sm font-bold text-navy-deep">20% Discount Reward</p>
+                      <p className="text-xs text-muted-brand">Earned for referring a friend</p>
+                    </div>
+                    <Link href={`/booking?rewardId=${r.id}&rewardType=referrer`}>
+                      <Button size="sm" style={{ backgroundColor: "#281A39", color: "#fff" }}>Use Now</Button>
+                    </Link>
+                  </div>
+                ))}
+                {referralData.pendingRewards.asReferee.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between p-3 rounded-xl border border-green-100 bg-green-50/50">
+                    <div>
+                      <p className="text-sm font-bold text-navy-deep">20% Welcome Reward</p>
+                      <p className="text-xs text-muted-brand">Earned via referral</p>
+                    </div>
+                    <Link href={`/booking?rewardId=${r.id}&rewardType=referee`}>
+                      <Button size="sm" style={{ backgroundColor: "#281A39", color: "#fff" }}>Use Now</Button>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-brand italic">No rewards available yet. Share your code to start earning!</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Downloads Section */}
       <Card>

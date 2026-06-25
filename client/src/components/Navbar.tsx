@@ -51,7 +51,7 @@ export default function Navbar() {
       }`}
       style={scrolled ? {} : { backgroundColor: "#281A39" }}
     >
-      <div className="max-w-screen-xl mx-auto px-4">
+      <div className="max-w-screen-2xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-18">
           {/* Logo */}
           <div className="flex items-center gap-4 shrink-0">
@@ -75,8 +75,8 @@ export default function Navbar() {
             />
           </div>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-8 mx-4 flex-1 justify-center">
+          {/* Desktop nav - centered */}
+          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center px-8">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -84,7 +84,7 @@ export default function Navbar() {
                 className={`text-sm font-medium whitespace-nowrap transition-all duration-300 ease-out ${
                   scrolled
                     ? "text-gray-700 hover:text-[#281A39]"
-                    : "text-white/80 hover:text-amber"
+                    : "text-white/90 hover:text-amber-300"
                 }`}
               >
                 {link.label}
@@ -92,33 +92,30 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
-            {toggleTheme && (
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-full transition-colors mr-2 ${
-                  scrolled 
-                    ? "text-gray-500 hover:bg-gray-100 hover:text-amber" 
-                    : "text-white/70 hover:bg-white/10 hover:text-amber"
-                }`}
-                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              >
-                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-            )}
+          {/* Desktop CTA - right side */}
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
+            {/* Become an Oak Scholar - Highlighted */}
             <Link href="/tutor-apply">
               <Button
-                variant="outline"
-                size="sm"
-                className={scrolled
-                  ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent whitespace-nowrap"
-                  : "border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent whitespace-nowrap"
-                }
+                className="font-semibold transition-all duration-300 ease-out hover:scale-105"
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 Become an Oak Scholar
               </Button>
             </Link>
+
+            {/* Book a Session */}
+            <Link href="/booking">
+              <Button
+                size="sm"
+                className="btn-press font-semibold"
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+              >
+                Book a Session
+              </Button>
+            </Link>
+
+            {/* Auth buttons or user menu */}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -180,15 +177,21 @@ export default function Navbar() {
                 </Link>
               </>
             )}
-            <Link href="/booking">
-              <Button
-                size="sm"
-                className="btn-press font-semibold"
-                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+
+            {/* Dark mode toggle - Last item */}
+            {toggleTheme && (
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-full transition-colors ml-2 ${
+                  scrolled 
+                    ? "text-gray-600 hover:bg-gray-200 hover:text-gray-800" 
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                }`}
+                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
-                Book a Session
-              </Button>
-            </Link>
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            )}
           </div>
 
           {/* Mobile menu toggle */}
@@ -218,7 +221,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className={`lg:hidden backdrop-blur-md border-t ${
+        <div className={`lg:hidden backdrop-blur-md border-t transition-colors duration-300 ${
           scrolled
             ? "bg-gray-50 border-gray-200"
             : "bg-navy/98 border-white/10"
@@ -231,7 +234,7 @@ export default function Navbar() {
                 className={`font-medium py-2 transition-colors ${
                   scrolled
                     ? "text-gray-700 hover:text-[#281A39]"
-                    : "text-white/80 hover:text-amber"
+                    : "text-white/90 hover:text-amber-300"
                 }`}
               >
                 {link.label}
@@ -240,21 +243,22 @@ export default function Navbar() {
             <div className={`flex flex-col gap-3 pt-2 border-t ${
               scrolled ? "border-gray-200" : "border-white/10"
             }`}>
-              <Link href="/tutor-apply">
+              <Link href="/tutor-apply" className="w-full">
                 <Button
-                  variant="outline"
-                  className={`w-full ${
-                    scrolled
-                      ? "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-100"
-                      : "border-white/30 text-white bg-transparent hover:bg-white/10"
-                  }`}
+                  className="w-full font-semibold"
+                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
                 >
                   Become an Oak Scholar
                 </Button>
               </Link>
+              <Link href="/booking" className="w-full">
+                <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+                  Book a Session
+                </Button>
+              </Link>
               {isAuthenticated ? (
                 <>
-                  <Link href="/account">
+                  <Link href="/account" className="w-full">
                     <Button
                       variant="outline"
                       className={`w-full ${
@@ -306,11 +310,6 @@ export default function Navbar() {
                   </Link>
                 </>
               )}
-              <Link href="/booking">
-                <Button className="w-full btn-press font-semibold" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
-                  Book a Session
-                </Button>
-              </Link>
             </div>
           </div>
         </div>

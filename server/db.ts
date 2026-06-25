@@ -11,6 +11,7 @@ import {
   InsertFeedback,
   InsertOrder,
   InsertPushSubscription,
+  InsertReferral,
   InsertTutorApplication,
   InsertTutorAvailability,
   InsertTutoringRelationship,
@@ -18,6 +19,7 @@ import {
   InsertUser,
   orders,
   pushSubscriptions,
+  referrals,
   tutorApplications,
   tutorAvailability,
   tutoringRelationships,
@@ -377,6 +379,50 @@ export async function getFeedbackReceivedByUser(userId: number) {
   return db.select().from(feedback).where(eq(feedback.toUserId, userId)).orderBy(desc(feedback.createdAt));
 }
 
+// ─── Referrals ────────────────────────────────────────────────────────────────
+export async function createReferral(data: InsertReferral) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(referrals).values(data);
+}
+
+export async function getReferralByRefereeId(refereeId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(referrals).where(eq(referrals.refereeId, refereeId)).limit(1);
+  return result[0] ?? undefined;
+}
+
+export async function updateReferralStatus(id: number, status: "pending" | "completed") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(referrals).set({ status }).where(eq(referrals.id, id));
+}
+
+export async function markReferrerRewardUsed(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(referrals).set({ referrerRewardUsed: 1 }).where(eq(referrals.id, id));
+}
+
+export async function markRefereeRewardUsed(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(referrals).set({ refereeRewardUsed: 1 }).where(eq(referrals.id, id));
+}
+
+export async function getPendingRewardsForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return { asReferrer: [], asReferee: [] };
+  
+  const allReferrals = await db.select().from(referrals);
+  
+  return {
+    asReferrer: allReferrals.filter(r => r.referrerId === userId && r.status === "completed" && r.referrerRewardUsed === 0),
+    asReferee: allReferrals.filter(r => r.refereeId === userId && r.status === "completed" && r.refereeRewardUsed === 0)
+  };
+}
+
 // ─── Tutor Availability ───────────────────────────────────────────────────────
 export async function createTutorAvailability(data: InsertTutorAvailability) {
   const db = await getDb();
@@ -403,6 +449,19 @@ export async function getUserByEmail(email: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
   return result[0] ?? undefined;
+}
+
+export async function getUserByReferralCode(code: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
+  return result[0] ?? undefined;
+}
+
+export async function updateUserReferralCode(id: number, code: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ referralCode: code }).where(eq(users.id, id));
 }
 
 export async function createUserWithPassword(data: {

@@ -54,7 +54,7 @@ export default function Footer() {
 
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-white/40 text-sm">© {new Date().getFullYear()} Oak Scholars. All rights reserved.</p>
-          <p className="text-white/40 text-sm">Made with ❤️ by students, for students.</p>
+          <p className="text-white/40 text-sm">Empowering the next generation of learners through peer-led mentorship.</p>
         </div>
       </div>
     </footer>

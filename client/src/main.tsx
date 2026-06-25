@@ -36,6 +36,12 @@ function Root() {
         httpBatchLink({
           url: "/api/trpc",
           transformer: superjson,
+          fetch: (url, options) => {
+            return fetch(url, {
+              ...options,
+              credentials: 'include', // Include cookies in requests
+            });
+          },
         }),
       ],
     })

@@ -36,6 +36,13 @@
       "when": 1782368429397,
       "tag": "0004_known_machine_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1782383889638,
+      "tag": "0005_damp_ultragirl",
+      "breakpoints": true
     }
   ]
 }

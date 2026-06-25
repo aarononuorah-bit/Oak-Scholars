@@ -85,6 +85,7 @@ export default function Booking() {
   const [step, setStep] = useState<Step>(1);
   const [submitted, setSubmitted] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"success" | "cancelled" | null>(null);
+  const [rewardInfo, setRewardInfo] = useState<{ id: number; type: "referrer" | "referee" } | null>(null);
   const [form, setForm] = useState<FormData>({
     subject: "", level: "", packageId: "", preferredTime: "",
     firstName: "", lastName: "", email: "", phone: "", preferredContactMethod: "", message: "", consent: false, marketingOptIn: false,
@@ -98,6 +99,13 @@ export default function Booking() {
     const payment = params.get("payment");
     if (payment === "success") setPaymentStatus("success");
     else if (payment === "cancelled") setPaymentStatus("cancelled");
+
+    const rewardId = params.get("rewardId");
+    const rewardType = params.get("rewardType") as "referrer" | "referee" | null;
+    if (rewardId && rewardType) {
+      setRewardInfo({ id: parseInt(rewardId), type: rewardType });
+      toast.info("Referral discount applied!");
+    }
   }, [location]);
 
   const submitMutation = trpc.booking.submit.useMutation({
@@ -155,6 +163,8 @@ export default function Booking() {
       origin: window.location.origin,
       customerEmail: form.email || undefined,
       customerName: form.firstName ? `${form.firstName} ${form.lastName}` : undefined,
+      rewardId: rewardInfo?.id,
+      rewardType: rewardInfo?.type,
     });
   };
 
@@ -354,8 +364,19 @@ export default function Booking() {
                       </span>
                     )}
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-serif text-2xl font-bold text-navy-deep">{pkg.price}</span>
-                      {pkg.original && <span className="text-muted-brand text-sm line-through">{pkg.original}</span>}
+                      <span className="font-serif text-2xl font-bold text-navy-deep">
+                        {rewardInfo ? `£${Math.round(parseInt(pkg.price.replace("£", "")) * 0.8)}` : pkg.price}
+                      </span>
+                      {(pkg.original || rewardInfo) && (
+                        <span className="text-muted-brand text-sm line-through">
+                          {rewardInfo ? pkg.price : pkg.original}
+                        </span>
+                      )}
+                      {rewardInfo && (
+                        <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-1">
+                          20% OFF
+                        </span>
+                      )}
                     </div>
                     <p className="font-semibold text-navy-deep text-sm">{pkg.name}</p>
                     <p className="text-muted-brand text-xs mt-1">{pkg.desc}</p>
