@@ -1,5 +1,7 @@
 import { Link } from "wouter";
 
+const LOGO_URL = "/manus-storage/oak-logo_35a8e9ad.webp";
+
 export default function Footer() {
   return (
     <footer className="bg-navy text-white/80">
@@ -8,8 +10,8 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🌳</span>
-              <span className="font-serif font-bold text-xl text-amber uppercase tracking-wide">Oak Scholars</span>
+              <img src={LOGO_URL} alt="Oak Scholars" className="h-8 w-auto object-contain" />
+              <span className="font-serif font-bold text-xl text-amber uppercase tracking-wide whitespace-nowrap">Oak Scholars</span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
               Expert tutoring for ambitious students from 11+ through A-Level and IB. Run by undergraduates who recently aced the same exams.

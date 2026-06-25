@@ -45,35 +45,39 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "shadow-lg"
+          ? "shadow-lg bg-white"
           : ""
       }`}
-      style={{ backgroundColor: "#281A39" }}
+      style={scrolled ? {} : { backgroundColor: "#281A39" }}
     >
-      <div className="container">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+      <div className="max-w-screen-xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16 lg:h-18">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
             <img
               src={LOGO_URL}
               alt="Oak Scholars"
               className="h-8 w-auto object-contain"
             />
             <span
-              className="font-serif font-bold text-xl tracking-wide uppercase hidden sm:inline"
-              style={{ color: "#E8A838" }}
+              className="font-serif font-bold text-lg tracking-wide uppercase hidden sm:inline whitespace-nowrap"
+              style={{ color: scrolled ? "#281A39" : "#E8A838" }}
             >
               Oak Scholars
             </span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-10">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 mx-4">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-white/80 hover:text-amber transition-colors duration-200"
+                className={`text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+                  scrolled
+                    ? "text-gray-700 hover:text-[#281A39]"
+                    : "text-white/80 hover:text-amber"
+                }`}
               >
                 {link.label}
               </a>
@@ -81,12 +85,15 @@ export default function Navbar() {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
             <Link href="/tutor-apply">
               <Button
                 variant="outline"
                 size="sm"
-                className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent"
+                className={scrolled
+                  ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent whitespace-nowrap"
+                  : "border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent whitespace-nowrap"
+                }
               >
                 Become a Tutor
               </Button>
