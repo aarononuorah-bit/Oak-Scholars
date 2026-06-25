@@ -9,6 +9,9 @@ import Booking from "./pages/Booking";
 import Contact from "./pages/Contact";
 import TutorApply from "./pages/TutorApply";
 import AdminDashboard from "./pages/AdminDashboard";
+import { TutorDashboard } from "./pages/TutorDashboard";
+import { StudentDashboard } from "./pages/StudentDashboard";
+import { ParentDashboard } from "./pages/ParentDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Account from "./pages/Account";
@@ -30,6 +33,9 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/tutor-apply" component={TutorApply} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/tutor-dashboard" component={TutorDashboard} />
+      <Route path="/student-dashboard" component={StudentDashboard} />
+      <Route path="/parent-dashboard" component={ParentDashboard} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/account" component={Account} />

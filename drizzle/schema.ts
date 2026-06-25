@@ -7,7 +7,9 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 30 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "tutor", "parent"]).default("user").notNull(),
+  parentOf: int("parentOf"), // if role is 'parent', this is the student user ID
+  approvedAsTutor: int("approvedAsTutor").default(0).notNull(), // 1 if admin approved as tutor
   stripeCustomerId: varchar("stripeCustomerId", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -120,3 +122,66 @@ export const orders = mysqlTable("orders", {
 
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = typeof orders.$inferInsert;
+
+// ─── Tutoring Relationships ───────────────────────────────────────────────────
+export const tutoringRelationships = mysqlTable("tutoring_relationships", {
+  id: int("id").autoincrement().primaryKey(),
+  tutorId: int("tutorId").notNull(),
+  studentId: int("studentId").notNull(),
+  subjects: text("subjects").notNull(), // JSON array of subjects
+  level: varchar("level", { length: 50 }).notNull(),
+  status: mysqlEnum("status", ["active", "paused", "completed"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TutoringRelationship = typeof tutoringRelationships.$inferSelect;
+export type InsertTutoringRelationship = typeof tutoringRelationships.$inferInsert;
+
+// ─── Tutoring Sessions ────────────────────────────────────────────────────────
+export const tutoringSessions = mysqlTable("tutoring_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  relationshipId: int("relationshipId").notNull(),
+  tutorId: int("tutorId").notNull(),
+  studentId: int("studentId").notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  duration: int("duration").notNull(), // in minutes
+  status: mysqlEnum("status", ["scheduled", "completed", "cancelled", "no-show"]).default("scheduled").notNull(),
+  notes: text("notes"), // tutor notes from the session
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TutoringSession = typeof tutoringSessions.$inferSelect;
+export type InsertTutoringSession = typeof tutoringSessions.$inferInsert;
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+export const feedback = mysqlTable("feedback", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  fromUserId: int("fromUserId").notNull(), // tutor or student giving feedback
+  toUserId: int("toUserId").notNull(), // tutor or student receiving feedback
+  rating: int("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertFeedback = typeof feedback.$inferInsert;
+
+// ─── Tutor Availability ───────────────────────────────────────────────────────
+export const tutorAvailability = mysqlTable("tutor_availability", {
+  id: int("id").autoincrement().primaryKey(),
+  tutorId: int("tutorId").notNull(),
+  dayOfWeek: varchar("dayOfWeek", { length: 20 }).notNull(), // "Monday", "Tuesday", etc.
+  startTime: varchar("startTime", { length: 10 }).notNull(), // "09:00"
+  endTime: varchar("endTime", { length: 10 }).notNull(), // "17:00"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TutorAvailability = typeof tutorAvailability.$inferSelect;
+export type InsertTutorAvailability = typeof tutorAvailability.$inferInsert;

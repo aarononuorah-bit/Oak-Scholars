@@ -40,6 +40,20 @@ import {
   updateUserProfile,
   getAllOrders,
   getAllUsers,
+  updateUserRole,
+  approveTutorByEmail,
+  createTutoringRelationship,
+  getTutoringRelationshipsByTutorId,
+  getTutoringRelationshipsByStudentId,
+  updateTutoringRelationshipStatus,
+  createTutoringSession,
+  getTutoringSessionsByTutorId,
+  getTutoringSessionsByStudentId,
+  updateTutoringSessionStatus,
+  createFeedback,
+  getFeedbackForSession,
+  getFeedbackReceivedByUser,
+  getUserById,
 } from "./db";
 import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";
@@ -48,6 +62,30 @@ import { PRODUCTS } from "./products";
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
     throw new Error("Forbidden: admins only");
+  }
+  return next({ ctx });
+});
+
+// ─── Tutor guard ──────────────────────────────────────────────────────────────
+const tutorProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "tutor") {
+    throw new Error("Forbidden: tutors only");
+  }
+  return next({ ctx });
+});
+
+// ─── Student guard ────────────────────────────────────────────────────────────
+const studentProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "user") {
+    throw new Error("Forbidden: students only");
+  }
+  return next({ ctx });
+});
+
+// ─── Parent guard ────────────────────────────────────────────────────────────
+const parentProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "parent") {
+    throw new Error("Forbidden: parents only");
   }
   return next({ ctx });
 });
@@ -455,16 +493,129 @@ const adminRouter = router({
   orders: adminProcedure.query(async () => getAllOrders()),
 
   updateUserRole: adminProcedure
-    .input(z.object({ id: z.number(), role: z.enum(['user', 'admin']) }))
+    .input(z.object({ id: z.number(), role: z.enum(['user', 'admin', 'tutor', 'parent']) }))
     .mutation(async ({ input }) => {
-      const db = await (await import('./db')).getDb();
-      if (!db) throw new Error('Database not available');
-      const { users: usersTable } = await import('../drizzle/schema');
-      const { eq } = await import('drizzle-orm');
-      await db.update(usersTable).set({ role: input.role }).where(eq(usersTable.id, input.id));
+      await updateUserRole(input.id, input.role);
+      return { success: true };
+    }),
+
+  approveTutor: adminProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const userId = await approveTutorByEmail(input.email);
+      return { success: true, userId };
+    }),
+});
+
+// ─── Tutoring router ──────────────────────────────────────────────────────────
+const tutoringRouter = router({
+  myStudents: tutorProcedure.query(async ({ ctx }) => {
+    const relationships = await getTutoringRelationshipsByTutorId(ctx.user.id);
+    const students = await Promise.all(
+      relationships.map(async (rel) => {
+        const student = await getUserById(rel.studentId);
+        return { ...rel, student };
+      })
+    );
+    return students;
+  }),
+
+  myTutors: studentProcedure.query(async ({ ctx }) => {
+    const relationships = await getTutoringRelationshipsByStudentId(ctx.user.id);
+    const tutors = await Promise.all(
+      relationships.map(async (rel) => {
+        const tutor = await getUserById(rel.tutorId);
+        return { ...rel, tutor };
+      })
+    );
+    return tutors;
+  }),
+
+  createRelationship: adminProcedure
+    .input(z.object({ tutorId: z.number(), studentId: z.number(), subjects: z.string(), level: z.string() }))
+    .mutation(async ({ input }) => {
+      const id = await createTutoringRelationship({
+        tutorId: input.tutorId,
+        studentId: input.studentId,
+        subjects: input.subjects,
+        level: input.level,
+        status: 'active',
+      });
+      return { success: true, id };
+    }),
+
+  updateRelationshipStatus: protectedProcedure
+    .input(z.object({ id: z.number(), status: z.enum(['active', 'paused', 'completed']) }))
+    .mutation(async ({ input, ctx }) => {
+      const rels = await getTutoringRelationshipsByTutorId(ctx.user.id);
+      if (!rels.find(r => r.id === input.id) && ctx.user.role !== 'admin') {
+        throw new Error('Forbidden');
+      }
+      await updateTutoringRelationshipStatus(input.id, input.status);
       return { success: true };
     }),
 });
+
+// ─── Session router ───────────────────────────────────────────────────────────
+const sessionRouter = router({
+  tutorSessions: tutorProcedure.query(async ({ ctx }) => {
+    return getTutoringSessionsByTutorId(ctx.user.id);
+  }),
+
+  studentSessions: studentProcedure.query(async ({ ctx }) => {
+    return getTutoringSessionsByStudentId(ctx.user.id);
+  }),
+
+  createSession: tutorProcedure
+    .input(z.object({ relationshipId: z.number(), studentId: z.number(), subject: z.string(), scheduledAt: z.date(), duration: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const id = await createTutoringSession({
+        relationshipId: input.relationshipId,
+        tutorId: ctx.user.id,
+        studentId: input.studentId,
+        subject: input.subject,
+        scheduledAt: input.scheduledAt,
+        duration: input.duration,
+        status: 'scheduled',
+      });
+      return { success: true, id };
+    }),
+
+  updateStatus: tutorProcedure
+    .input(z.object({ id: z.number(), status: z.enum(['scheduled', 'completed', 'cancelled', 'no-show']), notes: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      await updateTutoringSessionStatus(input.id, input.status, input.notes);
+      return { success: true };
+    }),
+});
+
+// ─── Feedback router ──────────────────────────────────────────────────────────
+const feedbackRouter = router({
+  received: protectedProcedure.query(async ({ ctx }) => {
+    return getFeedbackReceivedByUser(ctx.user.id);
+  }),
+
+  forSession: protectedProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .query(async ({ input }) => {
+      return getFeedbackForSession(input.sessionId);
+    }),
+
+  submit: protectedProcedure
+    .input(z.object({ sessionId: z.number(), toUserId: z.number(), rating: z.number().min(1).max(5), comment: z.string().optional() }))
+    .mutation(async ({ input, ctx }) => {
+      const id = await createFeedback({
+        sessionId: input.sessionId,
+        fromUserId: ctx.user.id,
+        toUserId: input.toUserId,
+        rating: input.rating,
+        comment: input.comment,
+      });
+      return { success: true, id };
+    }),
+});
+
+// ─── App router ───────────────────────────────────────────────────────────────
 
 // ─── App router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
@@ -481,6 +632,9 @@ export const appRouter = router({
   booking: bookingRouter,
   contact: contactRouter,
   tutor: tutorRouter,
+  tutoring: tutoringRouter,
+  session: sessionRouter,
+  feedback: feedbackRouter,
   payments: paymentsRouter,
   banners: bannersRouter,
   push: pushRouter,

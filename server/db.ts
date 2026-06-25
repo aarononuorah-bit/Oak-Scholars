@@ -4,16 +4,24 @@ import {
   announcementBanners,
   bookings,
   contactMessages,
+  feedback,
   InsertAnnouncementBanner,
   InsertBooking,
   InsertContactMessage,
+  InsertFeedback,
   InsertOrder,
   InsertPushSubscription,
   InsertTutorApplication,
+  InsertTutorAvailability,
+  InsertTutoringRelationship,
+  InsertTutoringSession,
   InsertUser,
   orders,
   pushSubscriptions,
   tutorApplications,
+  tutorAvailability,
+  tutoringRelationships,
+  tutoringSessions,
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -254,4 +262,122 @@ export async function getUserById(id: number) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return result[0] ?? undefined;
+}
+
+export async function updateUserRole(id: number, role: "user" | "admin" | "tutor" | "parent", parentOf?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, unknown> = { role };
+  if (parentOf !== undefined) updateData.parentOf = parentOf;
+  await db.update(users).set(updateData).where(eq(users.id, id));
+}
+
+export async function approveTutorByEmail(email: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (result.length === 0) throw new Error("User not found");
+  await db.update(users).set({ role: "tutor", approvedAsTutor: 1 }).where(eq(users.id, result[0].id));
+  return result[0].id;
+}
+
+// ─── Tutoring Relationships ───────────────────────────────────────────────────
+export async function createTutoringRelationship(data: InsertTutoringRelationship) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(tutoringRelationships).values(data);
+  return result[0]?.insertId || 0;
+}
+
+export async function getTutoringRelationshipsByTutorId(tutorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tutoringRelationships).where(eq(tutoringRelationships.tutorId, tutorId));
+}
+
+export async function getTutoringRelationshipsByStudentId(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tutoringRelationships).where(eq(tutoringRelationships.studentId, studentId));
+}
+
+export async function updateTutoringRelationshipStatus(id: number, status: "active" | "paused" | "completed") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(tutoringRelationships).set({ status }).where(eq(tutoringRelationships.id, id));
+}
+
+// ─── Tutoring Sessions ────────────────────────────────────────────────────────
+export async function createTutoringSession(data: InsertTutoringSession) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(tutoringSessions).values(data);
+  return result[0]?.insertId || 0;
+}
+
+export async function getTutoringSessionsByTutorId(tutorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tutoringSessions).where(eq(tutoringSessions.tutorId, tutorId)).orderBy(desc(tutoringSessions.scheduledAt));
+}
+
+export async function getTutoringSessionsByStudentId(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tutoringSessions).where(eq(tutoringSessions.studentId, studentId)).orderBy(desc(tutoringSessions.scheduledAt));
+}
+
+export async function getTutoringSessionsByRelationshipId(relationshipId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tutoringSessions).where(eq(tutoringSessions.relationshipId, relationshipId)).orderBy(desc(tutoringSessions.scheduledAt));
+}
+
+export async function updateTutoringSessionStatus(id: number, status: "scheduled" | "completed" | "cancelled" | "no-show", notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, unknown> = { status };
+  if (notes !== undefined) updateData.notes = notes;
+  if (status === "completed") updateData.completedAt = new Date();
+  await db.update(tutoringSessions).set(updateData).where(eq(tutoringSessions.id, id));
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+export async function createFeedback(data: InsertFeedback) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(feedback).values(data);
+  return result[0]?.insertId || 0;
+}
+
+export async function getFeedbackForSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(feedback).where(eq(feedback.sessionId, sessionId));
+}
+
+export async function getFeedbackReceivedByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(feedback).where(eq(feedback.toUserId, userId)).orderBy(desc(feedback.createdAt));
+}
+
+// ─── Tutor Availability ───────────────────────────────────────────────────────
+export async function createTutorAvailability(data: InsertTutorAvailability) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(tutorAvailability).values(data);
+  return result[0]?.insertId || 0;
+}
+
+export async function getTutorAvailabilityByTutorId(tutorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tutorAvailability).where(eq(tutorAvailability.tutorId, tutorId));
+}
+
+export async function deleteTutorAvailability(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(tutorAvailability).where(eq(tutorAvailability.id, id));
 }
