@@ -156,7 +156,7 @@ export default function Booking() {
           </div>
           <h1 className="font-serif text-3xl font-bold text-navy-deep mb-4">Payment Successful!</h1>
           <p className="text-muted-brand mb-8">Your session has been booked and paid. We'll be in touch within 24 hours to confirm your tutor and session time.</p>
-          <Button style={{ backgroundColor: "#E8A838", color: "#0F1B35" }} onClick={() => window.location.href = "/"}>
+          <Button style={{ backgroundColor: "#E8A838", color: "#281A39" }} onClick={() => window.location.href = "/"}>
             Back to Home
           </Button>
         </div>
@@ -189,7 +189,7 @@ export default function Booking() {
                   onClick={handleStripeCheckout}
                   disabled={checkoutMutation.isPending}
                   className="btn-press font-semibold"
-                  style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
                 >
                   <CreditCard size={16} className="mr-2" />
                   {checkoutMutation.isPending ? "Redirecting..." : "Pay with Stripe"}
@@ -231,7 +231,7 @@ export default function Booking() {
                     className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
                       done ? "bg-green-500 text-white" : active ? "text-white" : "bg-gray-100 text-gray-400"
                     }`}
-                    style={active ? { backgroundColor: "#E8A838", color: "#0F1B35" } : {}}
+                    style={active ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
                   >
                     {done ? <CheckCircle size={18} /> : <Icon size={16} />}
                   </div>
@@ -414,7 +414,7 @@ export default function Booking() {
                 onClick={() => setStep((s) => (s + 1) as Step)}
                 disabled={!canAdvance()}
                 className="btn-press flex items-center gap-2"
-                style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 Continue
                 <ChevronRight size={16} />
@@ -424,7 +424,7 @@ export default function Booking() {
                 onClick={handleSubmit}
                 disabled={!canAdvance() || submitMutation.isPending}
                 className="btn-press flex items-center gap-2"
-                style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 {submitMutation.isPending ? "Submitting..." : "Submit Booking"}
                 <ChevronRight size={16} />

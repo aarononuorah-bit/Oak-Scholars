@@ -381,7 +381,7 @@ export default function TutorApply() {
                 onClick={() => setStep((s) => (s + 1) as Step)}
                 disabled={!canAdvance()}
                 className="btn-press flex items-center gap-2"
-                style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 Continue
                 <ChevronRight size={16} />
@@ -391,7 +391,7 @@ export default function TutorApply() {
                 onClick={handleSubmit}
                 disabled={!canAdvance() || submitMutation.isPending || uploadingCv}
                 className="btn-press flex items-center gap-2"
-                style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 {submitMutation.isPending ? "Submitting..." : "Submit Application"}
                 <ChevronRight size={16} />

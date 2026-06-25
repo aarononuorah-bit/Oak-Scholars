@@ -12,7 +12,7 @@ export default function AnnouncementBanner() {
   if (!banner || dismissed) return null;
 
   const bgColors: Record<string, string> = {
-    info: "bg-blue-600",
+    info: "bg-navy",
     success: "bg-green-600",
     warning: "bg-amber-500",
     promo: "bg-navy-deep",

@@ -37,7 +37,7 @@ function HeroSection() {
   return (
     <section
       className="relative min-h-screen flex items-center pt-20"
-      style={{ background: "linear-gradient(135deg, #0F1B35 0%, #1a2d5a 50%, #281A39 100%)" }}
+      style={{ background: "linear-gradient(160deg, #281A39 0%, #1e1230 50%, #160D22 100%)" }}
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5" style={{
@@ -66,7 +66,7 @@ function HeroSection() {
               <Button
                 size="lg"
                 className="btn-press font-semibold text-base px-8 py-6"
-                style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
               >
                 Book Your Trial Session
                 <ChevronRight size={18} className="ml-1" />
@@ -240,7 +240,7 @@ function SubjectsSection() {
               ))}
             </div>
             <Link href="/booking">
-              <Button className="btn-press" style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}>
+              <Button className="btn-press" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
                 Book a Session
               </Button>
             </Link>
@@ -364,7 +364,7 @@ function PricingSection() {
               <Link href="/booking">
                 <Button
                   className="w-full btn-press"
-                  style={plan.highlight ? { backgroundColor: "#E8A838", color: "#0F1B35" } : {}}
+                  style={plan.highlight ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
                   variant={plan.highlight ? "default" : "outline"}
                 >
                   Book Now
@@ -475,7 +475,7 @@ function TeamSection() {
             <div key={member.name} className="text-center group">
               <div
                 className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold font-serif text-white border-4 border-amber/20 group-hover:border-amber transition-colors duration-300"
-                style={{ backgroundColor: "#0F1B35" }}
+                style={{ backgroundColor: "#281A39" }}
               >
                 {member.initials}
               </div>

@@ -104,7 +104,7 @@ export default function Contact() {
                   type="submit"
                   className="w-full btn-press font-semibold"
                   disabled={submitMutation.isPending}
-                  style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
                 >
                   {submitMutation.isPending ? "Sending..." : "Send Message"}
                 </Button>

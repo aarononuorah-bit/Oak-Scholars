@@ -17,7 +17,7 @@ export default function CtaBanner() {
             <Button
               size="lg"
               className="btn-press font-semibold text-base px-8"
-              style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+              style={{ backgroundColor: "#E8A838", color: "#281A39" }}
             >
               Book Your Trial — 50% Off
             </Button>

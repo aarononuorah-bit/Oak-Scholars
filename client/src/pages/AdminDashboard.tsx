@@ -17,7 +17,7 @@ import Footer from "@/components/Footer";
 // ─── Status badge helper ──────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    new: "bg-blue-100 text-blue-700",
+    new: "bg-amber-100 text-amber-800",
     contacted: "bg-yellow-100 text-yellow-700",
     confirmed: "bg-green-100 text-green-700",
     cancelled: "bg-red-100 text-red-700",
@@ -228,7 +228,7 @@ function BannersTab() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-xl font-bold text-navy-deep">Announcement Banners</h2>
-        <Button size="sm" onClick={() => setShowForm((v) => !v)} style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}>
+        <Button size="sm" onClick={() => setShowForm((v) => !v)} style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
           <Plus size={14} className="mr-1" />New Banner
         </Button>
       </div>
@@ -270,7 +270,7 @@ function BannersTab() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => createBanner.mutate(form)} disabled={!form.message || createBanner.isPending} style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}>
+              <Button size="sm" onClick={() => createBanner.mutate(form)} disabled={!form.message || createBanner.isPending} style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
                 {createBanner.isPending ? "Creating..." : "Create"}
               </Button>
               <Button size="sm" variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancel</Button>
@@ -287,7 +287,7 @@ function BannersTab() {
             <div key={b.id} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between gap-4 flex-wrap">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${b.type === "promo" ? "bg-purple-100 text-purple-700" : b.type === "warning" ? "bg-yellow-100 text-yellow-700" : b.type === "success" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{b.type}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${b.type === "promo" ? "bg-purple-100 text-purple-700" : b.type === "warning" ? "bg-yellow-100 text-yellow-700" : b.type === "success" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-800"}`}>{b.type}</span>
                   {b.isActive === 1 && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Active</span>}
                 </div>
                 <p className="text-sm text-navy-deep">{b.message}</p>
@@ -353,7 +353,7 @@ function PushTab() {
             onClick={() => sendPush.mutate(form)}
             disabled={!form.title || !form.body || sendPush.isPending}
             className="btn-press flex items-center gap-2"
-            style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}
+            style={{ backgroundColor: "#E8A838", color: "#281A39" }}
           >
             <Send size={14} />
             {sendPush.isPending ? "Sending..." : `Send to ${countData?.count ?? 0} subscribers`}
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
           <h1 className="font-serif text-3xl font-bold text-navy-deep mb-4">Access Denied</h1>
           <p className="text-muted-brand mb-6">This page is restricted to Oak Scholars administrators.</p>
           <Link href="/">
-            <Button style={{ backgroundColor: "#E8A838", color: "#0F1B35" }}>Back to Home</Button>
+            <Button style={{ backgroundColor: "#E8A838", color: "#281A39" }}>Back to Home</Button>
           </Link>
         </div>
         <Footer />

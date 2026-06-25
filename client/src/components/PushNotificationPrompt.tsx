@@ -24,7 +24,7 @@ export default function PushNotificationPrompt() {
         onClick={isSubscribed ? unsubscribe : subscribe}
         disabled={isLoading}
         className="flex-shrink-0 text-xs"
-        style={!isSubscribed ? { backgroundColor: "#E8A838", color: "#0F1B35" } : {}}
+        style={!isSubscribed ? { backgroundColor: "#E8A838", color: "#281A39" } : {}}
       >
         {isLoading ? "..." : isSubscribed ? (
           <><BellOff size={14} className="mr-1" />Disable</>
