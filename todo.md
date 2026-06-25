@@ -67,14 +67,14 @@
 - [x] Register new routes in App.tsx
 
 ## UI/UX Fixes (Round 4)
-- [ ] Space out navbar links so they are less clumped
-- [ ] Fix navbar background on scroll — use solid colour so text is always readable (not transparent over white)
-- [ ] Make entire service card clickable (not just the "Find out more" link)
-- [ ] Build dedicated Academic Support enquiry form at /academic-support
-- [ ] Build dedicated Wellbeing Support enquiry form at /wellbeing-support
-- [ ] Update Support & Guidance page service card buttons to link to their specific forms
-- [ ] Remove "Group 1" and "Group 2" labels from Support & Guidance page
-- [ ] Register new routes in App.tsx
+- [x] Space out navbar links so they are less clumped
+- [x] Fix navbar background on scroll — solid white on all non-home pages, transparent purple only on homepage hero
+- [x] Make entire service card clickable (already wrapped in Link, confirmed)
+- [x] Build dedicated Academic Support enquiry form at /academic-support
+- [x] Build dedicated Wellbeing Support enquiry form at /wellbeing-support
+- [x] Update Support & Guidance page service card buttons to link to their specific forms
+- [x] No "Group 1" / "Group 2" labels found in SupportGuidance.tsx (already clean)
+- [x] Register new routes in App.tsx
 
 ## Email/Password Auth & Admin Email Fix
 - [x] Extend users table: add passwordHash, emailVerified columns

@@ -25,7 +25,6 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuth();
@@ -34,11 +33,17 @@ export default function Navbar() {
     onSuccess: () => { window.location.href = "/"; },
   });
 
+  // Only show transparent purple navbar on the homepage hero; everywhere else use solid white
+  const isHome = location === "/";
+  const [atTop, setAtTop] = useState(true);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setAtTop(window.scrollY < 20);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  // scrolled = we should show the white/solid navbar
+  const scrolled = !isHome || !atTop;
 
   useEffect(() => setMenuOpen(false), [location]);
 
@@ -46,7 +51,7 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "shadow-lg bg-white"
+          ? "shadow-md bg-white border-b border-gray-100"
           : ""
       }`}
       style={scrolled ? {} : { backgroundColor: "#281A39" }}
@@ -76,7 +81,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop nav - centered */}
-          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center px-8">
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 flex-1 justify-center px-4 xl:px-8">
             {navLinks.map((link) => (
               <a
                 key={link.href}
