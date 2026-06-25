@@ -37,6 +37,16 @@ export function ParentDashboard() {
   const { data: children = [], isLoading: childrenLoading, refetch: refetchChildren } = trpc.parent.myChildren.useQuery();
   const { data: pendingRequests = [], refetch: refetchRequests } = trpc.parent.pendingRequests.useQuery();
 
+  const cancelSessionMutation = trpc.session.updateStatus.useMutation({
+    onSuccess: () => { toast.success("Session cancelled"); refetchChildren(); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+
+  const rescheduleSessionMutation = trpc.session.rescheduleSession.useMutation({
+    onSuccess: () => { toast.success("Reschedule request sent"); refetchChildren(); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+
   const sendLinkRequest = trpc.parent.sendLinkRequest.useMutation({
     onSuccess: () => {
       toast.success("Link request sent! The student will need to approve it from their account.");
@@ -206,13 +216,7 @@ export function ParentDashboard() {
 	                                      onClick={() => {
 	                                        const reason = window.prompt("Reason for cancellation (optional):");
 	                                        if (reason !== null) {
-	                                          trpc.session.updateStatus.mutate({ id: s.id, status: "cancelled", notes: reason || undefined }, {
-	                                            onSuccess: () => {
-	                                              toast.success("Session cancelled");
-	                                              refetchChildren();
-	                                            },
-	                                            onError: (e) => toast.error(e.message)
-	                                          });
+                                          cancelSessionMutation.mutate({ id: s.id, status: "cancelled", notes: reason || undefined });
 	                                        }
 	                                      }}
 	                                    >
@@ -227,13 +231,7 @@ export function ParentDashboard() {
 	                                        if (newDateStr) {
 	                                          const newDate = new Date(newDateStr);
 	                                          if (isNaN(newDate.getTime())) return toast.error("Invalid date format");
-	                                          trpc.session.rescheduleSession.mutate({ id: s.id, newDate }, {
-	                                            onSuccess: () => {
-	                                              toast.success("Reschedule request sent");
-	                                              refetchChildren();
-	                                            },
-	                                            onError: (e) => toast.error(e.message)
-	                                          });
+                                          rescheduleSessionMutation.mutate({ id: s.id, newScheduledAt: newDate });
 	                                        }
 	                                      }}
 	                                    >

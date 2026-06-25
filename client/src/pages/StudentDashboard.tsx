@@ -49,6 +49,16 @@ export function StudentDashboard() {
     onError: (e) => toast.error(e.message),
   });
 
+  const cancelSessionMutation = trpc.session.updateStatus.useMutation({
+    onSuccess: () => { toast.success("Session cancelled"); utils.session.studentSessions.invalidate(); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+
+  const rescheduleSessionMutation = trpc.session.rescheduleSession.useMutation({
+    onSuccess: () => { toast.success("Reschedule request sent"); utils.session.studentSessions.invalidate(); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+
   if (!user) {
     return (
       <div className="min-h-screen bg-[#F9F7F2]">
@@ -189,46 +199,34 @@ export function StudentDashboard() {
 	                            <div className="flex items-center gap-2">
 	                              <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
 	                              <div className="flex items-center gap-1">
-	                                <Button
-	                                  size="sm"
-	                                  variant="ghost"
-	                                  className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]"
-	                                  onClick={() => {
-	                                    const reason = window.prompt("Reason for cancellation (optional):");
-	                                    if (reason !== null) {
-	                                      trpc.session.updateStatus.mutate({ id: s.id, status: "cancelled", notes: reason || undefined }, {
-	                                        onSuccess: () => {
-	                                          toast.success("Session cancelled");
-	                                          utils.session.studentSessions.invalidate();
-	                                        },
-	                                        onError: (e) => toast.error(e.message)
-	                                      });
-	                                    }
-	                                  }}
-	                                >
-	                                  Cancel
-	                                </Button>
-	                                <Button
-	                                  size="sm"
-	                                  variant="ghost"
-	                                  className="h-8 px-2 text-[10px] text-[#E8A838] hover:bg-amber-50"
-	                                  onClick={() => {
-	                                    const newDateStr = window.prompt("Enter new date/time (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm"));
-	                                    if (newDateStr) {
-	                                      const newDate = new Date(newDateStr);
-	                                      if (isNaN(newDate.getTime())) return toast.error("Invalid date format");
-	                                      trpc.session.rescheduleSession.mutate({ id: s.id, newDate }, {
-	                                        onSuccess: () => {
-	                                          toast.success("Reschedule request sent");
-	                                          utils.session.studentSessions.invalidate();
-	                                        },
-	                                        onError: (e) => toast.error(e.message)
-	                                      });
-	                                    }
-	                                  }}
-	                                >
-	                                  Reschedule
-	                                </Button>
+							                <Button
+							                  size="sm"
+							                  variant="ghost"
+							                  className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]"
+							                  onClick={() => {
+							                    const reason = window.prompt("Reason for cancellation (optional):");
+							                    if (reason !== null) {
+							                      cancelSessionMutation.mutate({ id: s.id, status: "cancelled", notes: reason || undefined });
+							                    }
+							                  }}
+							                >
+							                  Cancel
+							                </Button>
+							                <Button
+							                  size="sm"
+							                  variant="ghost"
+							                  className="h-8 px-2 text-[10px] text-[#E8A838] hover:bg-amber-50"
+							                  onClick={() => {
+							                    const newDateStr = window.prompt("Enter new date/time (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm"));
+							                    if (newDateStr) {
+							                      const newDate = new Date(newDateStr);
+							                      if (isNaN(newDate.getTime())) return toast.error("Invalid date format");
+                                      rescheduleSessionMutation.mutate({ id: s.id, newScheduledAt: newDate });
+							                    }
+							                  }}
+							                >
+							                  Reschedule
+							                </Button>
 	                              </div>
 	                            </div>
 	                          </div>
