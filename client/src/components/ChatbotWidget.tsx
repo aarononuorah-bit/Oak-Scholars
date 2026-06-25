@@ -31,8 +31,8 @@ export function ChatbotWidget() {
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant",
-          content: response.message,
+          role: "assistant" as const,
+          content: String(response.message),
         },
       ]);
       setIsLoading(false);

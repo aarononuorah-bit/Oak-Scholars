@@ -17,7 +17,7 @@ const CONTACT_METHODS = [
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
-  const [preferredContactMethod, setPreferredContactMethod] = useState("");
+  const [preferredContactMethod, setPreferredContactMethod] = useState<"email" | "phone" | "whatsapp" | "">("" as "");
   const [form, setForm] = useState({
     name: "", email: "", phone: "", subject: "", message: "",
   });
@@ -36,7 +36,7 @@ export default function Contact() {
       toast.error("Please fill in all fields and select a preferred contact method.");
       return;
     }
-    submitMutation.mutate({ ...form, preferredContactMethod });
+    submitMutation.mutate({ ...form, preferredContactMethod: preferredContactMethod as "email" | "phone" | "whatsapp" });
   };
 
   return (
@@ -110,7 +110,7 @@ export default function Contact() {
                       <button
                         key={method.id}
                         type="button"
-                        onClick={() => setPreferredContactMethod(method.id)}
+                        onClick={() => setPreferredContactMethod(method.id as "email" | "phone" | "whatsapp")}
                         className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                           preferredContactMethod === method.id
                             ? "border-amber bg-amber/10 text-navy-deep"

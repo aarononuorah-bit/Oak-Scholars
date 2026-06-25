@@ -26,7 +26,7 @@ const CONTACT_PREFS = [
 
 export default function WellbeingForm() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [contactPref, setContactPref] = useState("");
+  const [contactPref, setContactPref] = useState<"email" | "phone" | "whatsapp" | "">("" as "");
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -68,7 +68,7 @@ export default function WellbeingForm() {
       name: form.name,
       email: form.email,
       phone: form.phone,
-      preferredContactMethod: contactPref,
+      preferredContactMethod: contactPref as "email" | "phone" | "whatsapp",
       subject: `Wellbeing Support Enquiry — ${typeLabels}`,
       message: [
         `Support areas: ${typeLabels}`,
@@ -258,7 +258,7 @@ export default function WellbeingForm() {
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => setContactPref(p.id)}
+                    onClick={() => setContactPref(p.id as "email" | "phone" | "whatsapp")}
                     className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                       contactPref === p.id
                         ? "border-amber bg-amber/10 text-navy-deep"

@@ -21,7 +21,7 @@ const YEAR_GROUPS = ["Year 10", "Year 11", "Year 12", "Year 13", "Gap Year", "Ot
 export default function AcademicSupportForm() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
-  const [preferredContactMethod, setPreferredContactMethod] = useState("");
+  const [preferredContactMethod, setPreferredContactMethod] = useState<"email" | "phone" | "whatsapp" | "">("" as "");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -207,7 +207,7 @@ export default function AcademicSupportForm() {
                     <button
                       key={method.id}
                       type="button"
-                      onClick={() => setPreferredContactMethod(method.id)}
+                      onClick={() => setPreferredContactMethod(method.id as "email" | "phone" | "whatsapp")}
                       className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                         preferredContactMethod === method.id
                           ? "border-amber bg-amber/10 text-navy-deep"
