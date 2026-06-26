@@ -94,7 +94,7 @@ function HeroSection() {
       <div
         className="absolute inset-0 opacity-20"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop')`,
+          backgroundImage: `url('/manus-storage/philosophy-hero-new_da9ea291.jpg')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -162,7 +162,7 @@ function HeroSection() {
           <div className="relative hidden lg:block animate-slide-in-right" style={{ animationDelay: "200ms" }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="/manus-storage/hero-tutoring_1dfe71f1.jpeg"
+                src="/manus-storage/hero-tutoring-new_2fa775c6.jpg"
                 alt="A university student tutoring a secondary school student"
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
               />

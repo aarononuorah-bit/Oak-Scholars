@@ -33,6 +33,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
+  // Trust the Manus reverse proxy so x-forwarded-proto and x-forwarded-host are correct
+  app.set("trust proxy", 1);
   const server = createServer(app);
   // Stripe webhook MUST be registered before express.json() to get raw body
   registerStripeWebhook(app);

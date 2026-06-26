@@ -182,7 +182,7 @@ export default function SupportGuidance() {
             <div className="hidden lg:block">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
                 <img
-                  src="/manus-storage/support-mentoring_d39f7d5e.jpg"
+                  src="/manus-storage/support-mentoring-new_8515c2be.jpg"
                   alt="A mentor supporting a student"
                   className="w-full h-full object-cover"
                 />

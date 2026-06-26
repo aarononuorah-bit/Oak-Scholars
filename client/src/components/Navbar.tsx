@@ -31,7 +31,7 @@ export default function Navbar() {
     onSuccess: () => { window.location.href = "/"; },
   });
 
-  // Transparent purple on homepage hero only; solid white everywhere else
+  // Always purple navbar — transparent on homepage hero at top, solid purple when scrolled or on other pages
   const isHome = location === "/";
   const [atTop, setAtTop] = useState(true);
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // scrolled = show solid white navbar
+  // scrolled = show solid purple navbar (not white)
   const scrolled = !isHome || !atTop;
 
   useEffect(() => setMenuOpen(false), [location]);
@@ -59,16 +59,17 @@ export default function Navbar() {
     user?.role === "parent" ? "/parent-dashboard" :
     "/student-dashboard";
 
-  const textColor = scrolled ? "text-[#281A39]" : "text-white";
-  const mutedColor = scrolled ? "text-gray-600 hover:text-[#281A39]" : "text-white/90 hover:text-white";
-  const activeColor = scrolled ? "text-[#281A39]" : "text-[#E8A838]";
-  const underlineColor = scrolled ? "#281A39" : "#E8A838";
+  // Always white text on purple background
+  const textColor = "text-white";
+  const mutedColor = "text-white/90 hover:text-white";
+  const activeColor = "text-[#E8A838]";
+  const underlineColor = "#E8A838";
 
   return (
     <header
       className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-white shadow-sm py-1 border-b border-gray-100"
+          ? "bg-[#281A39] shadow-md py-1 border-b border-white/10"
           : "bg-[#281A39] lg:bg-transparent py-2"
       }`}
     >
@@ -115,7 +116,7 @@ export default function Navbar() {
                   </a>
                   {showDividerAfter && (
                     <span
-                      className={`mx-1 h-4 w-px ${scrolled ? "bg-gray-300" : "bg-white/30"}`}
+                        className="mx-1 h-5 w-px bg-white/30"
                     />
                   )}
                 </div>
@@ -133,9 +134,7 @@ export default function Navbar() {
                 variant="ghost"
                 size="sm"
                 className={`font-semibold transition-all duration-200 btn-press ${
-                  scrolled
-                    ? "text-[#281A39] hover:bg-[#281A39]/5"
-                    : "text-white hover:bg-white/10"
+                  "text-white hover:bg-white/10"
                 }`}
               >
                 Become an Oak Scholar
@@ -152,9 +151,7 @@ export default function Navbar() {
                     variant="outline"
                     size="sm"
                     className={`transition-all duration-200 gap-2 btn-press ${
-                      scrolled
-                        ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
-                        : "border-white/30 text-white hover:bg-white/10 bg-transparent"
+                      "border-white/30 text-white hover:bg-white/10 bg-transparent"
                     }`}
                   >
                     <User size={15} />

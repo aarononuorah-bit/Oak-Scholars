@@ -38,9 +38,13 @@ function getOAuth2Client(redirectUri: string) {
 }
 
 function getRedirectUri(req: Request): string {
-  // Use the forwarded host if behind a proxy (production), else build from req
-  const proto = req.headers["x-forwarded-proto"] || req.protocol;
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  // Use the forwarded headers from the Manus reverse proxy (trust proxy is set)
+  // x-forwarded-proto may be comma-separated (e.g. "https,http") — take the first value
+  const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+  const proto = rawProto.split(",")[0].trim();
+  // x-forwarded-host may also be comma-separated — take the first value
+  const rawHost = (req.headers["x-forwarded-host"] as string) || (req.headers.host as string);
+  const host = rawHost.split(",")[0].trim();
   return `${proto}://${host}/api/auth/google/callback`;
 }
 
