@@ -458,4 +458,696 @@ function OrdersTab() {
         <div>
           <h2 className="font-serif text-xl font-bold text-navy-deep">Orders & Payments ({orders.length})</h2>
           <p className="text-xs text-muted-brand mt-0.5">
-            Total revenue: <span className="font-semibold text-navy-deep">£
+            Total revenue: <span className="font-semibold text-navy-deep">£{(totalRevenue / 100).toFixed(2)}</span>
+          </p>
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {["all", "paid", "pending", "cancelled", "refunded"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filter === s ? "bg-navy text-white border-navy" : "border-gray-200 text-muted-brand hover:border-gray-300"}`}
+            >
+              {s === "all" ? `All (${orders.length})` : `${s} (${orders.filter((o) => o.status === s).length})`}
+            </button>
+          ))}
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="space-y-3 mt-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 h-20 animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-brand text-sm mt-4">No orders found.</p>
+      ) : (
+        <div className="space-y-3 mt-4">
+          {filtered.map((o) => (
+            <div key={o.id} className="bg-white rounded-xl border border-gray-100 p-5">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-navy-deep">{o.packageName}</p>
+                    <StatusBadge status={o.status} />
+                  </div>
+                  <p className="text-sm text-muted-brand mt-0.5">{o.email}</p>
+                  {(o.subject || o.level) && (
+                    <p className="text-xs text-muted-brand mt-0.5">
+                      {[o.subject, o.level].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-brand mt-1 font-mono">{o.stripeSessionId.slice(0, 28)}…</p>
+                  <p className="text-xs text-muted-brand mt-0.5">
+                    {new Date(o.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xl font-bold text-navy-deep">£{(o.amountTotal / 100).toFixed(2)}</p>
+                  <p className="text-xs text-muted-brand uppercase">{o.currency}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── User Profile Modal ───────────────────────────────────────────────────────
+function UserProfileModal({ userId, onClose }: { userId: number; onClose: () => void }) {
+  const { data: profile, isLoading } = trpc.admin.getUserProfile.useQuery({ id: userId });
+
+  const roleLabel = (role: string) => {
+    if (role === "user") return "Student";
+    if (role === "admin") return "Admin";
+    if (role === "tutor") return "Tutor";
+    if (role === "parent") return "Parent";
+    return role;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-serif text-xl font-bold text-navy-deep">User Profile</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          </div>
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />)}
+            </div>
+          ) : !profile ? (
+            <p className="text-muted-brand text-sm">Profile not found.</p>
+          ) : (
+            <div className="space-y-5">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {(profile as any).profilePhotoUrl ? (
+                    <img src={(profile as any).profilePhotoUrl} alt={profile.name || ""} className="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-navy/10 flex items-center justify-center text-2xl font-bold text-navy-deep">
+                      {(profile.name || profile.email || "?").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold text-navy-deep text-lg">{profile.name || <span className="italic text-muted-brand">No name</span>}</p>
+                  <p className="text-sm text-muted-brand">{profile.email}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      profile.role === "admin" ? "bg-purple-100 text-purple-700" :
+                      profile.role === "tutor" ? "bg-blue-100 text-blue-700" :
+                      profile.role === "parent" ? "bg-green-100 text-green-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>{roleLabel(profile.role)}</span>
+                    {profile.loginMethod && <span className="text-xs text-muted-brand capitalize">{profile.loginMethod}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Joined</p>
+                  <p className="text-sm font-semibold text-navy-deep">{new Date(profile.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Last Sign-in</p>
+                  <p className="text-sm font-semibold text-navy-deep">{new Date(profile.lastSignedIn).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                </div>
+                {profile.accountType && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-0.5">Account Type</p>
+                    <p className="text-sm font-semibold text-navy-deep capitalize">{profile.accountType}</p>
+                  </div>
+                )}
+              </div>
+
+              {(profile.role === "tutor" || profile.bio || (profile as any).tutorUniversity) && (
+                <div>
+                  <h3 className="text-xs font-semibold text-navy-deep uppercase tracking-wide mb-2">Tutor Profile</h3>
+                  <div className="space-y-2">
+                    {profile.bio && (
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Bio</p>
+                        <p className="text-sm text-navy-deep">{profile.bio}</p>
+                      </div>
+                    )}
+                    {((profile as any).tutorUniversity || (profile as any).tutorCourse) && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {(profile as any).tutorUniversity && (
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-400 mb-0.5">University</p>
+                            <p className="text-sm font-semibold text-navy-deep">{(profile as any).tutorUniversity}</p>
+                          </div>
+                        )}
+                        {(profile as any).tutorCourse && (
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-400 mb-0.5">Course</p>
+                            <p className="text-sm font-semibold text-navy-deep">{(profile as any).tutorCourse}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {profile.tutorSubjects && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Subjects</p>
+                        <p className="text-sm font-semibold text-navy-deep">{profile.tutorSubjects}</p>
+                      </div>
+                    )}
+                    {profile.tutorLevel && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">Level(s)</p>
+                        <p className="text-sm font-semibold text-navy-deep">{profile.tutorLevel}</p>
+                      </div>
+                    )}
+                    {profile.linkedin && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-0.5">LinkedIn</p>
+                        <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">{profile.linkedin}</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {((profile as any).bankAccountName || (profile as any).bankAccountNumber) && (
+                <div>
+                  <h3 className="text-xs font-semibold text-navy-deep uppercase tracking-wide mb-2">Banking Details</h3>
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 space-y-1">
+                    {(profile as any).bankAccountName && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">Name: </span>{(profile as any).bankAccountName}</p>}
+                    {(profile as any).bankSortCode && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">Sort Code: </span>{(profile as any).bankSortCode}</p>}
+                    {(profile as any).bankAccountNumber && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">Account: </span>{(profile as any).bankAccountNumber}</p>}
+                    {(profile as any).bankPaypalEmail && <p className="text-sm text-navy-deep"><span className="text-xs text-gray-400">PayPal: </span>{(profile as any).bankPaypalEmail}</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Users Tab ────────────────────────────────────────────────────────────────
+function UsersTab() {
+  const { data: users = [], isLoading, refetch } = trpc.admin.users.useQuery(undefined, { refetchInterval: 60000 });
+  const updateRole = trpc.admin.updateUserRole.useMutation({
+    onSuccess: () => { toast.success("Role updated"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [viewProfileId, setViewProfileId] = useState<number | null>(null);
+
+  const nonAdminUsers = users.filter((u) => u.role !== "admin");
+  const adminUsers = users.filter((u) => u.role === "admin");
+
+  const filtered = users
+    .filter((u) => {
+      if (filter === "all") return true;
+      if (filter === "admin") return u.role === "admin";
+      if (filter === "tutor") return u.role === "tutor";
+      if (filter === "parent") return u.role === "parent";
+      if (filter === "user") return u.role === "user";
+      return true;
+    })
+    .filter((u) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.loginMethod?.toLowerCase().includes(q));
+    });
+
+  return (
+    <div>
+      {viewProfileId !== null && <UserProfileModal userId={viewProfileId} onClose={() => setViewProfileId(null)} />}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 className="font-serif text-xl font-bold text-navy-deep">Accounts ({users.length})</h2>
+          <p className="text-xs text-muted-brand mt-0.5">
+            {adminUsers.length} admin{adminUsers.length !== 1 ? "s" : ""} · {users.filter((u) => u.role === "tutor").length} tutors · {users.filter((u) => u.role === "user").length} students · {users.filter((u) => u.role === "parent").length} parents
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input placeholder="Search by name or email…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 text-xs w-48" />
+          {["all", "user", "tutor", "parent", "admin"].map((r) => (
+            <button key={r} onClick={() => setFilter(r)} className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filter === r ? "bg-navy text-white border-navy" : "border-gray-200 text-muted-brand hover:border-gray-300"}`}>
+              {r === "all" ? `All (${users.length})` : r === "user" ? `Students (${users.filter((u) => u.role === "user").length})` : r === "tutor" ? `Tutors (${users.filter((u) => u.role === "tutor").length})` : r === "parent" ? `Parents (${users.filter((u) => u.role === "parent").length})` : `Admins (${adminUsers.length})`}
+            </button>
+          ))}
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 h-16 animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-brand text-sm">No accounts found.</p>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="hidden md:grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-muted-brand uppercase tracking-wide">
+            <span>Name</span><span>Email</span><span>Login Method</span><span>Role</span><span>Joined</span><span>Last Sign-in</span><span>Profile</span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {filtered.map((u) => (
+              <div key={u.id} className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] gap-2 md:gap-4 px-5 py-4 items-center hover:bg-gray-50/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${u.role === "admin" ? "bg-purple-100 text-purple-700" : u.role === "tutor" ? "bg-blue-100 text-blue-700" : u.role === "parent" ? "bg-green-100 text-green-700" : "bg-navy/10 text-navy-deep"}`}>
+                    {(u.name || u.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-semibold text-navy-deep truncate">{u.name || <span className="text-muted-brand italic font-normal">No name</span>}</span>
+                </div>
+                <span className="text-sm text-muted-brand truncate">{u.email || <span className="italic">No email</span>}</span>
+                <span className="text-xs text-muted-brand capitalize">{u.loginMethod || "—"}</span>
+                <div>
+                  <Select value={u.role} onValueChange={(v) => updateRole.mutate({ id: u.id, role: v as "user" | "admin" | "tutor" | "parent" })}>
+                    <SelectTrigger className="w-28 h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Student</SelectItem>
+                      <SelectItem value="tutor">Tutor</SelectItem>
+                      <SelectItem value="parent">Parent</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <span className="text-xs text-muted-brand">{new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}</span>
+                <span className="text-xs text-muted-brand">{new Date(u.lastSignedIn).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}</span>
+                <button onClick={() => setViewProfileId(u.id)} className="px-2.5 py-1 text-xs bg-[#281A39] text-white rounded-lg hover:bg-[#160D22] transition-colors whitespace-nowrap">View</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Banners Tab ──────────────────────────────────────────────────────────────
+function BannersTab() {
+  const { data: banners = [], refetch } = trpc.banners.list.useQuery();
+  const createBannerMutation = trpc.banners.create.useMutation({
+    onSuccess: () => { toast.success("Banner created"); refetch(); setShowForm(false); resetForm(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const setActive = trpc.banners.setActive.useMutation({
+    onSuccess: () => { toast.success("Banner updated"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteBannerMutation = trpc.banners.delete.useMutation({
+    onSuccess: () => { toast.success("Banner deleted"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ message: "", type: "info" as "info" | "success" | "warning" | "promo", linkText: "", linkUrl: "", isActive: false });
+  const resetForm = () => setForm({ message: "", type: "info", linkText: "", linkUrl: "", isActive: false });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-serif text-xl font-bold text-navy-deep">Announcement Banners ({banners.length})</h2>
+        <Button size="sm" onClick={() => setShowForm((v) => !v)} style={{ backgroundColor: "#E8A838", color: "#281A39" }} className="flex items-center gap-1.5 text-xs h-8">
+          <Plus size={12} />New Banner
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white rounded-xl border border-amber/30 p-5 mb-5">
+          <h3 className="font-semibold text-navy-deep mb-4 text-sm">Create Banner</h3>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-semibold text-navy-deep mb-1 block">Message *</Label>
+              <Input value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} placeholder="🎉 First session 50% off this week!" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-semibold text-navy-deep mb-1 block">Type</Label>
+                <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as typeof form.type }))}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="info">Info</SelectItem>
+                    <SelectItem value="success">Success</SelectItem>
+                    <SelectItem value="warning">Warning</SelectItem>
+                    <SelectItem value="promo">Promo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2 mt-5">
+                <input type="checkbox" id="isActive" checked={form.isActive} onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} className="accent-amber" />
+                <label htmlFor="isActive" className="text-xs text-navy-deep">Set as active</label>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-semibold text-navy-deep mb-1 block">CTA Text (optional)</Label>
+                <Input value={form.linkText} onChange={(e) => setForm((f) => ({ ...f, linkText: e.target.value }))} placeholder="Book now" />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-navy-deep mb-1 block">CTA URL (optional)</Label>
+                <Input value={form.linkUrl} onChange={(e) => setForm((f) => ({ ...f, linkUrl: e.target.value }))} placeholder="/booking" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => createBannerMutation.mutate(form)} disabled={!form.message || createBannerMutation.isPending} style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+                {createBannerMutation.isPending ? "Creating…" : "Create"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {banners.length === 0 ? (
+        <p className="text-muted-brand text-sm">No banners yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {banners.map((b) => (
+            <div key={b.id} className={`bg-white rounded-xl border p-4 flex items-center justify-between gap-4 flex-wrap ${b.isActive === 1 ? "border-amber" : "border-gray-100"}`}>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${b.type === "promo" ? "bg-purple-100 text-purple-700" : b.type === "warning" ? "bg-yellow-100 text-yellow-700" : b.type === "success" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-800"}`}>
+                    {b.type}
+                  </span>
+                  {b.isActive === 1 && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Active</span>}
+                </div>
+                <p className="text-sm text-navy-deep">{b.message}</p>
+                {b.linkText && <p className="text-xs text-muted-brand mt-0.5">CTA: {b.linkText} → {b.linkUrl}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setActive.mutate({ id: b.id, isActive: b.isActive !== 1 })}>
+                  {b.isActive === 1 ? <><ToggleRight size={14} className="mr-1 text-green-600" />Deactivate</> : <><ToggleLeft size={14} className="mr-1" />Activate</>}
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs text-red-500 hover:bg-red-50" onClick={() => deleteBannerMutation.mutate({ id: b.id })}>
+                  <Trash2 size={12} />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Tutoring Relationships Tab ──────────────────────────────────────────────
+function TutoringRelationshipsTab() {
+  const { data: relationships = [], isLoading, refetch } = trpc.admin.tutoringRelationships.useQuery(undefined, { refetchInterval: 60000 });
+  const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const removeTutorRole = trpc.admin.updateUserRole.useMutation({
+    onSuccess: () => { toast.success("Tutor role removed"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const filtered = relationships
+    .filter((r) => filter === "all" || r.status === filter)
+    .filter((r) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (r.tutor?.name?.toLowerCase().includes(q) || r.tutor?.email?.toLowerCase().includes(q) || r.student?.name?.toLowerCase().includes(q) || r.student?.email?.toLowerCase().includes(q));
+    });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 className="font-serif text-xl font-bold text-navy-deep">Tutoring Pairs ({relationships.length})</h2>
+          <p className="text-xs text-muted-brand mt-0.5">
+            {relationships.filter((r) => r.status === "active").length} active · {relationships.filter((r) => r.status === "paused").length} paused · {relationships.filter((r) => r.status === "completed").length} completed
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input placeholder="Search by tutor or student name…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 text-xs w-56" />
+          {["all", "active", "paused", "completed"].map((s) => (
+            <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filter === s ? "bg-navy text-white border-navy" : "border-gray-200 text-muted-brand hover:border-gray-300"}`}>
+              {s === "all" ? `All (${relationships.length})` : `${s.charAt(0).toUpperCase() + s.slice(1)} (${relationships.filter((r) => r.status === s).length})`}
+            </button>
+          ))}
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 h-16 animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-brand text-sm">No tutoring pairs found.</p>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="hidden md:grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr_1fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-muted-brand uppercase tracking-wide">
+            <span>Tutor</span><span>Student</span><span>Subject & Level</span><span>Status</span><span>Started</span><span>Action</span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {filtered.map((r) => (
+              <div key={r.id} className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1.5fr_1fr_1fr_1fr] gap-2 md:gap-4 px-5 py-4 items-center hover:bg-gray-50/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
+                    {(r.tutor?.name || r.tutor?.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-navy-deep block">{r.tutor?.name || <span className="text-muted-brand italic font-normal">No name</span>}</span>
+                    <span className="text-xs text-muted-brand">{r.tutor?.email}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-600 shrink-0">
+                    {(r.student?.name || r.student?.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-navy-deep block">{r.student?.name || <span className="text-muted-brand italic font-normal">No name</span>}</span>
+                    <span className="text-xs text-muted-brand">{r.student?.email}</span>
+                  </div>
+                </div>
+                <span className="text-sm text-muted-brand">{r.subjects} • {r.level}</span>
+                <StatusBadge status={r.status} />
+                <span className="text-xs text-muted-brand">{new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}</span>
+                <div className="flex gap-1">
+                  <button onClick={() => { if (confirm(`Remove tutor role from ${r.tutor?.name}? They will become a regular student.`)) { removeTutorRole.mutate({ id: r.tutor!.id, role: "user" }); } }} className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                    Remove Tutor
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Assign Tutor Tab ────────────────────────────────────────────────────────
+function AssignTutorTab() {
+  const { data: tutors = [], isLoading: tutorsLoading } = trpc.admin.tutors.useQuery();
+  const { data: students = [], isLoading: studentsLoading } = trpc.admin.students.useQuery();
+  const { data: relationships = [], refetch } = trpc.admin.tutoringRelationships.useQuery();
+  const [tutorId, setTutorId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [subjects, setSubjects] = useState("");
+  const [level, setLevel] = useState("");
+
+  const assignMutation = trpc.admin.assignTutor.useMutation({
+    onSuccess: () => {
+      toast.success("Tutor assigned successfully!");
+      setTutorId(""); setStudentId(""); setSubjects(""); setLevel("");
+      refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleAssign = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tutorId || !studentId || !subjects || !level) { toast.error("Please fill in all fields"); return; }
+    assignMutation.mutate({ tutorId: Number(tutorId), studentId: Number(studentId), subjects, level });
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h2 className="font-serif text-xl font-bold text-navy-deep mb-1">Assign Tutor to Student</h2>
+        <p className="text-xs text-muted-brand mb-5">Create a new tutoring relationship. One tutor can be assigned to multiple students and vice versa.</p>
+        <form onSubmit={handleAssign} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Tutor</Label>
+            <Select value={tutorId} onValueChange={setTutorId}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={tutorsLoading ? "Loading..." : "Select a tutor"} /></SelectTrigger>
+              <SelectContent>
+                {tutors.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>{t.name || t.email} {t.email ? `(${t.email})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Student</Label>
+            <Select value={studentId} onValueChange={setStudentId}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={studentsLoading ? "Loading..." : "Select a student"} /></SelectTrigger>
+              <SelectContent>
+                {students.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name || s.email} {s.email ? `(${s.email})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Subject(s)</Label>
+            <Input value={subjects} onChange={(e) => setSubjects(e.target.value)} placeholder="e.g. Maths, Physics" className="h-9 text-sm" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-navy-deep">Level</Label>
+            <Select value={level} onValueChange={setLevel}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select level" /></SelectTrigger>
+              <SelectContent>
+                {["GCSE", "A-Level", "University", "Primary", "Secondary", "Other"].map((l) => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={assignMutation.isPending} className="bg-navy text-white hover:bg-navy/90">
+              {assignMutation.isPending ? "Assigning..." : "Assign Tutor"}
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h2 className="font-serif text-lg font-bold text-navy-deep mb-1">Current Tutoring Pairs</h2>
+        <p className="text-xs text-muted-brand mb-4">Recent assignments. Manage all pairs in the Tutoring Pairs tab.</p>
+        <div className="divide-y divide-gray-50">
+          {relationships.length === 0 ? (
+            <p className="text-sm text-muted-brand py-2">No tutoring relationships yet.</p>
+          ) : relationships.slice(0, 8).map((r) => (
+            <div key={r.id} className="flex items-center justify-between py-3">
+              <div>
+                <span className="text-sm font-semibold text-navy-deep">{r.tutor?.name || r.tutor?.email}</span>
+                <span className="text-xs text-muted-brand ml-2">&#8594; {r.student?.name || r.student?.email}</span>
+                <span className="text-xs text-muted-brand ml-2">({r.subjects} &middot; {r.level})</span>
+              </div>
+              <StatusBadge status={r.status} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Push Tab ─────────────────────────────────────────────────────────────────
+function PushTab() {
+  const { data: countData } = trpc.push.subscriberCount.useQuery();
+  const sendPush = trpc.push.send.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Sent to ${data.sent} subscribers (${data.failed} failed)`);
+      setForm({ title: "", body: "", url: "" });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const [form, setForm] = useState({ title: "", body: "", url: "" });
+
+  return (
+    <div>
+      <h2 className="font-serif text-xl font-bold text-navy-deep mb-2">Push Notifications</h2>
+      <p className="text-muted-brand text-sm mb-6">{countData?.count ?? 0} active subscriber{countData?.count !== 1 ? "s" : ""}</p>
+      <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-lg">
+        <h3 className="font-semibold text-navy-deep mb-4">Send Broadcast</h3>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-xs font-semibold text-navy-deep mb-1 block">Title *</Label>
+            <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="New session slots available!" />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-navy-deep mb-1 block">Message *</Label>
+            <Textarea value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} placeholder="We've just opened up new slots for this week…" rows={3} />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-navy-deep mb-1 block">Link URL (optional)</Label>
+            <Input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="/booking" />
+          </div>
+          <Button onClick={() => sendPush.mutate(form)} disabled={!form.title || !form.body || sendPush.isPending} className="btn-press flex items-center gap-2" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+            <Send size={14} />{sendPush.isPending ? "Sending…" : `Send to ${countData?.count ?? 0} subscribers`}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Admin Dashboard ──────────────────────────────────────────────────────────
+export default function AdminDashboard() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center"><div className="text-muted-brand">Loading…</div></div>;
+
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="min-h-screen bg-surface">
+        <Navbar />
+        <div className="container py-32 text-center max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><Shield size={28} className="text-red-400" /></div>
+          <h1 className="font-serif text-3xl font-bold text-navy-deep mb-4">Access Denied</h1>
+          <p className="text-muted-brand mb-6">This page is restricted to Oak Scholars administrators.</p>
+          <Link href="/"><Button style={{ backgroundColor: "#E8A838", color: "#281A39" }}>Back to Home</Button></Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const tabs = [
+    { value: "overview", label: "Overview", icon: LayoutDashboard },
+    { value: "bookings", label: "Bookings", icon: Calendar },
+    { value: "contact", label: "Messages", icon: Mail },
+    { value: "tutors", label: "Applications", icon: GraduationCap },
+    { value: "tutoring", label: "Tutoring Pairs", icon: Users },
+    { value: "orders", label: "Orders", icon: ShoppingCart },
+    { value: "users", label: "Users", icon: Users },
+    { value: "banners", label: "Banners", icon: Megaphone },
+    { value: "assign", label: "Assign Tutor", icon: UserCheck },
+    { value: "push", label: "Push", icon: Bell },
+  ];
+
+  return (
+    <div className="min-h-screen bg-surface">
+      <Navbar />
+      <div className="container py-24">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-amber text-sm font-semibold tracking-widest uppercase">Admin</span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 flex items-center gap-1">
+              <Shield size={10} />Restricted
+            </span>
+          </div>
+          <h1 className="font-serif text-3xl font-bold text-navy-deep">Dashboard</h1>
+          <p className="text-muted-brand text-sm mt-1">Welcome back, {user.name || "Admin"}</p>
+        </div>
+        <Tabs defaultValue="overview">
+          <TabsList className="mb-6 flex flex-wrap gap-1 h-auto bg-white border border-gray-100 p-1 rounded-xl">
+            {tabs.map((t) => (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#281A39] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-transparent rounded-lg px-3 py-2 text-gray-600 hover:text-[#281A39]"
+              >
+                <t.icon size={14} />{t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value="overview"><OverviewTab /></TabsContent>
+          <TabsContent value="bookings"><BookingsTab /></TabsContent>
+          <TabsContent value="contact"><ContactTab /></TabsContent>
+          <TabsContent value="tutors"><TutorApplicationsTab /></TabsContent>
+          <TabsContent value="tutoring"><TutoringRelationshipsTab /></TabsContent>
+          <TabsContent value="orders"><OrdersTab /></TabsContent>
+          <TabsContent value="users"><UsersTab /></TabsContent>
+          <TabsContent value="banners"><BannersTab /></TabsContent>
+          <TabsContent value="assign"><AssignTutorTab /></TabsContent>
+          <TabsContent value="push"><PushTab /></TabsContent>
+        </Tabs>
+      </div>
+      <Footer />
+    </div>
+  );
+}
