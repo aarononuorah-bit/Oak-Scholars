@@ -9,12 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Timetable from "@/components/Timetable";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
   ExternalLink, Shield,
 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -183,8 +182,32 @@ export function StudentDashboard() {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
-                              <Button size="sm" variant="ghost" className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]" onClick={() => { const reason = window.prompt("Reason for cancellation:"); if (reason !== null) cancelSessionMutation.mutate({ id: s.id, reason: reason || undefined }); }}>Cancel</Button>
-                              <Button size="sm" variant="ghost" className="h-8 px-2 text-[10px] text-[#E8A838]" onClick={() => { const newDateStr = window.prompt("New date (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm")); if (newDateStr) rescheduleSessionMutation.mutate({ id: s.id, newScheduledAt: new Date(newDateStr) }); }}>Reschedule</Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]" 
+                                onClick={() => { 
+                                  const reason = window.prompt("Reason for cancellation:");
+                                  if (reason) {
+                                    cancelSessionMutation.mutate({ sessionId: s.id, status: "cancelled", reason });
+                                  }
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 px-2 text-[10px] text-[#E8A838]" 
+                                onClick={() => { 
+                                  const newDateStr = window.prompt("New date (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm"));
+                                  if (newDateStr) {
+                                    rescheduleSessionMutation.mutate({ sessionId: s.id, newDate: new Date(newDateStr) });
+                                  }
+                                }}
+                              >
+                                Reschedule
+                              </Button>
                             </div>
                           </div>
                         ))}
@@ -218,10 +241,22 @@ export function StudentDashboard() {
               {feedbackTarget ? (
                 <div className="border border-gray-100 rounded-xl p-5 space-y-4">
                   <p className="text-sm font-semibold text-[#281A39]">Rating</p>
-                  <div className="flex gap-1">{[1, 2, 3, 4, 5].map((n) => <button key={n} onClick={() => setRating(n)}><Star size={24} className={n <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200"} /></button>)}</div>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button key={n} onClick={() => setRating(n)} type="button">
+                        <Star size={24} className={n <= rating ? "fill-amber-400 text-amber-400" : "text-gray-300"} />
+                      </button>
+                    ))}
+                  </div>
                   <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment..." rows={3} className="text-sm" />
                   <div className="flex gap-2">
-                    <Button onClick={() => submitFeedback.mutate({ sessionId: feedbackTarget.sessionId, toUserId: feedbackTarget.tutorId, rating, comment: comment || undefined })} disabled={submitFeedback.isPending}>Submit</Button>
+                    <Button 
+                      onClick={() => submitFeedback.mutate({ sessionId: feedbackTarget.sessionId, toUserId: feedbackTarget.tutorId, rating, comment: comment || undefined })} 
+                      disabled={submitFeedback.isPending}
+                      style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                    >
+                      Submit Feedback
+                    </Button>
                     <Button variant="outline" onClick={() => setFeedbackTarget(null)}>Cancel</Button>
                   </div>
                 </div>
