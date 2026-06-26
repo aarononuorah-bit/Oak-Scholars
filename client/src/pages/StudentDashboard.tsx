@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Timetable from "@/components/Timetable";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
   ExternalLink, Shield,
@@ -81,14 +82,12 @@ export function StudentDashboard() {
     <div className="min-h-screen bg-[#F9F7F2]">
       <Navbar />
       <div className="container py-24">
-        {/* Header */}
         <div className="mb-8">
           <span className="text-[#E8A838] text-sm font-semibold tracking-widest uppercase">Student</span>
           <h1 className="font-serif text-3xl font-bold text-[#281A39] mt-1">My Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Welcome back, {user.name?.split(" ")[0] || "Scholar"}</p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <StatCard label="My Tutors" value={tutors.length} icon={Users} color="bg-[#281A39]" />
           <StatCard label="Upcoming Sessions" value={upcomingSessions.length} icon={Calendar} color="bg-[#E8A838]" />
@@ -113,7 +112,6 @@ export function StudentDashboard() {
             ))}
           </TabsList>
 
-          {/* Tutors Tab */}
           <TabsContent value="tutors">
             <div className="bg-white rounded-xl border border-gray-100 p-6">
               <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Your Tutors</h2>
@@ -137,31 +135,16 @@ export function StudentDashboard() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-semibold text-[#281A39]">{rel.tutor?.name || <span className="italic text-gray-400">Name not set</span>}</p>
                             {rel.tutor?.linkedin && (
-                              <a
-                                href={rel.tutor.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                              >
+                              <a href={rel.tutor.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                 <Linkedin size={12} /> LinkedIn <ExternalLink size={10} />
                               </a>
                             )}
                           </div>
-                          {rel.tutor?.bio && (
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{rel.tutor.bio}</p>
-                          )}
+                          {rel.tutor?.bio && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{rel.tutor.bio}</p>}
                           <div className="flex flex-wrap gap-2 mt-3">
-                            {rel.subjects && (
-                              <span className="flex items-center gap-1 text-xs bg-[#281A39]/5 text-[#281A39] px-2.5 py-1 rounded-full">
-                                <GraduationCap size={11} /> {rel.subjects}
-                              </span>
-                            )}
-                            {rel.level && (
-                              <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">{rel.level}</span>
-                            )}
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${rel.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                              {rel.status}
-                            </span>
+                            {rel.subjects && <span className="flex items-center gap-1 text-xs bg-[#281A39]/5 text-[#281A39] px-2.5 py-1 rounded-full"><GraduationCap size={11} /> {rel.subjects}</span>}
+                            {rel.level && <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">{rel.level}</span>}
+                            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${rel.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{rel.status}</span>
                           </div>
                         </div>
                       </div>
@@ -172,10 +155,13 @@ export function StudentDashboard() {
             </div>
           </TabsContent>
 
-          {/* Sessions Tab */}
           <TabsContent value="sessions">
+            <div className="mb-8">
+              <Timetable targetUserId={user.id} userName={user.name || "My"} />
+            </div>
+
             <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-5">My Sessions</h2>
+              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-5">List View</h2>
               {sessionsLoading ? (
                 <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
               ) : sessions.length === 0 ? (
@@ -187,9 +173,7 @@ export function StudentDashboard() {
                 <div className="space-y-6">
                   {upcomingSessions.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3">
-                        <Clock size={14} className="text-green-500" /> Upcoming
-                      </h3>
+                      <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3"><Clock size={14} className="text-green-500" /> Upcoming</h3>
                       <div className="space-y-3">
                         {upcomingSessions.map((s) => (
                           <div key={s.id} className="flex items-center justify-between p-4 bg-green-50 border border-green-100 rounded-xl">
@@ -197,67 +181,27 @@ export function StudentDashboard() {
                               <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
                               <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP p")} &middot; {s.duration} min</p>
                             </div>
-	                            <div className="flex items-center gap-2">
-	                              <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
-	                              <div className="flex items-center gap-1">
-							                <Button
-							                  size="sm"
-							                  variant="ghost"
-							                  className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]"
-							                  onClick={() => {
-							                    const reason = window.prompt("Reason for cancellation (optional):");
-							                    if (reason !== null) {
-							                      cancelSessionMutation.mutate({ id: s.id, status: "cancelled", notes: reason || undefined });
-							                    }
-							                  }}
-							                >
-							                  Cancel
-							                </Button>
-							                <Button
-							                  size="sm"
-							                  variant="ghost"
-							                  className="h-8 px-2 text-[10px] text-[#E8A838] hover:bg-amber-50"
-							                  onClick={() => {
-							                    const newDateStr = window.prompt("Enter new date/time (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm"));
-							                    if (newDateStr) {
-							                      const newDate = new Date(newDateStr);
-							                      if (isNaN(newDate.getTime())) return toast.error("Invalid date format");
-                                      rescheduleSessionMutation.mutate({ id: s.id, newScheduledAt: newDate });
-							                    }
-							                  }}
-							                >
-							                  Reschedule
-							                </Button>
-	                              </div>
-	                            </div>
-	                          </div>
-	                        ))}
-	                      </div>
-	                    </div>
-	                  )}
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
+                              <Button size="sm" variant="ghost" className="h-8 px-2 text-[10px] text-gray-500 hover:text-[#281A39]" onClick={() => { const reason = window.prompt("Reason for cancellation:"); if (reason !== null) cancelSessionMutation.mutate({ id: s.id, reason: reason || undefined }); }}>Cancel</Button>
+                              <Button size="sm" variant="ghost" className="h-8 px-2 text-[10px] text-[#E8A838]" onClick={() => { const newDateStr = window.prompt("New date (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm")); if (newDateStr) rescheduleSessionMutation.mutate({ id: s.id, newScheduledAt: new Date(newDateStr) }); }}>Reschedule</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {completedSessions.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3">
-                        <BookOpen size={14} className="text-blue-500" /> Completed
-                      </h3>
+                      <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3"><BookOpen size={14} className="text-blue-500" /> Completed</h3>
                       <div className="space-y-3">
                         {completedSessions.map((s) => (
                           <div key={s.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
                             <div>
                               <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
-                              <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP p")}</p>
+                              <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP")}</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-1 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">Done</span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs h-7"
-                                onClick={() => setFeedbackTarget({ sessionId: s.id, tutorId: s.tutorId! })}
-                              >
-                                Rate
-                              </Button>
-                            </div>
+                            <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setFeedbackTarget({ sessionId: s.id, tutorId: s.tutorId! })}>Rate</Button>
                           </div>
                         ))}
                       </div>
@@ -268,67 +212,21 @@ export function StudentDashboard() {
             </div>
           </TabsContent>
 
-          {/* Feedback Tab */}
           <TabsContent value="feedback">
             <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-xl">
               <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Leave Feedback</h2>
-              <p className="text-xs text-gray-500 mb-5">Rate a completed session to help your tutor improve.</p>
-              {completedSessions.length === 0 ? (
-                <div className="text-center py-10">
-                  <Star size={36} className="text-gray-200 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">No completed sessions to rate yet.</p>
+              {feedbackTarget ? (
+                <div className="border border-gray-100 rounded-xl p-5 space-y-4">
+                  <p className="text-sm font-semibold text-[#281A39]">Rating</p>
+                  <div className="flex gap-1">{[1, 2, 3, 4, 5].map((n) => <button key={n} onClick={() => setRating(n)}><Star size={24} className={n <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200"} /></button>)}</div>
+                  <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment..." rows={3} className="text-sm" />
+                  <div className="flex gap-2">
+                    <Button onClick={() => submitFeedback.mutate({ sessionId: feedbackTarget.sessionId, toUserId: feedbackTarget.tutorId, rating, comment: comment || undefined })} disabled={submitFeedback.isPending}>Submit</Button>
+                    <Button variant="outline" onClick={() => setFeedbackTarget(null)}>Cancel</Button>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {feedbackTarget ? (
-                    <div className="border border-gray-100 rounded-xl p-5 space-y-4">
-                      <p className="text-sm font-semibold text-[#281A39]">Rating</p>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <button key={n} onClick={() => setRating(n)}>
-                            <Star size={24} className={n <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200"} />
-                          </button>
-                        ))}
-                      </div>
-                      <Textarea
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        placeholder="Optional comment..."
-                        rows={3}
-                        className="text-sm"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => submitFeedback.mutate({ sessionId: feedbackTarget.sessionId, toUserId: feedbackTarget.tutorId, rating, comment: comment || undefined })}
-                          disabled={submitFeedback.isPending}
-                          className="bg-[#E8A838] hover:bg-[#c8881a] text-[#281A39] font-semibold"
-                        >
-                          {submitFeedback.isPending ? "Submitting..." : "Submit"}
-                        </Button>
-                        <Button variant="outline" onClick={() => setFeedbackTarget(null)}>Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {completedSessions.map((s) => (
-                        <div key={s.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                          <div>
-                            <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
-                            <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP")}</p>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs"
-                            onClick={() => setFeedbackTarget({ sessionId: s.id, tutorId: s.tutorId! })}
-                          >
-                            Rate Session
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <p className="text-sm text-gray-400 text-center py-10">Select a completed session to leave feedback.</p>
               )}
             </div>
           </TabsContent>
