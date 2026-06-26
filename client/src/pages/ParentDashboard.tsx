@@ -11,8 +11,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
   Users, Calendar, BookOpen, Star, Clock, GraduationCap,
-  CheckCircle, Send, Loader,
+  CheckCircle, Loader2, UserPlus,
 } from "lucide-react";
+import { format } from "date-fns";
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -111,7 +112,7 @@ export function ParentDashboard() {
           <TabsContent value="children">
             {childrenLoading ? (
               <div className="flex items-center justify-center h-40">
-                <Loader className="animate-spin text-[#281A39]" />
+                <Loader2 className="animate-spin text-[#281A39]" />
               </div>
             ) : children.length === 0 ? (
               <div className="text-center py-12">
@@ -187,7 +188,7 @@ export function ParentDashboard() {
                                 <p className="font-semibold text-[#281A39]">{session.subject || "Tutoring Session"}</p>
                                 <p className="text-sm text-gray-500">{session.tutor?.name || "Tutor"}</p>
                               </div>
-                              <span className="text-sm text-gray-500">{new Date(session.date).toLocaleDateString()}</span>
+                              <span className="text-sm text-gray-500">{format(new Date(session.scheduledAt), "PPP")}</span>
                             </div>
                           ))}
                         </div>
@@ -243,7 +244,7 @@ export function ParentDashboard() {
                       className="w-full bg-[#281A39] hover:bg-[#3a2547] text-white gap-2"
                       disabled={sendLinkRequest.isPending}
                     >
-                      {sendLinkRequest.isPending && <Loader className="w-4 h-4 animate-spin" />}
+                      {sendLinkRequest.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                       Send Confirmation Code
                     </Button>
                   </form>
@@ -286,7 +287,7 @@ export function ParentDashboard() {
                         className="flex-1 bg-[#281A39] hover:bg-[#3a2547] text-white gap-2"
                         disabled={confirmLink.isPending}
                       >
-                        {confirmLink.isPending && <Loader className="w-4 h-4 animate-spin" />}
+                        {confirmLink.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                         Confirm
                       </Button>
                     </div>
