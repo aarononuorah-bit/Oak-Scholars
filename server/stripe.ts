@@ -14,12 +14,11 @@ import {
 } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { sendBookingConfirmation, sendAdminBookingAlert } from "./email";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
   apiVersion: "2026-06-24.dahlia",
 });
-
-// ─── Stripe Customer helpers ──────────────────────────────────────────────────
 
 export async function getOrCreateStripeCustomer(
   userId: number,
@@ -47,10 +46,7 @@ export async function createStripePortalSession(customerId: string, returnUrl: s
   return session.url;
 }
 
-// ─── Webhook registration ─────────────────────────────────────────────────────
-
 export function registerStripeWebhook(app: Express) {
-  // MUST be registered BEFORE express.json() — uses raw body for signature verification
   app.post(
     "/api/stripe/webhook",
     express.raw({ type: "application/json" }),
@@ -58,18 +54,15 @@ export function registerStripeWebhook(app: Express) {
       const sig = req.headers["stripe-signature"];
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-      // Test event detection (required by Stripe test mode)
       const rawBody = req.body?.toString?.() ?? "";
       let parsedForTest: { id?: string } = {};
       try { parsedForTest = JSON.parse(rawBody); } catch { /* ignore */ }
       if (parsedForTest.id?.startsWith("evt_test_")) {
-        console.log("[Webhook] Test event detected, returning verification response");
         res.json({ verified: true });
         return;
       }
 
       if (!webhookSecret) {
-        // No secret configured — still try to parse and persist
         try {
           const event = JSON.parse(rawBody) as Stripe.Event;
           await handleStripeEvent(event);
@@ -83,12 +76,10 @@ export function registerStripeWebhook(app: Express) {
         event = stripe.webhooks.constructEvent(req.body, sig as string, webhookSecret);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        console.error("[Webhook] Signature verification failed:", message);
         res.status(400).send(`Webhook Error: ${message}`);
         return;
       }
 
-      console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
       await handleStripeEvent(event);
       res.json({ received: true });
     }
@@ -101,11 +92,11 @@ async function handleStripeEvent(event: Stripe.Event) {
       const session = event.data.object as Stripe.Checkout.Session;
       const email = session.customer_details?.email ?? session.metadata?.customer_email ?? "";
       const packageName = session.metadata?.product_id ?? "unknown";
-      const subject = session.metadata?.subject ?? null;
-      const level = session.metadata?.level ?? null;
+      const subject = session.metadata?.subject ?? "Not specified";
+      const level = session.metadata?.level ?? "Not specified";
       const amountTotal = session.amount_total ?? 0;
+      const customerName = session.customer_details?.name ?? "Student";
 
-      // Try to link to a user account by email
       let userId: number | null = null;
       try {
         const db = await getDb();
@@ -113,7 +104,8 @@ async function handleStripeEvent(event: Stripe.Event) {
           const userRows = await db.select().from(users).where(eq(users.email, email)).limit(1);
           if (userRows[0]) {
             userId = userRows[0].id;
-            // Save Stripe customer ID if not already stored
+            
+            // Only update the stripe customer ID, leave the accountType exactly as they registered it
             if (!userRows[0].stripeCustomerId && session.customer) {
               await updateStripeCustomerId(userId, session.customer as string);
             }
@@ -130,62 +122,61 @@ async function handleStripeEvent(event: Stripe.Event) {
           stripeSessionId: session.id,
           stripePaymentIntentId: session.payment_intent as string | undefined,
           packageName,
-          subject: subject ?? undefined,
-          level: level ?? undefined,
+          subject: subject !== "Not specified" ? subject : undefined,
+          level: level !== "Not specified" ? level : undefined,
           amountTotal,
           currency: session.currency ?? "gbp",
           status: "paid",
         });
-        console.log(`[Webhook] Order created for session ${session.id} (${email})`);
 
-        // ─── Referral Reward Logic ─────────────────────────────────────────────
+        const [firstName, ...lastNameParts] = customerName.split(" ");
+        const lastName = lastNameParts.join(" ") || "Learner";
+
+        await sendBookingConfirmation({
+          firstName: firstName || "there",
+          email,
+          subject,
+          level,
+          sessionType: packageName,
+          preferredTime: session.metadata?.preferred_time || "Flexible / Discuss",
+        });
+
+        await sendAdminBookingAlert({
+          firstName: firstName || "New",
+          lastName,
+          email,
+          phone: session.customer_details?.phone || undefined,
+          subject,
+          level,
+          sessionType: packageName,
+          preferredTime: session.metadata?.preferred_time || "Flexible / Discuss",
+          message: session.metadata?.message || undefined,
+        });
+
         if (userId) {
-          // 1. If this is the referee's first purchase, complete the referral
           const referral = await getReferralByRefereeId(userId);
           if (referral && referral.status === "pending") {
             await updateReferralStatus(referral.id, "completed");
-            console.log(`[Referral] Referral ${referral.id} completed for referee ${userId}`);
           }
 
-          // 2. If a reward was used in this session, mark it as used in DB
           const rewardId = session.metadata?.reward_id;
-          const rewardType = session.metadata?.reward_type; // "referrer" or "referee"
+          const rewardType = session.metadata?.reward_type;
           if (rewardId) {
             const rid = parseInt(rewardId);
-            if (rewardType === "referrer") {
-              await markReferrerRewardUsed(rid);
-              console.log(`[Referral] Referrer reward ${rid} marked as used`);
-            } else if (rewardType === "referee") {
-              await markRefereeRewardUsed(rid);
-              console.log(`[Referral] Referee reward ${rid} marked as used`);
-            }
+            if (rewardType === "referrer") await markReferrerRewardUsed(rid);
+            else if (rewardType === "referee") await markRefereeRewardUsed(rid);
           }
         }
       } catch (e: unknown) {
-        // Duplicate session — already recorded
         const msg = e instanceof Error ? e.message : String(e);
-        if (!msg.includes("Duplicate")) {
-          console.error("[Webhook] Failed to create order:", e);
-        }
+        if (!msg.includes("Duplicate")) console.error("[Webhook] Error:", e);
       }
       break;
     }
-
-    case "payment_intent.succeeded": {
-      const pi = event.data.object as Stripe.PaymentIntent;
-      console.log(`[Webhook] PaymentIntent succeeded: ${pi.id}`);
-      break;
-    }
-
     case "checkout.session.expired": {
       const session = event.data.object as Stripe.Checkout.Session;
-      try {
-        await updateOrderStatus(session.id, "cancelled");
-      } catch { /* order may not exist yet */ }
+      try { await updateOrderStatus(session.id, "cancelled"); } catch { }
       break;
     }
-
-    default:
-      console.log(`[Webhook] Unhandled event type: ${event.type}`);
   }
 }
