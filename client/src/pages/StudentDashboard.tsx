@@ -189,7 +189,7 @@ export function StudentDashboard() {
                                 onClick={() => { 
                                   const reason = window.prompt("Reason for cancellation:");
                                   if (reason) {
-                                    cancelSessionMutation.mutate({ sessionId: s.id, status: "cancelled", reason });
+                                    cancelSessionMutation.mutate({ id: s.id, status: "cancelled", notes: reason });
                                   }
                                 }}
                               >
@@ -202,7 +202,7 @@ export function StudentDashboard() {
                                 onClick={() => { 
                                   const newDateStr = window.prompt("New date (YYYY-MM-DD HH:MM):", format(new Date(s.scheduledAt), "yyyy-MM-dd HH:mm"));
                                   if (newDateStr) {
-                                    rescheduleSessionMutation.mutate({ sessionId: s.id, newDate: new Date(newDateStr) });
+                                    rescheduleSessionMutation.mutate({ id: s.id, newScheduledAt: new Date(newDateStr) });
                                   }
                                 }}
                               >

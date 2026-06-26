@@ -92,7 +92,7 @@ function OverviewTab() {
 
 // ─── Users Tab ───────────────────────────
 function UsersTab({ onSelectUser }: { onSelectUser: (userId: number) => void }) {
-  const { data: users, isLoading } = trpc.admin.getAllUsers.useQuery();
+  const { data: users, isLoading } = trpc.admin.users.useQuery();
 
   return (
     <div className="space-y-4">
@@ -123,7 +123,7 @@ function UsersTab({ onSelectUser }: { onSelectUser: (userId: number) => void }) 
         <p className="text-center text-muted-brand py-8">No users found.</p>
       ) : (
         <div className="grid gap-4">
-          {users.map((user: any) => (
+          {users.map((user) => (
             <div key={user.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md transition">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center font-bold text-navy-deep">

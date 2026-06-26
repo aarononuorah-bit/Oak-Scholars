@@ -150,15 +150,15 @@ export function TutorDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {students.map((student) => (
-                    <div key={student.id} className="border border-gray-100 rounded-xl p-5 hover:border-[#E8A838]/40 transition-colors">
+                  {students.map((rel) => (
+                    <div key={rel.id} className="border border-gray-100 rounded-xl p-5 hover:border-[#E8A838]/40 transition-colors">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-full bg-[#281A39] flex items-center justify-center text-white font-bold text-lg shrink-0">
-                          {(student.name || student.email || "?").charAt(0).toUpperCase()}
+                          {(rel.student?.name || rel.student?.email || "?").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-[#281A39]">{student.name || <span className="italic text-gray-400">Name not set</span>}</p>
-                          <p className="text-xs text-gray-500">{student.email}</p>
+                          <p className="font-semibold text-[#281A39]">{rel.student?.name || <span className="italic text-gray-400">Name not set</span>}</p>
+                          <p className="text-xs text-gray-500">{rel.student?.email}</p>
                         </div>
                       </div>
                     </div>

@@ -76,7 +76,7 @@ export function ParentDashboard() {
       toast.error("Please enter a valid email");
       return;
     }
-    sendLinkRequest.mutate({ childEmail: linkEmail });
+    sendLinkRequest.mutate({ studentEmail: linkEmail });
   };
 
   const handleConfirmLink = (e: React.FormEvent) => {
@@ -85,7 +85,7 @@ export function ParentDashboard() {
       toast.error("Please enter the confirmation code");
       return;
     }
-    confirmLink.mutate({ childEmail: linkEmail, code: confirmCode });
+    confirmLink.mutate({ code: confirmCode });
   };
 
   return (
@@ -117,7 +117,7 @@ export function ParentDashboard() {
             ) : children.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 mb-4">No children linked yet.</p>
-                <Button onClick={() => document.querySelector('[value="link"]')?.click()}>
+                <Button onClick={() => (document.querySelector('[value="link"]') as HTMLElement)?.click()}>
                   Link a Child
                 </Button>
               </div>
@@ -151,19 +151,19 @@ export function ParentDashboard() {
                       />
                       <StatCard
                         label="Upcoming"
-                        value={childData?.upcomingSessions?.length || 0}
+                        value={childData?.sessions?.filter((s) => new Date(s.scheduledAt) > new Date()).length || 0}
                         icon={Clock}
                         color="bg-green-500"
                       />
                       <StatCard
                         label="Completed"
-                        value={childData?.completedSessions?.length || 0}
+                        value={childData?.sessions?.filter((s) => s.status === "completed").length || 0}
                         icon={CheckCircle}
                         color="bg-purple-500"
                       />
                       <StatCard
-                        label="Performance"
-                        value={childData?.averageRating ? `${childData.averageRating.toFixed(1)}/5` : "N/A"}
+                        label="Tutors"
+                        value={childData?.tutors?.length || 0}
                         icon={Star}
                         color="bg-orange-500"
                       />
@@ -182,11 +182,11 @@ export function ParentDashboard() {
                         <p className="text-gray-500">No sessions yet.</p>
                       ) : (
                         <div className="space-y-3">
-                          {childData.sessions.slice(0, 5).map((session: any) => (
+                          {childData.sessions.slice(0, 5).map((session) => (
                             <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                               <div>
                                 <p className="font-semibold text-[#281A39]">{session.subject || "Tutoring Session"}</p>
-                                <p className="text-sm text-gray-500">{session.tutor?.name || "Tutor"}</p>
+                                <p className="text-sm text-gray-500">{session.subject}</p>
                               </div>
                               <span className="text-sm text-gray-500">{format(new Date(session.scheduledAt), "PPP")}</span>
                             </div>
@@ -230,9 +230,9 @@ export function ParentDashboard() {
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <p className="text-sm font-semibold text-blue-900 mb-2">Pending Requests</p>
                         <div className="space-y-2">
-                          {pendingRequests.map((req: any) => (
+                          {pendingRequests.map((req) => (
                             <p key={req.id} className="text-sm text-blue-700">
-                              {req.childEmail}
+                              {req.parent?.name || req.parent?.email || `Request #${req.id}`}
                             </p>
                           ))}
                         </div>
