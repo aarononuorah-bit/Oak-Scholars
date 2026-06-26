@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, ChevronRight, ChevronLeft, CreditCard, Calendar, User, BookOpen, X, Lock, AlertCircle } from "lucide-react";
+import { CheckCircle, ChevronRight, ChevronLeft, CreditCard, Calendar, User, BookOpen, X, Lock, AlertCircle, CalendarCheck, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
+import Step3Availability from "@/components/Step3Availability";
 
 const SUBJECTS = [
   "Mathematics", "Further Maths", "Physics", "Chemistry", "Biology",
@@ -292,16 +293,11 @@ export default function Booking() {
               )}
 
               {step === 3 && (
-                <div>
-                  <h2 className="font-serif text-2xl font-bold text-navy-deep mb-6">When works best for you?</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {TIMES.map((t) => (
-                      <button key={t} onClick={() => update("preferredTime", t)} className={`text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 ${form.preferredTime === t ? "border-amber text-navy-deep shadow-sm" : "border-gray-100 text-muted-brand hover:border-amber/40 hover:shadow-sm"}`} style={form.preferredTime === t ? { backgroundColor: "rgba(232,168,56,0.05)" } : {}}>
-                        <div className="flex items-center justify-between">{t}{form.preferredTime === t && <CheckCircle size={14} className="text-amber flex-shrink-0" />}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <Step3Availability
+                  user={user}
+                  form={form}
+                  update={update}
+                />
               )}
 
               {step === 4 && (

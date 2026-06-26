@@ -695,3 +695,31 @@ export async function clearLoginOtp(userId: number) {
     .set({ loginOtpCode: null, loginOtpExpiresAt: null })
     .where(eq(users.id, userId));
 }
+
+// ─── Google Calendar helpers ──────────────────────────────────────────────────
+export async function setUserCalendarConnection(
+  userId: number,
+  data: { googleRefreshToken: string; googleCalendarId: string }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users)
+    .set({
+      googleRefreshToken: data.googleRefreshToken,
+      googleCalendarId: data.googleCalendarId,
+      calendarSyncEnabled: 1,
+    })
+    .where(eq(users.id, userId));
+}
+
+export async function clearUserCalendarConnection(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users)
+    .set({
+      googleRefreshToken: null,
+      googleCalendarId: null,
+      calendarSyncEnabled: 0,
+    })
+    .where(eq(users.id, userId));
+}

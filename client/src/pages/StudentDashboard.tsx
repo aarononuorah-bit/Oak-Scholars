@@ -11,9 +11,50 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
-  ExternalLink, Shield,
+  ExternalLink, Shield, CalendarCheck, CalendarX,
 } from "lucide-react";
 import { format } from "date-fns";
+
+function StudentCalendarConnectCard() {
+  const { data: calStatus, isLoading } = trpc.calendar.status.useQuery();
+  const utils = trpc.useUtils();
+  const disconnect = trpc.calendar.disconnect.useMutation({
+    onSuccess: () => { toast.success("Google Calendar disconnected."); utils.calendar.status.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  if (isLoading) return <div className="h-16 bg-gray-50 rounded-xl animate-pulse" />;
+  const connected = calStatus?.connected;
+  return (
+    <div className={`rounded-xl border p-4 flex items-center justify-between gap-4 ${
+      connected ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+    }`}>
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${ connected ? "bg-green-100" : "bg-gray-200"}`}>
+          {connected ? <CalendarCheck size={18} className="text-green-600" /> : <CalendarX size={18} className="text-gray-500" />}
+        </div>
+        <div>
+          <p className="font-semibold text-[#281A39] text-sm">
+            {connected ? "Google Calendar Connected" : "Google Calendar Not Connected"}
+          </p>
+          <p className="text-xs text-gray-500">
+            {connected ? "Your availability is synced with Google Calendar." : "Connect to share your availability with your tutor."}
+          </p>
+        </div>
+      </div>
+      {connected ? (
+        <Button variant="outline" size="sm" onClick={() => disconnect.mutate()} disabled={disconnect.isPending}
+          className="shrink-0 border-red-200 text-red-600 hover:bg-red-50">
+          {disconnect.isPending ? "Disconnecting..." : "Disconnect"}
+        </Button>
+      ) : (
+        <Button size="sm" onClick={() => { window.location.href = "/api/auth/google/calendar"; }}
+          className="shrink-0" style={{ backgroundColor: "#4285F4", color: "white" }}>
+          Connect
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -99,6 +140,7 @@ export function StudentDashboard() {
               { value: "tutors", label: "My Tutors", icon: Users },
               { value: "sessions", label: "Sessions", icon: Calendar },
               { value: "feedback", label: "Leave Feedback", icon: Star },
+              { value: "calendar", label: "Calendar", icon: CalendarCheck },
             ].map((t) => (
               <TabsTrigger
                 key={t.value}
@@ -232,6 +274,14 @@ export function StudentDashboard() {
                   )}
                 </div>
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-xl">
+              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">Google Calendar</h2>
+              <p className="text-xs text-gray-500 mb-5">Connect your Google Calendar to share your availability with your tutor.</p>
+              <StudentCalendarConnectCard />
             </div>
           </TabsContent>
 

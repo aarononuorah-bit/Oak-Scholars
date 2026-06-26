@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
-import { upsertGoogleUser, updateUserRole } from "./db";
+import { upsertGoogleUser, updateUserRole, setUserCalendarConnection, getUserByOpenId } from "./db";
 import { ENV } from "./_core/env";
 
 // In-memory CSRF state store (keyed by state token, value = expiry timestamp)
@@ -123,6 +123,98 @@ export function registerGoogleAuthRoutes(app: Express) {
     } catch (err) {
       console.error("[Google OAuth] Callback failed:", err);
       res.redirect(302, "/login?error=google_failed");
+    }
+  });
+
+  // ─── Calendar OAuth: initiate ─────────────────────────────────────────────
+  app.get("/api/auth/google/calendar", async (req: Request, res: Response) => {
+    const cookieHeader = req.headers.cookie || "";
+    const match = cookieHeader.match(new RegExp(`(?:^|;\s*)${COOKIE_NAME}=([^;]+)`));
+    const token = match?.[1];
+    if (!token) {
+      res.redirect(302, "/login?error=not_logged_in");
+      return;
+    }
+    try {
+      const session = await sdk.verifySession(token);
+      if (!session?.openId) throw new Error("no user");
+      const state = generateState();
+      const compositeState = `${state}:${session.openId}`;
+      pendingStates.delete(state);
+      pendingStates.set(compositeState, Date.now() + STATE_TTL_MS);
+      const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+      const proto = rawProto.split(",")[0].trim();
+      const rawHost = (req.headers["x-forwarded-host"] as string) || (req.headers.host as string);
+      const host = rawHost.split(",")[0].trim();
+      const calendarCallbackUri = `${proto}://${host}/api/auth/google/calendar/callback`;
+      const oauth2Client = getOAuth2Client(calendarCallbackUri);
+      const url = oauth2Client.generateAuthUrl({
+        access_type: "offline",
+        scope: [
+          "https://www.googleapis.com/auth/calendar.readonly",
+          "https://www.googleapis.com/auth/calendar.freebusy",
+        ],
+        prompt: "consent",
+        state: compositeState,
+      });
+      res.redirect(302, url);
+    } catch (err) {
+      console.error("[Calendar OAuth] Initiate failed:", err);
+      res.redirect(302, "/login?error=not_logged_in");
+    }
+  });
+
+  // ─── Calendar OAuth: callback ─────────────────────────────────────────────
+  app.get("/api/auth/google/calendar/callback", async (req: Request, res: Response) => {
+    const code = req.query.code as string | undefined;
+    const error = req.query.error as string | undefined;
+    const state = req.query.state as string | undefined;
+
+    if (error || !code || !state) {
+      res.redirect(302, "/student-dashboard?error=calendar_cancelled");
+      return;
+    }
+
+    const exp = pendingStates.get(state);
+    if (!exp || Date.now() > exp) {
+      res.redirect(302, "/student-dashboard?error=calendar_state_invalid");
+      return;
+    }
+    pendingStates.delete(state);
+
+    const colonIdx = state.lastIndexOf(":");
+    const openId = state.slice(colonIdx + 1);
+
+    try {
+      const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol;
+      const proto = rawProto.split(",")[0].trim();
+      const rawHost = (req.headers["x-forwarded-host"] as string) || (req.headers.host as string);
+      const host = rawHost.split(",")[0].trim();
+      const calendarCallbackUri = `${proto}://${host}/api/auth/google/calendar/callback`;
+      const oauth2Client = getOAuth2Client(calendarCallbackUri);
+      const { tokens } = await oauth2Client.getToken(code);
+
+      if (!tokens.refresh_token) {
+        res.redirect(302, "/student-dashboard?error=calendar_no_refresh_token");
+        return;
+      }
+
+      const dbUser = await getUserByOpenId(openId);
+      if (!dbUser) {
+        res.redirect(302, "/login?error=not_logged_in");
+        return;
+      }
+
+      await setUserCalendarConnection(dbUser.id, {
+        googleRefreshToken: tokens.refresh_token,
+        googleCalendarId: "primary",
+      });
+
+      const dashboardPath = dbUser.role === "tutor" ? "/tutor-dashboard" : "/student-dashboard";
+      res.redirect(302, `${dashboardPath}?calendar_connected=1`);
+    } catch (err) {
+      console.error("[Calendar OAuth] Callback failed:", err);
+      res.redirect(302, "/student-dashboard?error=calendar_failed");
     }
   });
 }

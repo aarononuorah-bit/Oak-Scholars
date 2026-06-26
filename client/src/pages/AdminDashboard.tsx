@@ -11,8 +11,11 @@ import {
   Calendar, Users, LayoutDashboard, ShoppingCart,
   FileText, TrendingUp, Activity, UserCheck,
   CheckCircle, CreditCard, MessageSquare, UserPlus,
-  Mail, GraduationCap, Clock, AlertCircle,
+  Mail, GraduationCap, Clock, AlertCircle, PoundSterling,
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -308,6 +311,86 @@ function OrdersTab() {
   );
 }
 
+// ─── Earnings Tab ────────────────────────────────────
+function EarningsTab() {
+  const { data, isLoading } = trpc.admin.earnings.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-48 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (!data) return <p className="text-muted-brand">Failed to load earnings.</p>;
+
+  const { totalRevenue, recentRevenue, totalOrders, months, byPackage } = data;
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard icon={PoundSterling} label="Total Revenue" value={`£${(totalRevenue / 100).toFixed(2)}`} sub={`${totalOrders} paid orders`} colour="bg-teal-500" />
+        <StatCard icon={TrendingUp} label="Last 30 Days" value={`£${(recentRevenue / 100).toFixed(2)}`} sub="rolling 30-day window" colour="bg-amber-500" />
+        <StatCard icon={ShoppingCart} label="Total Orders" value={totalOrders} sub="all time paid orders" colour="bg-purple-500" />
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h2 className="text-lg font-bold text-navy-deep mb-5">Monthly Revenue (last 12 months)</h2>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={months} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#6b7280" }} />
+            <YAxis tickFormatter={(v) => `£${(v / 100).toFixed(0)}`} tick={{ fontSize: 11, fill: "#6b7280" }} />
+            <Tooltip
+              formatter={(value: number) => [`£${(value / 100).toFixed(2)}`, "Revenue"]}
+              contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid #e5e7eb" }}
+            />
+            <Bar dataKey="revenue" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-navy-deep">Revenue by Package</h2>
+        </div>
+        {byPackage.length === 0 ? (
+          <div className="p-8 text-center">
+            <PoundSterling size={32} className="text-gray-300 mx-auto mb-2" />
+            <p className="text-muted-brand">No paid orders yet.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Package</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Orders</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Revenue</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Avg / Order</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {byPackage.map((pkg) => (
+                <tr key={pkg.name} className="hover:bg-gray-50 transition-colors duration-100">
+                  <td className="px-5 py-3 font-medium text-navy-deep">{pkg.name}</td>
+                  <td className="px-5 py-3 text-right text-muted-brand">{pkg.orders}</td>
+                  <td className="px-5 py-3 text-right font-bold text-navy-deep">£{(pkg.revenue / 100).toFixed(2)}</td>
+                  <td className="px-5 py-3 text-right text-muted-brand">£{pkg.orders > 0 ? (pkg.revenue / pkg.orders / 100).toFixed(2) : "0.00"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Dashboard Shell ─────────────────────────────────
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -349,6 +432,9 @@ export default function AdminDashboard() {
             <TabsTrigger value="orders" className="flex items-center gap-1.5">
               <ShoppingCart size={14} /> Orders
             </TabsTrigger>
+            <TabsTrigger value="earnings" className="flex items-center gap-1.5">
+              <PoundSterling size={14} /> Earnings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -359,6 +445,9 @@ export default function AdminDashboard() {
           </TabsContent>
           <TabsContent value="orders">
             <OrdersTab />
+          </TabsContent>
+          <TabsContent value="earnings">
+            <EarningsTab />
           </TabsContent>
         </Tabs>
       </div>

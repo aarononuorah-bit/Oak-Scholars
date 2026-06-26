@@ -176,3 +176,15 @@
 - [ ] Rate limiting on auth routes — add per-IP rate limiting to /api/auth/login and /api/auth/register to prevent brute-force attacks
 - [ ] Input sanitisation on contact and wellbeing forms — ensure all free-text fields are sanitised server-side before being stored or emailed
 - [ ] Webhook idempotency — guard the Stripe webhook handler against duplicate event delivery by checking event IDs against a processed-events log before acting
+
+## Round 9: Admin Earnings + Google Calendar Integration
+- [x] Admin Dashboard: add Earnings tab showing total revenue, monthly breakdown, and per-package stats
+- [x] Backend: admin.earnings procedure returning total, monthly, and by-package revenue from orders
+- [x] Google Calendar OAuth: add /api/auth/google/calendar and /api/auth/google/calendar/callback routes
+- [x] Backend: calendar.status, calendar.disconnect, calendar.tutorAvailability procedures
+- [x] Backend: setUserCalendarConnection and clearUserCalendarConnection db helpers
+- [x] Tutor Dashboard: add Google Calendar connect/disconnect card in profile tab
+- [x] Student Dashboard: add Calendar tab with Google Calendar connect/disconnect card
+- [x] Booking Step 3: smart availability picker — shows tutor's live free slots if connected, falls back to generic time-preference grid
+- [x] Step3Availability component: groups slots by date, handles no-tutor/no-calendar fallback states
+- [x] TypeScript check — zero errors

@@ -79,6 +79,8 @@ import {
   getPendingRewardsForUser,
   setLoginOtp,
   clearLoginOtp,
+  clearUserCalendarConnection,
+  getUserByOpenId,
 } from "./db";
 import { tutoringSessions, tutorApplications, tutoringRelationships } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -615,6 +617,36 @@ const adminRouter = router({
       if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
       return user;
     }),
+
+  earnings: adminProcedure.query(async () => {
+    const allOrders = await getAllOrders();
+    const paidOrders = allOrders.filter(o => o.status === 'paid');
+    const now = new Date();
+    const months: { label: string; revenue: number; orders: number }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+      const monthOrders = paidOrders.filter(o => {
+        const od = new Date(o.createdAt);
+        return od.getFullYear() === d.getFullYear() && od.getMonth() === d.getMonth();
+      });
+      months.push({ label, revenue: monthOrders.reduce((s, o) => s + o.amountTotal, 0), orders: monthOrders.length });
+    }
+    const packageMap: Record<string, { revenue: number; orders: number }> = {};
+    for (const o of paidOrders) {
+      const key = o.packageName || 'Unknown';
+      if (!packageMap[key]) packageMap[key] = { revenue: 0, orders: 0 };
+      packageMap[key].revenue += o.amountTotal;
+      packageMap[key].orders += 1;
+    }
+    const byPackage = Object.entries(packageMap)
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.revenue - a.revenue);
+    const totalRevenue = paidOrders.reduce((s, o) => s + o.amountTotal, 0);
+    const now30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const recentRevenue = paidOrders.filter(o => new Date(o.createdAt) >= now30).reduce((s, o) => s + o.amountTotal, 0);
+    return { totalRevenue, recentRevenue, totalOrders: paidOrders.length, months, byPackage, recentOrders: paidOrders.filter(o => new Date(o.createdAt) >= now30).length };
+  }),
 });
 
 // ─── Tutoring router ──────────────────────────────────────────────────────────
@@ -997,6 +1029,61 @@ const calendarRouter = router({
         start: s.scheduledAt,
         end: addHours(new Date(s.scheduledAt), s.duration / 60),
       }));
+    }),
+
+  disconnect: protectedProcedure.mutation(async ({ ctx }) => {
+    await clearUserCalendarConnection(ctx.user.id);
+    return { success: true };
+  }),
+
+  tutorAvailability: protectedProcedure
+    .input(z.object({ tutorId: z.number() }))
+    .query(async ({ input }) => {
+      const tutor = await getUserById(input.tutorId);
+      if (!tutor?.googleRefreshToken || !tutor.calendarSyncEnabled) {
+        return { slots: [], connected: false };
+      }
+      try {
+        const { google } = await import('googleapis');
+        const oauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+        );
+        oauth2Client.setCredentials({ refresh_token: tutor.googleRefreshToken });
+        const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+        const now = new Date();
+        const twoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+        const freeBusy = await calendar.freebusy.query({
+          requestBody: {
+            timeMin: now.toISOString(),
+            timeMax: twoWeeks.toISOString(),
+            items: [{ id: tutor.googleCalendarId || 'primary' }],
+          },
+        });
+        const busySlots = freeBusy.data.calendars?.[tutor.googleCalendarId || 'primary']?.busy ?? [];
+        const slots: { start: string; end: string }[] = [];
+        for (let day = 0; day < 14; day++) {
+          const base = new Date(now);
+          base.setDate(base.getDate() + day);
+          const dow = base.getDay();
+          if (dow === 0) continue;
+          for (let hour = 9; hour <= 18; hour++) {
+            const slotStart = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hour, 0, 0);
+            if (slotStart <= now) continue;
+            const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
+            const isBusy = busySlots.some(b => {
+              const bs = new Date(b.start!);
+              const be = new Date(b.end!);
+              return slotStart < be && slotEnd > bs;
+            });
+            if (!isBusy) slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
+          }
+        }
+        return { slots: slots.slice(0, 60), connected: true };
+      } catch (e) {
+        console.error('[Calendar] tutorAvailability error:', e);
+        return { slots: [], connected: false };
+      }
     }),
 });
 
