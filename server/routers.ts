@@ -183,6 +183,51 @@ const bookingRouter = router({
 // (Retain the existing contactRouter, tutorRouter, paymentsRouter, bannersRouter, 
 // pushRouter, accountRouter, and adminRouter implementations you already have)
 
+// 1. ADD THIS ROUTER DEFINITION BEFORE THE APP ROUTER
+const sessionRouter = router({
+  // Add your existing session routes here if you have them, otherwise use these:
+  requestSession: protectedProcedure
+    .input(z.object({
+      tutorId: z.number(),
+      studentId: z.number(),
+      scheduledAt: z.date(),
+      duration: z.union([z.literal(60), z.literal(90), z.literal(120)]),
+      subject: z.string(),
+      message: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const cost = input.duration / 60;
+      const balance = await getCreditBalance(input.studentId);
+
+      if (balance < cost) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Insufficient credit balance." });
+      }
+
+      return await createTutoringSession({
+        ...input,
+        status: "pending_student",
+      });
+    }),
+
+  acceptBooking: protectedProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [session] = await db.select().from(tutoringSessions).where(eq(tutoringSessions.id, input.sessionId));
+      if (!session) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await db.transaction(async (tx) => {
+        const cost = session.duration / 60;
+        await updateCreditBalance(session.studentId, -cost); 
+        await updateTutoringSessionStatus(input.sessionId, "scheduled");
+      });
+
+      return { success: true };
+    }),
+});
+
 // ─── Final App Router ───────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
