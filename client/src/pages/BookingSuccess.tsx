@@ -1,15 +1,30 @@
-import { useEffect } from "react";
-import { Link } from "wouter";
-import { CheckCircle, Calendar, Mail, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
+import { CheckCircle, Calendar, Mail, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function BookingSuccess() {
+  const [_, setLocation] = useLocation();
+  const [countdown, setCountdown] = useState(10);
+
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  // 10-second countdown and auto-redirect
+  useEffect(() => {
+    if (countdown <= 0) {
+      setLocation("/dashboard");
+      return;
+    }
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown, setLocation]);
 
   return (
     <div className="min-h-screen bg-surface">
@@ -81,7 +96,7 @@ export default function BookingSuccess() {
           </div>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/dashboard">
               <Button
                 className="btn-press font-semibold flex items-center gap-2"
@@ -99,6 +114,12 @@ export default function BookingSuccess() {
                 Back to home
               </Button>
             </Link>
+          </div>
+
+          {/* Auto-redirect countdown */}
+          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-brand">
+            <Loader2 size={14} className="animate-spin text-amber" />
+            <span>Redirecting to your dashboard in {countdown} seconds...</span>
           </div>
         </div>
 
