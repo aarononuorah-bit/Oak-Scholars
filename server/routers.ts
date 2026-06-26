@@ -166,7 +166,7 @@ const bookingRouter = router({
     }))
     .mutation(async ({ input }) => {
       await createBooking(input);
-      Promise.all([
+      await Promise.all([
         sendAdminBookingAlert(input).catch((e) => console.error(e)),
         sendBookingConfirmation(input).catch((e) => console.error(e)),
       ]);
