@@ -239,3 +239,26 @@ export const tutorAvailability = mysqlTable("tutor_availability", {
 
 export type TutorAvailability = typeof tutorAvailability.$inferSelect;
 export type InsertTutorAvailability = typeof tutorAvailability.$inferInsert;
+
+// ─── Credit Balance System ───────────────────────────────────────────────────
+export const creditBalances = mysqlTable("credit_balances", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // The student ID who owns the credits
+  balance: float("balance").default(0).notNull(), // 1 credit = 1 hour
+});
+
+export type CreditBalance = typeof creditBalances.$inferSelect;
+export type InsertCreditBalance = typeof creditBalances.$inferInsert;
+
+// ─── Notifications System ────────────────────────────────────────────────────
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  recipientId: int("recipientId").notNull(), // Student or Parent receiving the alert
+  message: text("message").notNull(),
+  linkUrl: varchar("linkUrl", { length: 500 }),
+  read: int("read").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
