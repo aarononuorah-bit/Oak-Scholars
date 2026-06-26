@@ -77,7 +77,7 @@ import {
   createReferral,
   getPendingRewardsForUser,
 } from "./db";
-import { tutoringSessions } from "../drizzle/schema";
+import { tutoringSessions, tutorApplications } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";
@@ -140,8 +140,6 @@ const bookingRouter = router({
       // Attempt to create Google Calendar event
       const calendarPromise = (async () => {
         try {
-          // Default to tomorrow 10am if we can't parse a specific date/time from the free-text input
-          // In a real scenario, we'd use LLM or more structured input to get exact start/end
           const now = new Date();
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
@@ -177,7 +175,20 @@ Message: ${input.message || "None"}
       return { success: true };
     }),
 
-  list: adminProcedure.query(async () => getAllBookings()),
+  list: adminProcedure.query(async () => {
+    // We join the session id onto the booking by fetching orders. 
+    // Usually these share the same email.
+    const db = await getDb();
+    if (!db) return getAllBookings();
+    
+    const bookings = await getAllBookings();
+    const orders = await getAllOrders();
+    
+    return bookings.map(b => {
+      const order = orders.find(o => o.email === b.email && o.packageName === b.sessionType);
+      return { ...b, stripeSessionId: order?.stripeSessionId };
+    });
+  }),
 
   updateStatus: adminProcedure
     .input(z.object({ id: z.number(), status: z.enum(["new", "contacted", "confirmed", "cancelled"]) }))
@@ -273,6 +284,29 @@ const tutorRouter = router({
     .input(z.object({ id: z.number(), status: z.enum(["new", "reviewing", "interview", "accepted", "rejected"]) }))
     .mutation(async ({ input }) => {
       await updateTutorApplicationStatus(input.id, input.status);
+      
+      // Auto-promote to tutor if accepted
+      if (input.status === "accepted") {
+        const db = await getDb();
+        if (db) {
+          const apps = await db.select().from(tutorApplications).where(eq(tutorApplications.id, input.id));
+          if (apps.length > 0) {
+            const user = await getUserByEmail(apps[0].email);
+            if (user) {
+              await updateUserRole(user.id, "tutor");
+              
+              // Seed tutor profile with application data
+              await updateTutorProfile(user.id, {
+                tutorUniversity: apps[0].university,
+                tutorCourse: apps[0].degreeSubject,
+                tutorSubjects: apps[0].subjects,
+                tutorLevel: apps[0].levels
+              });
+            }
+          }
+        }
+      }
+
       return { success: true };
     }),
 });
@@ -302,7 +336,6 @@ const paymentsRouter = router({
       };
 
       if (input.rewardId && input.rewardType) {
-        // Apply 20% discount
         unitAmount = Math.round(unitAmount * 0.8);
         metadata.reward_id = String(input.rewardId);
         metadata.reward_type = input.rewardType;
@@ -427,7 +460,6 @@ const accountRouter = router({
     }),
 
   orders: protectedProcedure.query(async ({ ctx }) => {
-    // Try by userId first, fall back to email
     const byId = await getOrdersByUserId(ctx.user.id);
     if (byId.length > 0) return byId;
     if (ctx.user.email) return getOrdersByEmail(ctx.user.email);
@@ -484,7 +516,6 @@ const adminRouter = router({
 
     const cvUploads = allApplications.filter(a => a.cvFileUrl);
 
-    // Recent activity feed (last 7 days, mixed)
     type ActivityItem = { type: string; label: string; detail: string; date: Date; status?: string };
     const activity: ActivityItem[] = [
       ...allBookings.filter(b => new Date(b.createdAt) >= sevenDaysAgo).map(b => ({
@@ -551,7 +582,6 @@ const adminRouter = router({
 
   tutoringRelationships: adminProcedure.query(async () => getAllTutoringRelationships()),
 
-  // Assign a tutor to a student (creates a tutoring relationship)
   assignTutor: adminProcedure
     .input(z.object({ tutorId: z.number(), studentId: z.number(), subjects: z.string(), level: z.string() }))
     .mutation(async ({ input }) => {
@@ -565,7 +595,6 @@ const adminRouter = router({
       return { success: true, id };
     }),
 
-  // List all tutors (approved) and all students for the assignment form
   tutors: adminProcedure.query(async () => {
     const all = await getAllUsers();
     return all.filter(u => u.role === 'tutor' || u.approvedAsTutor === 1);
@@ -576,7 +605,6 @@ const adminRouter = router({
     return all.filter(u => u.role === 'user' || u.accountType === 'student');
   }),
 
-  // Get full profile of any user (for admin profile viewing)
   getUserProfile: adminProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
@@ -691,11 +719,9 @@ const sessionRouter = router({
       
       await updateTutoringSessionStatus(input.id, 'cancelled', input.reason || 'Cancelled by user');
       
-      // Get tutor and student details for notification
       const tutor = await getUserById(sess.tutorId);
       const student = await getUserById(sess.studentId);
       
-      // Send cancellation notices to both parties
       if (student?.email) {
         await sendSessionCancellationNotice({
           recipientName: student.name || 'Student',
@@ -758,11 +784,9 @@ const sessionRouter = router({
       
       await db.update(tutoringSessions).set({ scheduledAt: input.newScheduledAt }).where(eq(tutoringSessions.id, input.id));
       
-      // Get tutor and student details for notification
       const tutor = await getUserById(sess.tutorId);
       const student = await getUserById(sess.studentId);
       
-      // Send reminder to both parties about new time
       if (student?.email) {
         await sendSessionReminder({
           studentName: student.name || 'Student',
@@ -811,17 +835,14 @@ const feedbackRouter = router({
 
 // ─── Parent router ──────────────────────────────────────────────────────────
 const parentRouter = router({
-  // Get all children linked to this parent
   myChildren: parentProcedure.query(async ({ ctx }) => {
     return getLinkedChildrenForParent(ctx.user.id);
   }),
 
-  // Send a link request to a student by email — generates a 6-digit code sent to the student
   sendLinkRequest: parentProcedure
     .input(z.object({ studentEmail: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
       const result = await createParentLinkRequest(ctx.user.id, input.studentEmail);
-      // Send the confirmation code to the student by email
       try {
         await sendParentLinkCode({
           studentName: result.studentName || "Student",
@@ -835,7 +856,6 @@ const parentRouter = router({
       return { success: true, studentName: result.studentName };
     }),
 
-  // Parent enters the 6-digit code to confirm the link
   confirmLink: parentProcedure
     .input(z.object({ code: z.string().min(6).max(6) }))
     .mutation(async ({ input, ctx }) => {
@@ -843,11 +863,9 @@ const parentRouter = router({
       return result;
     }),
 
-  // Get a specific child's dashboard data
   childData: parentProcedure
     .input(z.object({ studentId: z.number() }))
     .query(async ({ input, ctx }) => {
-      // Verify this parent is actually linked to this student
       const children = await getLinkedChildrenForParent(ctx.user.id);
       const isLinked = children.some((c) => c.id === input.studentId);
       if (!isLinked) throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this student' });
@@ -864,7 +882,6 @@ const parentRouter = router({
       return { sessions, tutors: tutorsEnriched };
     }),
 
-  // Send a link request to a student by email
   requestLink: parentProcedure
     .input(z.object({ studentEmail: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
@@ -872,7 +889,6 @@ const parentRouter = router({
       return { success: true, ...result };
     }),
 
-  // Get the linked student's dashboard data
   myChild: parentProcedure.query(async ({ ctx }) => {
     const student = await getLinkedStudentForParent(ctx.user.id);
     if (!student) return null;
@@ -889,12 +905,10 @@ const parentRouter = router({
     return { student, sessions, tutors: tutorsEnriched };
   }),
 
-  // Student: get pending link requests from parents
   pendingRequests: protectedProcedure.query(async ({ ctx }) => {
     return getPendingLinkRequestsForStudent(ctx.user.id);
   }),
 
-  // Student: accept or decline a parent link request
   respondToRequest: protectedProcedure
     .input(z.object({ requestId: z.number(), accept: z.boolean() }))
     .mutation(async ({ input, ctx }) => {
@@ -948,7 +962,6 @@ const referralRouter = router({
     let user = await getUserById(ctx.user.id);
     if (!user) throw new Error("User not found");
 
-    // Generate referral code if not exists
     if (!user.referralCode) {
       const code = `OAK-${ctx.user.id}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
       await updateUserReferralCode(ctx.user.id, code);
@@ -984,11 +997,9 @@ export const appRouter = router({
       )
       .mutation(async ({ input, ctx }) => {
         const ADMIN_EMAIL = "team@oakscholars.com";
-        // Check if email already exists
         const existing = await getUserByEmail(input.email);
-        if (existing) {
-          throw new Error("An account with this email already exists");
-        }
+        if (existing) throw new Error("An account with this email already exists");
+        
         const passwordHash = await bcrypt.hash(input.password, 12);
         const role = input.email.toLowerCase() === ADMIN_EMAIL ? "admin" : "user";
         const user = await createUserWithPassword({
@@ -999,7 +1010,6 @@ export const appRouter = router({
           accountType: input.accountType,
         });
 
-        // Handle referral code if provided
         if (input.referralCode) {
           const referrer = await getUserByReferralCode(input.referralCode);
           if (referrer && referrer.id !== user.id) {
@@ -1011,7 +1021,6 @@ export const appRouter = router({
           }
         }
 
-        // Create session cookie
         const { sdk } = await import("./_core/sdk");
         const token = await sdk.createSessionToken(user.openId, { name: user.name || "" });
         const cookieOptions = getSessionCookieOptions(ctx.req);
@@ -1029,20 +1038,17 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const ADMIN_EMAIL = "team@oakscholars.com";
         const user = await getUserByEmail(input.email);
-        if (!user || !user.passwordHash) {
-          throw new Error("Invalid email or password");
-        }
+        if (!user || !user.passwordHash) throw new Error("Invalid email or password");
+        
         const valid = await bcrypt.compare(input.password, user.passwordHash);
-        if (!valid) {
-          throw new Error("Invalid email or password");
-        }
-        // Auto-promote team@oakscholars.com to admin if not already
+        if (!valid) throw new Error("Invalid email or password");
+        
         if (input.email.toLowerCase() === ADMIN_EMAIL && user.role !== "admin") {
           await updateUserRole(user.id, "admin");
           user.role = "admin";
         }
         await updateUserLastSignedIn(user.id);
-        // Create session cookie
+        
         const { sdk } = await import("./_core/sdk");
         const token = await sdk.createSessionToken(user.openId, { name: user.name || "" });
         const cookieOptions = getSessionCookieOptions(ctx.req);
