@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => { window.location.href = "/"; },
   });
@@ -84,20 +86,21 @@ export default function Navbar() {
               className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
             />
             <span
-              className={`font-serif font-bold text-xl tracking-wide uppercase hidden sm:inline whitespace-nowrap transition-colors duration-300 ${
-                scrolled ? "text-[#281A39]" : "text-[#E8A838]"
-              }`}
+              className="font-serif font-bold text-xl tracking-wide uppercase hidden sm:inline whitespace-nowrap text-[#E8A838]"
             >
               Oak Scholars
             </span>
           </Link>
 
+          {/* Divider between logo and Tuition */}
+          <span className="hidden lg:inline-block h-5 w-px bg-white/30 mx-2" />
+
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 flex-1 justify-center px-4">
             {navLinks.map((link, idx) => {
               const active = isActive(link.href);
-              // Divider after "Tuition" (idx 0) and after "Contact" (idx 4)
-              const showDividerAfter = idx === 0 || idx === 4; // between Tuition/Study Resources and Contact/Become
+              // Divider only after "Contact" (idx 4, last item) — before Become an Oak Scholar
+              const showDividerAfter = idx === navLinks.length - 1;
               return (
                 <div key={link.href} className="flex items-center">
                   <a
@@ -115,9 +118,7 @@ export default function Navbar() {
                     />
                   </a>
                   {showDividerAfter && (
-                    <span
-                        className="mx-1 h-5 w-px bg-white/30"
-                    />
+                    <span className="mx-1 h-5 w-px bg-white/30" />
                   )}
                 </div>
               );
@@ -126,23 +127,24 @@ export default function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0">
-            {/* Divider before Become an Oak Scholar */}
-            <span className={`h-5 w-px ${scrolled ? "bg-gray-300" : "bg-white/30"}`} />
-
             <Link href="/tutor-apply">
               <Button
                 variant="ghost"
                 size="sm"
-                className={`font-semibold transition-all duration-200 btn-press ${
-                  "text-white hover:bg-white/10"
-                }`}
+                className="font-semibold transition-all duration-200 btn-press text-white hover:bg-white/10"
               >
                 Become an Oak Scholar
               </Button>
             </Link>
 
-            {/* Divider before Contact actions */}
-            <span className={`h-5 w-px ${scrolled ? "bg-gray-300" : "bg-white/30"}`} />
+            {/* Dark/light mode toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle dark/light mode"
+              className="p-2 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
 
             {isAuthenticated ? (
               <DropdownMenu>
