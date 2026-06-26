@@ -32,6 +32,10 @@ export const users = mysqlTable("users", {
   bankSortCode: varchar("bankSortCode", { length: 10 }),
   bankAccountNumber: varchar("bankAccountNumber", { length: 20 }),
   bankPaypalEmail: varchar("bankPaypalEmail", { length: 320 }),
+  // Google Calendar Integration fields
+  googleRefreshToken: text("googleRefreshToken"),
+  googleCalendarId: varchar("googleCalendarId", { length: 255 }),
+  calendarSyncEnabled: int("calendarSyncEnabled").default(0).notNull(),
 });
 
 export type User = typeof users.$inferSelect;
