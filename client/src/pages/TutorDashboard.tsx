@@ -11,12 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Timetable from "@/components/Timetable"; // <--- ADDED IMPORT
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
-  ExternalLink, Shield, Banknote, Camera, Upload,
+  ExternalLink, Shield, Banknote, User,
 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -81,7 +80,6 @@ export function TutorDashboard() {
   const avgRating = feedbackReceived.length > 0 ? (feedbackReceived.reduce((sum, f) => sum + f.rating, 0) / feedbackReceived.length).toFixed(1) : "—";
   const SESSION_RATE_PER_HOUR = 25;
   const totalEarnings = completedSessions.reduce((sum, s) => sum + ((s.duration || 60) / 60) * SESSION_RATE_PER_HOUR, 0);
-  const nextSession = upcomingSessions.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0];
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,6 +90,22 @@ export function TutorDashboard() {
       uploadFile.mutate({ filename: file.name, contentType: file.type, base64 });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleProfileUpdate = () => {
+    updateProfile.mutate({
+      bio,
+      linkedin,
+      tutorSubjects,
+      tutorLevel,
+      tutorUniversity,
+      tutorCourse,
+      profilePhotoUrl,
+      bankAccountName,
+      bankSortCode,
+      bankAccountNumber,
+      bankPaypalEmail,
+    });
   };
 
   return (
@@ -123,14 +137,267 @@ export function TutorDashboard() {
             ))}
           </TabsList>
 
+          <TabsContent value="students">
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-1">My Students</h2>
+              <p className="text-xs text-gray-500 mb-5">Students assigned to you.</p>
+              {studentsLoading ? (
+                <div className="space-y-3">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-28 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+              ) : students.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users size={40} className="text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No students assigned yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {students.map((student) => (
+                    <div key={student.id} className="border border-gray-100 rounded-xl p-5 hover:border-[#E8A838]/40 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-[#281A39] flex items-center justify-center text-white font-bold text-lg shrink-0">
+                          {(student.name || student.email || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[#281A39]">{student.name || <span className="italic text-gray-400">Name not set</span>}</p>
+                          <p className="text-xs text-gray-500">{student.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="sessions">
             <div className="mb-8">
               <Timetable targetUserId={user.id} userName="My" />
             </div>
-            {/* ... your existing sessions list code ... */}
+
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-5">Sessions List</h2>
+              {sessionsLoading ? (
+                <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : sessions.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar size={40} className="text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No sessions scheduled yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {upcomingSessions.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3"><Clock size={14} className="text-green-500" /> Upcoming</h3>
+                      <div className="space-y-3">
+                        {upcomingSessions.map((s) => (
+                          <div key={s.id} className="flex items-center justify-between p-4 bg-green-50 border border-green-100 rounded-xl">
+                            <div>
+                              <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
+                              <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP p")} &middot; {s.duration} min</p>
+                            </div>
+                            <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {completedSessions.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3"><BookOpen size={14} className="text-blue-500" /> Completed</h3>
+                      <div className="space-y-3">
+                        {completedSessions.map((s) => (
+                          <div key={s.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                            <div>
+                              <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
+                              <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP")}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </TabsContent>
-          
-          {/* ... Rest of your tabs ... */}
+
+          <TabsContent value="profile">
+            <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-2xl">
+              <h2 className="font-serif text-xl font-bold text-[#281A39] mb-6">My Profile</h2>
+              
+              <div className="space-y-6">
+                {/* Profile Photo */}
+                <div>
+                  <Label className="text-sm font-semibold text-[#281A39]">Profile Photo</Label>
+                  <div className="mt-2 flex items-center gap-4">
+                    {profilePhotoUrl ? (
+                      <img src={profilePhotoUrl} alt="Profile" className="w-20 h-20 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-[#281A39] flex items-center justify-center text-white">
+                        {(user?.name || "T").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handlePhotoUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadFile.isPending}
+                    >
+                      {uploadFile.isPending ? "Uploading..." : "Upload Photo"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <Label htmlFor="bio" className="text-sm font-semibold text-[#281A39]">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Tell students about yourself..."
+                    rows={4}
+                    className="mt-2"
+                  />
+                </div>
+
+                {/* Subjects & Level */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="subjects" className="text-sm font-semibold text-[#281A39]">Subjects</Label>
+                    <Input
+                      id="subjects"
+                      value={tutorSubjects}
+                      onChange={(e) => setTutorSubjects(e.target.value)}
+                      placeholder="e.g. Math, Physics"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="level" className="text-sm font-semibold text-[#281A39]">Level</Label>
+                    <Input
+                      id="level"
+                      value={tutorLevel}
+                      onChange={(e) => setTutorLevel(e.target.value)}
+                      placeholder="e.g. GCSE, A-Level"
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+
+                {/* University & Course */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="university" className="text-sm font-semibold text-[#281A39]">University</Label>
+                    <Input
+                      id="university"
+                      value={tutorUniversity}
+                      onChange={(e) => setTutorUniversity(e.target.value)}
+                      placeholder="Your university"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="course" className="text-sm font-semibold text-[#281A39]">Course</Label>
+                    <Input
+                      id="course"
+                      value={tutorCourse}
+                      onChange={(e) => setTutorCourse(e.target.value)}
+                      placeholder="Your course/degree"
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+
+                {/* LinkedIn */}
+                <div>
+                  <Label htmlFor="linkedin" className="text-sm font-semibold text-[#281A39]">LinkedIn Profile</Label>
+                  <Input
+                    id="linkedin"
+                    value={linkedin}
+                    onChange={(e) => setLinkedin(e.target.value)}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    className="mt-2"
+                  />
+                </div>
+
+                {/* Bank Details */}
+                <div className="border-t pt-6">
+                  <h3 className="font-semibold text-[#281A39] mb-4 flex items-center gap-2"><Banknote size={18} /> Payment Details</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label htmlFor="accountName" className="text-sm font-semibold text-[#281A39]">Account Name</Label>
+                      <Input
+                        id="accountName"
+                        value={bankAccountName}
+                        onChange={(e) => setBankAccountName(e.target.value)}
+                        placeholder="Account holder name"
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sortCode" className="text-sm font-semibold text-[#281A39]">Sort Code</Label>
+                      <Input
+                        id="sortCode"
+                        value={bankSortCode}
+                        onChange={(e) => setBankSortCode(e.target.value)}
+                        placeholder="XX-XX-XX"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label htmlFor="accountNumber" className="text-sm font-semibold text-[#281A39]">Account Number</Label>
+                      <Input
+                        id="accountNumber"
+                        value={bankAccountNumber}
+                        onChange={(e) => setBankAccountNumber(e.target.value)}
+                        placeholder="Account number"
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="paypalEmail" className="text-sm font-semibold text-[#281A39]">PayPal Email</Label>
+                      <Input
+                        id="paypalEmail"
+                        type="email"
+                        value={bankPaypalEmail}
+                        onChange={(e) => setBankPaypalEmail(e.target.value)}
+                        placeholder="PayPal email (optional)"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Earnings */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <p className="text-sm text-gray-600">Total Earnings</p>
+                  <p className="text-2xl font-bold text-[#281A39]">£{totalEarnings.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">from {completedSessions.length} completed session{completedSessions.length !== 1 ? 's' : ''}</p>
+                </div>
+
+                {/* Save Button */}
+                <Button
+                  onClick={handleProfileUpdate}
+                  disabled={updateProfile.isPending}
+                  className="w-full"
+                  style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+                >
+                  {updateProfile.isPending ? "Saving..." : "Save Profile"}
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
       <Footer />
