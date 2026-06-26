@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, ChevronRight, ChevronLeft, CreditCard, Calendar, User, BookOpen, X, Lock } from "lucide-react";
+import { CheckCircle, ChevronRight, ChevronLeft, CreditCard, Calendar, User, BookOpen, X, Lock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
@@ -280,6 +280,17 @@ export default function Booking() {
           <h1 className="font-serif text-4xl font-bold text-navy-deep mb-3">Book a Session</h1>
           <p className="text-muted-brand">Your first session is 50% off. No commitment required.</p>
         </div>
+
+        {/* Cancelled Payment Warning Banner */}
+        {paymentStatus === "cancelled" && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-fade-in mx-auto max-w-lg">
+            <div className="mt-0.5"><AlertCircle size={18} className="text-red-500" /></div>
+            <div className="text-left">
+              <h3 className="text-sm font-bold text-red-800">Payment Cancelled</h3>
+              <p className="text-xs text-red-600 mt-1">Your checkout session was abandoned or cancelled. Don't worry, you can try completing your booking again when you're ready.</p>
+            </div>
+          </div>
+        )}
 
         {/* Step indicator */}
         <div className="mb-12 animate-fade-in" style={{ animationDelay: "100ms" }}>
