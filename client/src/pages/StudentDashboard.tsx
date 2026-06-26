@@ -1,3 +1,4 @@
+import Timetable from "@/components/Timetable";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
