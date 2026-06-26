@@ -18,6 +18,24 @@ export default function Login() {
   const [otpEmail, setOtpEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const resendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startResendTimer = () => {
+    setResendCountdown(60);
+    if (resendTimerRef.current) clearInterval(resendTimerRef.current);
+    resendTimerRef.current = setInterval(() => {
+      setResendCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(resendTimerRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => () => { if (resendTimerRef.current) clearInterval(resendTimerRef.current); }, []);
   const utils = trpc.useUtils();
 
   useEffect(() => {
@@ -38,6 +56,7 @@ export default function Login() {
       if (data.requiresOtp) {
         setOtpEmail(data.email || email);
         setStep("otp");
+        startResendTimer();
         toast.success("Verification code sent to your email.");
       }
     },
@@ -196,11 +215,23 @@ export default function Login() {
 
                 <button
                   type="button"
-                  onClick={() => loginMutation.mutate({ email, password })}
-                  disabled={loginMutation.isPending}
-                  className="w-full text-sm text-amber hover:text-amber/80 transition-colors duration-200 text-center mb-4"
+                  onClick={() => {
+                    if (resendCountdown > 0 || loginMutation.isPending) return;
+                    loginMutation.mutate({ email, password });
+                    startResendTimer();
+                  }}
+                  disabled={resendCountdown > 0 || loginMutation.isPending}
+                  className={`w-full text-sm transition-colors duration-200 text-center mb-4 ${
+                    resendCountdown > 0 || loginMutation.isPending
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-amber hover:text-amber/80 cursor-pointer"
+                  }`}
                 >
-                  {loginMutation.isPending ? "Resending..." : "Resend code"}
+                  {loginMutation.isPending
+                    ? "Resending..."
+                    : resendCountdown > 0
+                    ? `Resend code in ${resendCountdown}s`
+                    : "Resend code"}
                 </button>
 
                 <button

@@ -44,7 +44,30 @@ export function ThemeProvider({
 
   const toggleTheme = switchable
     ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
+        // Add a brief full-page fade overlay for a smooth transition
+        const overlay = document.createElement("div");
+        overlay.style.cssText = `
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.15);
+          z-index: 9999;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 180ms ease-out;
+        `;
+        document.body.appendChild(overlay);
+
+        // Fade in
+        requestAnimationFrame(() => {
+          overlay.style.opacity = "1";
+        });
+
+        // Switch theme at peak opacity, then fade out
+        setTimeout(() => {
+          setTheme(prev => (prev === "light" ? "dark" : "light"));
+          overlay.style.opacity = "0";
+          setTimeout(() => overlay.remove(), 200);
+        }, 180);
       }
     : undefined;
 
@@ -62,3 +85,6 @@ export function useTheme() {
   }
   return context;
 }
+
+// Re-export as default to satisfy Vite Fast Refresh (one component per file rule)
+export default ThemeContext;

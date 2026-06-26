@@ -69,11 +69,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#281A39] shadow-md py-1 border-b border-white/10"
-          : "bg-[#281A39] lg:bg-transparent py-2"
-      }`}
+      className="sticky top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#281A39] shadow-md border-b border-white/10"
     >
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -125,8 +121,18 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTA — order: Book a Session | Become an Oak Scholar | Login/Account | Dark/Light toggle */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0">
+            <Link href="/booking">
+              <Button
+                size="sm"
+                className="btn-press font-semibold shadow-md"
+                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+              >
+                Book a Session
+              </Button>
+            </Link>
+
             <Link href="/tutor-apply">
               <Button
                 variant="ghost"
@@ -137,24 +143,13 @@ export default function Navbar() {
               </Button>
             </Link>
 
-            {/* Dark/light mode toggle */}
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle dark/light mode"
-              className="p-2 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
-            >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`transition-all duration-200 gap-2 btn-press ${
-                      "border-white/30 text-white hover:bg-white/10 bg-transparent"
-                    }`}
+                    className="transition-all duration-200 gap-2 btn-press border-white/30 text-white hover:bg-white/10 bg-transparent"
                   >
                     <User size={15} />
                     {user?.name?.split(" ")[0] ?? "Account"}
@@ -189,11 +184,7 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`gap-2 transition-all duration-200 btn-press ${
-                    scrolled
-                      ? "border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
-                      : "border-white/30 text-white hover:bg-white/10 bg-transparent"
-                  }`}
+                  className="gap-2 transition-all duration-200 btn-press border-white/30 text-white hover:bg-white/10 bg-transparent"
                 >
                   <User size={15} />
                   Login
@@ -201,15 +192,14 @@ export default function Navbar() {
               </Link>
             )}
 
-            <Link href="/booking">
-              <Button
-                size="sm"
-                className="btn-press font-semibold shadow-md"
-                style={{ backgroundColor: "#E8A838", color: "#281A39" }}
-              >
-                Book a Session
-              </Button>
-            </Link>
+            {/* Dark/light mode toggle — always last */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle dark/light mode"
+              className="p-2 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
           </div>
 
           {/* Mobile menu toggle */}
