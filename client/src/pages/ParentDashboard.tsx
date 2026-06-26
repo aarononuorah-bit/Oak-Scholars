@@ -68,7 +68,7 @@ export function ParentDashboard() {
     { enabled: !!effectiveChildId }
   );
 
-  if (!user) return <div>Access Denied</div>;
+  if (!user || user.role !== "parent") return <div>Access Denied</div>;
 
   const handleSendLink = (e: React.FormEvent) => {
     e.preventDefault();

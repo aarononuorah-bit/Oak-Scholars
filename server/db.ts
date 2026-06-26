@@ -24,7 +24,7 @@ import {
   tutorApplications,
   tutorAvailability,
   tutoringRelationships,
-  creditBalances
+  creditBalances,
   tutoringSessions,
   users,
 } from "../drizzle/schema";
