@@ -1,10 +1,17 @@
-import Timetable from "@/components/Timetable";
-// ... existing imports ...
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import Timetable from "@/components/Timetable"; 
+import Timetable from "@/components/Timetable";
+import {
+  Calendar, Mail, GraduationCap, Megaphone, Bell, Users, Trash2,
+  ToggleLeft, ToggleRight, Send, Plus, LayoutDashboard, ShoppingCart,
+  FileText, TrendingUp, Activity, Download, Shield, UserCheck,
+  CheckCircle, CreditCard, MessageSquare, UserPlus, RefreshCw,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -23,8 +30,8 @@ function UserProfileModal({ userId, onClose }: { userId: number; onClose: () => 
           
           {isLoading ? (
             <div className="space-y-4">
-               <div className="h-16 w-16 rounded-full bg-gray-100 animate-pulse" />
-               <div className="h-4 w-1/3 bg-gray-100 animate-pulse" />
+              <div className="h-16 w-16 rounded-full bg-gray-100 animate-pulse" />
+              <div className="h-4 w-1/3 bg-gray-100 animate-pulse" />
             </div>
           ) : !profile ? (
             <p className="text-muted-brand">Profile not found.</p>
@@ -32,10 +39,10 @@ function UserProfileModal({ userId, onClose }: { userId: number; onClose: () => 
             <div className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-navy/10 flex items-center justify-center text-2xl font-bold text-navy-deep">
-                  {(profile.name || "?").charAt(0).toUpperCase()}
+                  {(profile.name || profile.email || "?").charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-bold text-navy-deep text-lg">{profile.name}</p>
+                  <p className="font-bold text-navy-deep text-lg">{profile.name || "No name"}</p>
                   <p className="text-sm text-muted-brand">{profile.email}</p>
                 </div>
               </div>
@@ -51,6 +58,66 @@ function UserProfileModal({ userId, onClose }: { userId: number; onClose: () => 
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Overview Tab ───────────────────────────
+function OverviewTab() {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-navy-deep">Welcome to Admin Dashboard</h2>
+      <p className="text-muted-brand">Select a tab to manage your platform.</p>
+    </div>
+  );
+}
+
+// ─── Users Tab ───────────────────────────
+function UsersTab({ onSelectUser }: { onSelectUser: (userId: number) => void }) {
+  const { data: users, isLoading } = trpc.admin.getAllUsers.useQuery();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-navy-deep">Manage Users</h2>
+        <Button className="gap-2">
+          <UserPlus className="w-4 h-4" />
+          Add User
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
+          ))}
+        </div>
+      ) : !users || users.length === 0 ? (
+        <p className="text-center text-muted-brand py-8">No users found.</p>
+      ) : (
+        <div className="grid gap-4">
+          {users.map((user: any) => (
+            <div key={user.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:shadow-md transition">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center font-bold text-navy-deep">
+                  {(user.name || user.email || "?").charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-navy-deep">{user.name || "No name"}</p>
+                  <p className="text-sm text-muted-brand">{user.email}</p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onSelectUser(user.id)}
+              >
+                View Profile
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -71,12 +138,22 @@ export default function AdminDashboard() {
         
         <Tabs defaultValue="overview">
           <TabsList className="mb-6 flex gap-2">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="overview">
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="users">
+              <Users className="w-4 h-4 mr-2" />
+              Users
+            </TabsTrigger>
           </TabsList>
           
+          <TabsContent value="overview">
+            <OverviewTab />
+          </TabsContent>
+
           <TabsContent value="users">
-            {/* Logic to list users and trigger: setSelectedUserId(user.id) */}
+            <UsersTab onSelectUser={setSelectedUserId} />
           </TabsContent>
         </Tabs>
       </div>
