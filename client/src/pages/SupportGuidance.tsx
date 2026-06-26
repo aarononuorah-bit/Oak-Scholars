@@ -151,29 +151,43 @@ export default function SupportGuidance() {
           backgroundSize: "40px 40px"
         }} />
         <div className="container relative z-10">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-px bg-amber" />
-              <span className="text-amber text-xs font-semibold tracking-widest uppercase">Support & Guidance</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left — text */}
+            <div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-px bg-amber" />
+                <span className="text-amber text-xs font-semibold tracking-widest uppercase">Support & Guidance</span>
+              </div>
+              <h1 className="font-serif text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
+                Beyond the classroom,{" "}
+                <em className="text-amber not-italic">we've got you.</em>
+              </h1>
+              <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-2xl">
+                Oak Scholars offers two distinct strands of support: academic guidance to help you reach your goals, and wellbeing support for everything life throws at you outside of education.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a href="#academic">
+                  <Button size="lg" className="btn-press font-semibold text-base px-8 py-3" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+                    Academic Support
+                  </Button>
+                </a>
+                <a href="#wellbeing">
+                  <Button size="lg" variant="outline" className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-3">
+                    Wellbeing Support
+                  </Button>
+                </a>
+              </div>
             </div>
-            <h1 className="font-serif text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
-              Beyond the classroom,{" "}
-              <em className="text-amber not-italic">we've got you.</em>
-            </h1>
-            <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-2xl">
-              Oak Scholars offers two distinct strands of support: academic guidance to help you reach your goals, and wellbeing support for everything life throws at you outside of education.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <a href="#academic">
-                <Button size="lg" className="btn-press font-semibold text-base px-8 py-3" style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
-                  Academic Support
-                </Button>
-              </a>
-              <a href="#wellbeing">
-                <Button size="lg" variant="outline" className="border-white/30 text-white bg-transparent hover:bg-white/10 text-base px-8 py-3">
-                  Wellbeing Support
-                </Button>
-              </a>
+            {/* Right — image */}
+            <div className="hidden lg:block">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
+                <img
+                  src="/manus-storage/support-mentoring_d39f7d5e.jpg"
+                  alt="A mentor supporting a student"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(40,26,57,0.5) 0%, transparent 50%)" }} />
+              </div>
             </div>
           </div>
         </div>

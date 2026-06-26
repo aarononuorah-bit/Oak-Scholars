@@ -13,6 +13,8 @@ export const users = mysqlTable("users", {
   stripeCustomerId: varchar("stripeCustomerId", { length: 100 }),
   passwordHash: varchar("passwordHash", { length: 255 }),
   emailVerified: int("emailVerified").default(0).notNull(),
+  loginOtpCode: varchar("loginOtpCode", { length: 6 }),
+  loginOtpExpiresAt: timestamp("loginOtpExpiresAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

@@ -452,3 +452,24 @@ export async function sendParentLinkCode(data: {
   });
   console.log("[Email] Parent link code sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }
+
+export async function sendLoginOtp(data: { name: string; email: string; code: string }) {
+  const transporter = await getTransporter();
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:24px;margin:0 0 16px;font-family:serif;">Your sign-in code</h2>
+    <p style="color:#666;font-size:16px;line-height:1.6;margin:0 0 32px;">Hi <strong>${data.name || "there"}</strong>, use the code below to complete your sign-in. It expires in <strong>10 minutes</strong>.</p>
+    <div style="background:rgba(232,168,56,0.08);border:2px solid ${BRAND_AMBER};border-radius:16px;padding:32px;text-align:center;margin-bottom:32px;">
+      <p style="margin:0 0 12px;color:${BRAND_PURPLE};font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Verification Code</p>
+      <p style="margin:0;color:${BRAND_PURPLE};font-size:48px;font-weight:900;font-family:monospace;letter-spacing:0.25em;">${data.code}</p>
+      <p style="margin:12px 0 0;color:#999;font-size:13px;">Expires in 10 minutes.</p>
+    </div>
+    <p style="color:#999;font-size:14px;line-height:1.7;margin:0;text-align:center;">If you did not attempt to sign in, you can safely ignore this email.</p>
+  `, `Your Oak Scholars sign-in code: ${data.code}`);
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.email,
+    subject: `Your Oak Scholars sign-in code: ${data.code}`,
+    html,
+  });
+  console.log("[Email] Login OTP sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}

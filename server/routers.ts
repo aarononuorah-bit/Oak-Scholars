@@ -19,6 +19,7 @@ import {
   sendSessionReminder,
   sendSessionCancellationNotice,
   sendParentLinkCode,
+  sendLoginOtp,
 } from "./email";
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
@@ -76,6 +77,8 @@ import {
   updateUserReferralCode,
   createReferral,
   getPendingRewardsForUser,
+  setLoginOtp,
+  clearLoginOtp,
 } from "./db";
 import { tutoringSessions, tutorApplications, tutoringRelationships } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -1090,20 +1093,49 @@ export const appRouter = router({
           password: z.string().min(1, "Password is required"),
         })
       )
-      .mutation(async ({ input, ctx }) => {
+      .mutation(async ({ input }) => {
         const ADMIN_EMAIL = "team@oakscholars.com";
         const user = await getUserByEmail(input.email);
         if (!user || !user.passwordHash) throw new Error("Invalid email or password");
-        
         const valid = await bcrypt.compare(input.password, user.passwordHash);
         if (!valid) throw new Error("Invalid email or password");
-        
         if (input.email.toLowerCase() === ADMIN_EMAIL && user.role !== "admin") {
           await updateUserRole(user.id, "admin");
-          user.role = "admin";
         }
+        // Generate 6-digit OTP and send it
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        await setLoginOtp(user.id, code, expiresAt);
+        try {
+          await sendLoginOtp({ name: user.name || "", email: user.email || "", code });
+        } catch (e) {
+          console.error("[Login OTP] Failed to send email:", e);
+        }
+        return { success: true, requiresOtp: true, email: user.email };
+      }),
+
+    verifyLoginOtp: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          code: z.string().length(6),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const user = await getUserByEmail(input.email);
+        if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        if (!user.loginOtpCode || !user.loginOtpExpiresAt) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "No verification code found. Please sign in again." });
+        }
+        if (new Date() > new Date(user.loginOtpExpiresAt)) {
+          await clearLoginOtp(user.id);
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Verification code has expired. Please sign in again." });
+        }
+        if (user.loginOtpCode !== input.code) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Incorrect verification code." });
+        }
+        await clearLoginOtp(user.id);
         await updateUserLastSignedIn(user.id);
-        
         const { sdk } = await import("./_core/sdk");
         const token = await sdk.createSessionToken(user.openId, { name: user.name || "" });
         const cookieOptions = getSessionCookieOptions(ctx.req);

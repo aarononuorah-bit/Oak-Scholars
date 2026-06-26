@@ -31,7 +31,7 @@ export default function CookieConsent() {
 
   return (
     <div
-      className="fixed left-0 right-0 z-50 px-4 transition-all duration-300"
+      className="fixed left-0 right-0 z-[60] px-4 transition-all duration-300"
       style={{
         bottom: "0",
         // On mobile, leave space for the chatbot button (bottom-4 = 1rem + 56px button + gap)

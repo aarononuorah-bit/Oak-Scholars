@@ -162,7 +162,7 @@ function HeroSection() {
           <div className="relative hidden lg:block animate-slide-in-right" style={{ animationDelay: "200ms" }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: "4/3" }}>
               <img
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
+                src="/manus-storage/hero-tutoring_1dfe71f1.jpeg"
                 alt="A university student tutoring a secondary school student"
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
               />
