@@ -11,6 +11,7 @@ import {
   updateReferralStatus,
   markReferrerRewardUsed,
   markRefereeRewardUsed,
+  updateUserRole,
 } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -108,6 +109,11 @@ async function handleStripeEvent(event: Stripe.Event) {
             // Only update the stripe customer ID, leave the accountType exactly as they registered it
             if (!userRows[0].stripeCustomerId && session.customer) {
               await updateStripeCustomerId(userId, session.customer as string);
+            }
+            
+            // Auto-assign 'user' (student) role after successful payment
+            if (userRows[0].role !== 'user' && userRows[0].role !== 'admin' && userRows[0].role !== 'tutor') {
+              await updateUserRole(userId, 'user');
             }
           }
         }
