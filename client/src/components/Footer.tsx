@@ -109,6 +109,7 @@ export default function Footer() {
                 { label: "Our Team", href: "/#team" },
                 { label: "Our Philosophy", href: "/philosophy" },
                 { label: "How It Works", href: "/#how-it-works" },
+                { label: "Blog & Insights", href: "/blog" },
                 { label: "Contact Us", href: "/contact" },
                 { label: "Privacy Policy", href: "/privacy" },
                 { label: "Terms of Service", href: "/terms" },

@@ -483,3 +483,106 @@
     transform: scaleX(1) !important;
   }
 }
+
+
+/* ─── Accessibility: Enhanced focus indicators ──────────────────────────────── */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* ─── Accessibility: Skip to main content link ──────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--navy);
+  color: var(--amber);
+  z-index: 50;
+  font-weight: bold;
+}
+
+/* ─── Accessibility: Improved text contrast ────────────────────────────────── */
+.text-gray-400 {
+  color: #666666 !important;
+}
+
+.text-gray-500 {
+  color: #6B7280 !important;
+}
+
+.text-white\/60 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* ─── Accessibility: Visible focus for form elements ────────────────────────── */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 3px solid var(--amber);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 3px rgba(232, 168, 56, 0.1);
+}
+
+/* ─── Accessibility: High contrast focus mode ────────────────────────────────── */
+@media (prefers-contrast: more) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 4px solid var(--navy);
+    outline-offset: 3px;
+  }
+}
+
+/* ─── Accessibility: Extended reduced motion support ────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .btn-press:hover,
+  .btn-press:active {
+    transform: none !important;
+  }
+  
+  .scroll-to-top:hover {
+    transform: none !important;
+  }
+  
+  .card-hover:hover {
+    transform: none !important;
+  }
+  
+  .hover-lift:hover,
+  .hover-scale:hover,
+  .hover-glow:hover {
+    transform: none !important;
+  }
+}

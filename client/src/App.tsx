@@ -26,6 +26,9 @@ import WellbeingForm from "./pages/WellbeingForm";
 import Philosophy from "./pages/Philosophy";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Blog from "./pages/Blog";
+import BlogArticle from "./pages/BlogArticle";
+import { AnalyticsProvider } from "./components/AnalyticsProvider";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import CookieConsent from "./components/CookieConsent";
 import { ChatbotWidget } from "./components/ChatbotWidget";
@@ -58,6 +61,8 @@ function AnimatedRoutes() {
         <Route path="/philosophy" component={Philosophy} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:id" component={BlogArticle} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -68,15 +73,17 @@ function AnimatedRoutes() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable>
-        <TooltipProvider>
-          <Toaster richColors position="top-right" />
-          <AnnouncementBanner />
-          <AnimatedRoutes />
-          <CookieConsent />
-          <ChatbotWidget />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AnalyticsProvider>
+        <ThemeProvider defaultTheme="light" switchable>
+          <TooltipProvider>
+            <Toaster richColors position="top-right" />
+            <AnnouncementBanner />
+            <AnimatedRoutes />
+            <CookieConsent />
+            <ChatbotWidget />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AnalyticsProvider>
     </ErrorBoundary>
   );
 }
