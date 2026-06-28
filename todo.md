@@ -157,11 +157,11 @@
 ### Study Resources & Content
 - [x] Study Resources: allow students to purchase individual packs — wire the /study-resources page pricing cards to Stripe Checkout so students can buy revision packs directly
 - [x] Study Resources: file delivery after purchase — after a study pack is purchased, email the student a download link or show it in their Account > Orders tab
-- [ ] Blog / Insights section — add a simple /blog page with 3–5 articles on exam tips, university applications, and wellbeing to improve SEO and build trust with prospective parents
+- [x] Blog / Insights section — add a simple /blog page with 3–5 articles on exam tips, university applications, and wellbeing to improve SEO and build trust with prospective parents
 
 ### UX & Design
 - [x] Mobile navigation — audit the Navbar on small screens; ensure the hamburger menu opens cleanly and all links (including Admin Dashboard, My Dashboard) are accessible on mobile
-- [ ] Accessibility audit — check colour contrast ratios for the amber-on-cream and white-on-navy combinations; ensure all interactive elements have visible focus rings and ARIA labels
+- [x] Accessibility audit — check colour contrast ratios for the amber-on-cream and white-on-navy combinations; ensure all interactive elements have visible focus rings and ARIA labels
 - [x] 404 page — improve the /not-found page with a friendly message, the Oak Scholars logo, and links back to Home and Book a Session
 - [x] Cookie consent — the current banner blocks the bottom of the screen on mobile; move it to a smaller bottom-left toast style that doesn't obscure content
 - [x] Loading skeletons on all dashboards — ensure every data-fetching section shows a skeleton while loading, not a blank space, to avoid layout shift
@@ -170,7 +170,7 @@
 - [x] Meta tags — add <title>, <meta description>, and Open Graph tags to each page (Home, Booking, Philosophy, Study Resources, etc.) for better search visibility
 - [x] Sitemap.xml — generate and serve a /sitemap.xml listing all public routes so search engines can index the site properly
 - [x] Structured data (JSON-LD) — add TutoringService schema markup to the homepage so Google can display rich results for the business
-- [ ] Google Analytics / tracking — add a privacy-friendly analytics integration so the team can see which pages get the most traffic and where users drop off
+- [x] Google Analytics / tracking — add a privacy-friendly analytics integration so the team can see which pages get the most traffic and where users drop off
 
 ### Security & Reliability
 - [x] Rate limiting on auth routes — add per-IP rate limiting to /api/auth/login and /api/auth/register to prevent brute-force attacks
