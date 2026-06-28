@@ -473,3 +473,55 @@ export async function sendLoginOtp(data: { name: string; email: string; code: st
   });
   console.log("[Email] Login OTP sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }
+
+export async function sendTutorApplicationStatusChange(data: {
+  applicantName: string;
+  applicantEmail: string;
+  status: "accepted" | "rejected" | "interview";
+  message?: string;
+}) {
+  const transporter = await getTransporter();
+  
+  const statusMessages: Record<string, { title: string; message: string; color: string }> = {
+    accepted: {
+      title: "Application Accepted! 🎉",
+      message: "Congratulations! Your application to join Oak Scholars has been accepted. You are now part of our tutor network. The team will be in touch shortly with next steps.",
+      color: "#22c55e",
+    },
+    rejected: {
+      title: "Application Update",
+      message: "Thank you for your interest in joining Oak Scholars. Unfortunately, we will not be moving forward with your application at this time. We appreciate your effort and encourage you to reapply in the future.",
+      color: "#ef4444",
+    },
+    interview: {
+      title: "Interview Scheduled 📅",
+      message: "Great news! Your application has progressed to the interview stage. The team will contact you shortly to schedule a convenient time.",
+      color: "#3b82f6",
+    },
+  };
+
+  const info = statusMessages[data.status];
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">${info.title}</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.applicantName}</strong>,</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">${info.message}</p>
+    
+    ${data.message ? `
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:20px;margin-bottom:32px;">
+      <p style="margin:0;color:${BRAND_PURPLE};font-size:15px;line-height:1.7;white-space:pre-wrap;">${data.message}</p>
+    </div>
+    ` : ""}
+
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Visit Oak Scholars</a>
+    </div>
+  `, `Tutor Application Status Update`);
+
+  const info_result = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.applicantEmail,
+    subject: `Oak Scholars Tutor Application — ${data.status === "accepted" ? "Accepted! 🎉" : data.status === "interview" ? "Interview Scheduled 📅" : "Update"}`,
+    html,
+  });
+  console.log("[Email] Tutor application status email sent:", nodemailer.getTestMessageUrl(info_result) || info_result.messageId);
+}

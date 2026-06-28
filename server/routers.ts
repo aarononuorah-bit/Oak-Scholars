@@ -20,6 +20,7 @@ import {
   sendSessionCancellationNotice,
   sendParentLinkCode,
   sendLoginOtp,
+  sendTutorApplicationStatusChange,
 } from "./email";
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
@@ -616,6 +617,31 @@ const adminRouter = router({
       const user = await getUserById(input.id);
       if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
       return user;
+    }),
+
+  tutorApplications: adminProcedure.query(async () => getAllTutorApplications()),
+
+  updateTutorApplicationStatus: adminProcedure
+    .input(z.object({ id: z.number(), status: z.enum(["new", "reviewing", "interview", "accepted", "rejected"]) }))
+    .mutation(async ({ input }) => {
+      await updateTutorApplicationStatus(input.id, input.status);
+      
+      // Send status change email if status changed to interview, accepted, or rejected
+      if (["interview", "accepted", "rejected"].includes(input.status)) {
+        const db = await getDb();
+        if (db) {
+          const apps = await db.select().from(tutorApplications).where(eq(tutorApplications.id, input.id));
+          if (apps.length > 0) {
+            await sendTutorApplicationStatusChange({
+              applicantName: apps[0].firstName,
+              applicantEmail: apps[0].email,
+              status: input.status as "accepted" | "rejected" | "interview",
+            }).catch((e) => console.error("[Email] Tutor status email failed:", e));
+          }
+        }
+      }
+      
+      return { success: true };
     }),
 
   earnings: adminProcedure.query(async () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +11,7 @@ import {
   Calendar, Users, LayoutDashboard, ShoppingCart,
   FileText, TrendingUp, Activity, UserCheck,
   CheckCircle, CreditCard, MessageSquare, UserPlus,
-  Mail, GraduationCap, Clock, AlertCircle, PoundSterling,
+  Mail, GraduationCap, Clock, AlertCircle, PoundSterling, RefreshCw,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -92,7 +92,18 @@ function StatCard({ icon: Icon, label, value, sub, colour }: {
 
 // ─── Overview Tab ────────────────────────────────────
 function OverviewTab() {
+  const utils = trpc.useUtils();
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const { data, isLoading } = trpc.admin.overview.useQuery();
+
+  // Auto-refresh every 60 seconds if enabled
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      utils.admin.overview.invalidate();
+    }, 60000); // 60 seconds
+    return () => clearInterval(interval);
+  }, [autoRefresh, utils]);
 
   const activityIcon: Record<string, React.ElementType> = {
     booking: Calendar,
@@ -136,6 +147,28 @@ function OverviewTab() {
 
   return (
     <div className="space-y-8">
+      {/* Refresh Controls */}
+      <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 p-4">
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+            />
+            <span className="text-sm font-medium text-navy-deep">Auto-refresh every 60 seconds</span>
+          </label>
+        </div>
+        <button
+          onClick={() => utils.admin.overview.invalidate()}
+          className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 transition-colors duration-200 flex items-center gap-2"
+        >
+          <RefreshCw size={14} />
+          Refresh Now
+        </button>
+      </div>
+
       {/* Stats grid */}
       <div>
         <h2 className="text-lg font-bold text-navy-deep mb-4">Platform Overview</h2>
@@ -311,6 +344,76 @@ function OrdersTab() {
   );
 }
 
+// ─── Tutor Applications Tab ────────────────────────────────────
+function TutorApplicationsTab() {
+  const { data: applications, isLoading } = trpc.admin.tutorApplications.useQuery();
+  const updateStatusMutation = trpc.admin.updateTutorApplicationStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Application status updated");
+      const utils = trpc.useUtils();
+      utils.admin.tutorApplications.invalidate();
+    },
+    onError: () => toast.error("Failed to update status"),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-navy-deep">Tutor Applications</h2>
+        <Badge variant="outline">{applications?.length ?? 0} total</Badge>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+      ) : !applications || applications.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+          <GraduationCap size={32} className="text-gray-300 mx-auto mb-2" />
+          <p className="text-muted-brand">No applications yet.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+          {applications.map((app) => (
+            <div key={app.id} className="p-4 hover:bg-gray-50 transition-colors duration-150">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <p className="font-semibold text-navy-deep">{app.firstName} {app.lastName}</p>
+                  <p className="text-sm text-muted-brand">{app.email} · {app.university}</p>
+                  <p className="text-xs text-muted-brand mt-1">{app.degreeSubject} ({app.yearOfStudy}) · {app.subjects}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <select
+                    value={app.status}
+                    onChange={(e) => {
+                      updateStatusMutation.mutate({
+                        id: app.id,
+                        status: e.target.value as "new" | "reviewing" | "interview" | "accepted" | "rejected",
+                      });
+                    }}
+                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-navy-deep bg-white focus:outline-none focus:ring-2 focus:ring-amber/30"
+                  >
+                    <option value="new">New</option>
+                    <option value="reviewing">Reviewing</option>
+                    <option value="interview">Interview</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
+                    app.status === "accepted" ? "bg-green-100 text-green-700" :
+                    app.status === "rejected" ? "bg-red-100 text-red-700" :
+                    app.status === "interview" ? "bg-blue-100 text-blue-700" :
+                    app.status === "reviewing" ? "bg-yellow-100 text-yellow-700" :
+                    "bg-gray-100 text-gray-600"
+                  }`}>{app.status}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Earnings Tab ────────────────────────────────────
 function EarningsTab() {
   const { data, isLoading } = trpc.admin.earnings.useQuery();
@@ -432,6 +535,9 @@ export default function AdminDashboard() {
             <TabsTrigger value="orders" className="flex items-center gap-1.5">
               <ShoppingCart size={14} /> Orders
             </TabsTrigger>
+            <TabsTrigger value="applications" className="flex items-center gap-1.5">
+              <GraduationCap size={14} /> Applications
+            </TabsTrigger>
             <TabsTrigger value="earnings" className="flex items-center gap-1.5">
               <PoundSterling size={14} /> Earnings
             </TabsTrigger>
@@ -445,6 +551,9 @@ export default function AdminDashboard() {
           </TabsContent>
           <TabsContent value="orders">
             <OrdersTab />
+          </TabsContent>
+          <TabsContent value="applications">
+            <TutorApplicationsTab />
           </TabsContent>
           <TabsContent value="earnings">
             <EarningsTab />
