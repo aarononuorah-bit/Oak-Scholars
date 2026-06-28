@@ -88,17 +88,18 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Divider between logo and Tuition */}
-          <span className="hidden lg:inline-block h-5 w-px bg-white/30 mx-2" />
-
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 flex-1 justify-center px-4">
             {navLinks.map((link, idx) => {
               const active = isActive(link.href);
-              // Divider only after "Contact" (idx 4, last item) — before Become an Oak Scholar
-              const showDividerAfter = idx === navLinks.length - 1;
+              const isFirst = idx === 0;
+              const isLast = idx === navLinks.length - 1;
+              
               return (
                 <div key={link.href} className="flex items-center">
+                  {isFirst && (
+                    <span className="mr-6 h-5 w-px bg-white/30" />
+                  )}
                   <a
                     href={link.href}
                     className={`relative text-sm font-semibold whitespace-nowrap transition-all duration-200 ease-out px-3 py-1 rounded-md ${
@@ -113,8 +114,8 @@ export default function Navbar() {
                       style={{ backgroundColor: underlineColor }}
                     />
                   </a>
-                  {showDividerAfter && (
-                    <span className="mx-1 h-5 w-px bg-white/30" />
+                  {isLast && (
+                    <span className="ml-6 h-5 w-px bg-white/30" />
                   )}
                 </div>
               );
