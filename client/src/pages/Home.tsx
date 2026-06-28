@@ -6,6 +6,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TrustBar from "@/components/TrustBar";
 import CtaBanner from "@/components/CtaBanner";
+import PageMeta from "@/components/PageMeta";
+import JsonLd from "@/components/JsonLd";
 
 // ─── Intersection Observer hook for scroll animations ─────────────────────────
 function useScrollReveal(options?: IntersectionObserverInit) {
@@ -628,8 +630,32 @@ function TeamSection() {
 
 // ─── Home Page ────────────────────────────────────────────────────────────────
 export default function Home() {
+  const jsonLdData = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: "Oak Scholars",
+    url: "https://oakscholars.co.uk",
+    logo: "https://oakscholars.co.uk/manus-storage/oak-logo_feb9f1bb.webp",
+    description: "Oak Scholars provides expert 1:1 online tutoring for 11+, GCSE, A-Level and IB students. Tutors who recently aced the same exams.",
+    sameAs: ["https://www.linkedin.com/company/oak-scholars"],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "hello@oakscholars.co.uk",
+    },
+    offers: {
+      "@type": "Offer",
+      name: "Trial Tutoring Session",
+      price: "15.00",
+      priceCurrency: "GBP",
+      url: "https://oakscholars.co.uk/booking",
+    },
+  };
+
   return (
     <div className="min-h-screen">
+      <PageMeta url="/" />
+      <JsonLd id="home" data={jsonLdData} />
       <Navbar />
       <HeroSection />
       <HowItWorksSection />

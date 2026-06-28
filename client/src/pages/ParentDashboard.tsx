@@ -11,9 +11,50 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
   Users, Calendar, BookOpen, Star, Clock, GraduationCap,
-  CheckCircle, Loader2, UserPlus,
+  CheckCircle, Loader2, UserPlus, ShoppingBag, CreditCard,
 } from "lucide-react";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 import { format } from "date-fns";
+
+function ParentOrdersTab() {
+  const { data: orders, isLoading } = trpc.account.myOrders.useQuery();
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-serif text-2xl font-bold text-[#281A39]">My Orders</h2>
+        <span className="text-xs text-gray-500 bg-white border border-gray-100 px-3 py-1.5 rounded-full">{orders?.length ?? 0} orders</span>
+      </div>
+      {isLoading ? (
+        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+      ) : !orders || orders.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+          <ShoppingBag size={36} className="text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">No orders yet.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+          {orders.map((o: any) => (
+            <div key={o.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-150">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-50">
+                  <CreditCard size={16} className="text-amber-500" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#281A39] text-sm">{o.packageName || o.description || "Order"}</p>
+                  <p className="text-xs text-gray-500">{new Date(o.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-[#281A39]">£{(o.amountTotal / 100).toFixed(2)}</span>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${ o.status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700" }`}>{o.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -68,6 +109,7 @@ export function ParentDashboard() {
     { enabled: !!effectiveChildId }
   );
 
+  if (childrenLoading) return <DashboardSkeleton />;
   if (!user || user.role !== "parent") return <div>Access Denied</div>;
 
   const handleSendLink = (e: React.FormEvent) => {
@@ -101,6 +143,10 @@ export function ParentDashboard() {
             <TabsTrigger value="children" className="text-xs px-3 py-2 flex items-center gap-2">
               <Users size={16} />
               My Children
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="text-xs px-3 py-2 flex items-center gap-2">
+              <ShoppingBag size={16} />
+              Orders
             </TabsTrigger>
             <TabsTrigger value="link" className="text-xs px-3 py-2 flex items-center gap-2">
               <UserPlus size={16} />
@@ -198,6 +244,11 @@ export function ParentDashboard() {
                 )}
               </>
             )}
+          </TabsContent>
+
+          {/* ─── Orders Tab ─── */}
+          <TabsContent value="orders">
+            <ParentOrdersTab />
           </TabsContent>
 
           {/* ─── Link a Child Tab ─── */}

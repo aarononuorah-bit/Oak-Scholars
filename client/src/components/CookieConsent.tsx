@@ -31,10 +31,14 @@ export default function CookieConsent() {
 
   return (
     <div
-      className="fixed left-0 right-0 z-[60] px-4 transition-all duration-300"
+      className="fixed z-[60] transition-all duration-300"
       style={{
-        bottom: "0",
-        // On mobile, leave space for the chatbot button (bottom-4 = 1rem + 56px button + gap)
+        bottom: "1.25rem",
+        left: "1rem",
+        right: "1rem",
+        maxWidth: "420px",
+        // On larger screens, pin to bottom-left
+        ...(typeof window !== "undefined" && window.innerWidth >= 640 ? { right: "auto" } : {}),
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         animation: animateOut
           ? "cookieSlideDown 300ms cubic-bezier(0.23,1,0.32,1) forwards"
@@ -42,7 +46,7 @@ export default function CookieConsent() {
       }}
     >
       <div
-        className="max-w-2xl mx-auto rounded-xl shadow-2xl p-4 sm:p-5 mb-4"
+        className="rounded-xl shadow-2xl p-3.5 sm:p-4"
         style={{ backgroundColor: "#281A39", border: "1px solid rgba(232,168,56,0.2)" }}
       >
         <div className="flex items-start gap-3">

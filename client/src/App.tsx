@@ -19,6 +19,7 @@ import TermsOfService from "./pages/TermsOfService";
 import Account from "./pages/Account";
 import StudyResources from "./pages/StudyResources";
 import StudyResourcesBooking from "./pages/StudyResourcesBooking";
+import StudyResourcesSuccess from "./pages/StudyResourcesSuccess";
 import SupportGuidance from "./pages/SupportGuidance";
 import AcademicSupportForm from "./pages/AcademicSupportForm";
 import WellbeingForm from "./pages/WellbeingForm";
@@ -50,6 +51,7 @@ function AnimatedRoutes() {
         <Route path="/account/:tab" component={Account} />
         <Route path="/study-resources" component={StudyResources} />
         <Route path="/study-resources/order" component={StudyResourcesBooking} />
+        <Route path="/study-resources/success" component={StudyResourcesSuccess} />
         <Route path="/support-guidance" component={SupportGuidance} />
         <Route path="/academic-support" component={AcademicSupportForm} />
         <Route path="/wellbeing-support" component={WellbeingForm} />

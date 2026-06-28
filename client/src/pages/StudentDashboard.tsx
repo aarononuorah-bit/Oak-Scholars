@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
   ExternalLink, Shield, CalendarCheck, CalendarX,
@@ -100,6 +101,8 @@ export function StudentDashboard() {
     onSuccess: () => { toast.success("Reschedule request sent"); utils.session.studentSessions.invalidate(); },
     onError: (e: { message: string }) => toast.error(e.message),
   });
+
+  if (tutorsLoading || sessionsLoading) return <DashboardSkeleton />;
 
   if (!user) {
     return (

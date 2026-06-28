@@ -15,7 +15,7 @@ import {
 } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { sendBookingConfirmation, sendAdminBookingAlert } from "./email";
+import { sendBookingConfirmation, sendAdminBookingAlert, sendStudyResourceDelivery } from "./email";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
   apiVersion: "2026-06-24.dahlia",
@@ -87,7 +87,23 @@ export function registerStripeWebhook(app: Express) {
   );
 }
 
+// ─── Idempotency guard ───────────────────────────────────────────────────────
+// Prevent duplicate processing if Stripe retries the same event.
+const processedEvents = new Set<string>();
+const EVENT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 async function handleStripeEvent(event: Stripe.Event) {
+  // Skip already-processed events (idempotency)
+  if (event.id && processedEvents.has(event.id)) {
+    console.log(`[Webhook] Skipping duplicate event: ${event.id}`);
+    return;
+  }
+  if (event.id) {
+    processedEvents.add(event.id);
+    // Auto-expire after 24 h to prevent unbounded memory growth
+    setTimeout(() => processedEvents.delete(event.id), EVENT_TTL_MS).unref?.();
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -121,13 +137,15 @@ async function handleStripeEvent(event: Stripe.Event) {
         console.error("[Webhook] Failed to link user:", e);
       }
 
+      const isStudyResource = session.metadata?.product_type === "study-resource";
+
       try {
         await createOrder({
           userId: userId ?? undefined,
           email,
           stripeSessionId: session.id,
           stripePaymentIntentId: session.payment_intent as string | undefined,
-          packageName,
+          packageName: isStudyResource ? (session.metadata?.resource_type ?? "study-resource") : packageName,
           subject: subject !== "Not specified" ? subject : undefined,
           level: level !== "Not specified" ? level : undefined,
           amountTotal,
@@ -138,26 +156,39 @@ async function handleStripeEvent(event: Stripe.Event) {
         const [firstName, ...lastNameParts] = customerName.split(" ");
         const lastName = lastNameParts.join(" ") || "Learner";
 
-        await sendBookingConfirmation({
-          firstName: firstName || "there",
-          email,
-          subject,
-          level,
-          sessionType: packageName,
-          preferredTime: session.metadata?.preferred_time || "Flexible / Discuss",
-        });
+        if (isStudyResource) {
+          // Study resource purchase — send delivery email
+          await sendStudyResourceDelivery({
+            firstName: firstName || "there",
+            email,
+            resourceType: session.metadata?.resource_type ?? "resource",
+            subject,
+            level,
+            examBoard: session.metadata?.exam_board || undefined,
+          });
+        } else {
+          // Regular tutoring booking
+          await sendBookingConfirmation({
+            firstName: firstName || "there",
+            email,
+            subject,
+            level,
+            sessionType: packageName,
+            preferredTime: session.metadata?.preferred_time || "Flexible / Discuss",
+          });
 
-        await sendAdminBookingAlert({
-          firstName: firstName || "New",
-          lastName,
-          email,
-          phone: session.customer_details?.phone || undefined,
-          subject,
-          level,
-          sessionType: packageName,
-          preferredTime: session.metadata?.preferred_time || "Flexible / Discuss",
-          message: session.metadata?.message || undefined,
-        });
+          await sendAdminBookingAlert({
+            firstName: firstName || "New",
+            lastName,
+            email,
+            phone: session.customer_details?.phone || undefined,
+            subject,
+            level,
+            sessionType: packageName,
+            preferredTime: session.metadata?.preferred_time || "Flexible / Discuss",
+            message: session.metadata?.message || undefined,
+          });
+        }
 
         if (userId) {
           const referral = await getReferralByRefereeId(userId);

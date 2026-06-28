@@ -12,6 +12,7 @@ import {
   FileText, TrendingUp, Activity, UserCheck,
   CheckCircle, CreditCard, MessageSquare, UserPlus,
   Mail, GraduationCap, Clock, AlertCircle, PoundSterling, RefreshCw,
+  ChevronDown, ChevronUp, Phone, ExternalLink, BookOpen,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -305,6 +306,213 @@ function UsersTab({ onSelectUser }: { onSelectUser: (userId: number) => void }) 
   );
 }
 
+// ─── Bookings Tab ────────────────────────────────────
+function BookingsTab() {
+  const { data: bookings, isLoading } = trpc.booking.list.useQuery();
+  const updateStatusMutation = trpc.booking.updateStatus.useMutation({
+    onSuccess: () => { toast.success("Status updated"); utils.booking.list.invalidate(); },
+    onError: () => toast.error("Failed to update status"),
+  });
+  const utils = trpc.useUtils();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [emailModal, setEmailModal] = useState<{ email: string; name: string } | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+
+  const openEmailModal = (email: string, name: string) => {
+    setEmailModal({ email, name });
+    setEmailSubject("Your Oak Scholars Booking");
+    setEmailBody(`Hi ${name},\n\nThank you for booking with Oak Scholars. We wanted to follow up regarding your session.\n\nBest regards,\nThe Oak Scholars Team`);
+  };
+
+  const sendEmail = () => {
+    if (!emailModal) return;
+    const mailto = `mailto:${emailModal.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    window.open(mailto, "_blank");
+    setEmailModal(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-navy-deep">Bookings</h2>
+        <Badge variant="outline">{bookings?.length ?? 0} total</Badge>
+      </div>
+      {isLoading ? (
+        <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+      ) : !bookings || bookings.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+          <BookOpen size={32} className="text-gray-300 mx-auto mb-2" />
+          <p className="text-muted-brand">No bookings yet.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+          {bookings.map((b) => {
+            const isExpanded = expandedId === b.id;
+            return (
+              <div key={b.id}>
+                {/* Row header */}
+                <div
+                  className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                  onClick={() => setExpandedId(isExpanded ? null : b.id)}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`p-1.5 rounded-lg shrink-0 ${
+                      b.status === "confirmed" ? "bg-green-100" :
+                      b.status === "cancelled" ? "bg-red-100" :
+                      b.status === "contacted" ? "bg-blue-100" : "bg-amber-100"
+                    }`}>
+                      <Calendar size={14} className={`${
+                        b.status === "confirmed" ? "text-green-600" :
+                        b.status === "cancelled" ? "text-red-600" :
+                        b.status === "contacted" ? "text-blue-600" : "text-amber-600"
+                      }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-navy-deep text-sm">{b.firstName} {b.lastName}</p>
+                      <p className="text-xs text-muted-brand truncate">{b.subject} · {b.level} · {new Date(b.createdAt).toLocaleDateString("en-GB")}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <select
+                      value={b.status}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        updateStatusMutation.mutate({ id: b.id, status: e.target.value as "new" | "contacted" | "confirmed" | "cancelled" });
+                      }}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-navy-deep bg-white focus:outline-none focus:ring-2 focus:ring-amber/30"
+                    >
+                      <option value="new">New</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openEmailModal(b.email, `${b.firstName} ${b.lastName}`); }}
+                      className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                      title="Email student"
+                    >
+                      <Mail size={14} />
+                    </button>
+                    {isExpanded ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                  </div>
+                </div>
+
+                {/* Expanded detail */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-bold text-navy-deep uppercase tracking-wide">Contact Details</h4>
+                        <div className="flex items-center gap-2 text-sm text-muted-brand">
+                          <Mail size={13} className="text-gray-400" />
+                          <a href={`mailto:${b.email}`} className="hover:text-amber transition-colors">{b.email}</a>
+                        </div>
+                        {b.phone && (
+                          <div className="flex items-center gap-2 text-sm text-muted-brand">
+                            <Phone size={13} className="text-gray-400" />
+                            <span>{b.phone}</span>
+                          </div>
+                        )}
+                        {b.preferredContactMethod && (
+                          <div className="text-xs text-muted-brand">Preferred contact: <span className="font-medium capitalize">{b.preferredContactMethod}</span></div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-bold text-navy-deep uppercase tracking-wide">Session Details</h4>
+                        <div className="text-sm text-muted-brand">Subject: <span className="font-medium text-navy-deep">{b.subject}</span></div>
+                        <div className="text-sm text-muted-brand">Level: <span className="font-medium text-navy-deep">{b.level}</span></div>
+                        <div className="text-sm text-muted-brand">Package: <span className="font-medium text-navy-deep">{b.sessionType}</span></div>
+                        <div className="text-sm text-muted-brand">Preferred time: <span className="font-medium text-navy-deep">{b.preferredTime}</span></div>
+                      </div>
+                      {(b as any).stripeSessionId && (
+                        <div className="sm:col-span-2 space-y-1">
+                          <h4 className="text-xs font-bold text-navy-deep uppercase tracking-wide">Payment</h4>
+                          <div className="flex items-center gap-2 text-sm text-muted-brand">
+                            <CreditCard size={13} className="text-gray-400" />
+                            <span className="font-mono text-xs">{(b as any).stripeSessionId}</span>
+                            <a
+                              href={`https://dashboard.stripe.com/payments/${(b as any).stripeSessionId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-700 transition-colors"
+                            >
+                              <ExternalLink size={12} />
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {b.message && (
+                        <div className="sm:col-span-2">
+                          <h4 className="text-xs font-bold text-navy-deep uppercase tracking-wide mb-1">Note from student</h4>
+                          <p className="text-sm text-muted-brand bg-white rounded-lg p-3 border border-gray-100">{b.message}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Email compose modal */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEmailModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-serif text-xl font-bold text-navy-deep">Email Student</h2>
+                <button onClick={() => setEmailModal(null)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-navy-deep uppercase tracking-wide block mb-1">To</label>
+                  <div className="text-sm text-muted-brand bg-gray-50 rounded-lg px-3 py-2">{emailModal.email}</div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-navy-deep uppercase tracking-wide block mb-1">Subject</label>
+                  <input
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-navy-deep uppercase tracking-wide block mb-1">Message</label>
+                  <textarea
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    rows={6}
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber/30 resize-none"
+                  />
+                </div>
+                <div className="flex gap-3 justify-end pt-2">
+                  <button
+                    onClick={() => setEmailModal(null)}
+                    className="px-4 py-2 text-sm text-muted-brand hover:text-navy-deep transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={sendEmail}
+                    className="px-5 py-2 text-sm font-semibold rounded-lg text-[#281A39] btn-press"
+                    style={{ backgroundColor: "#E8A838" }}
+                  >
+                    Open in Email Client
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Orders Tab ──────────────────────────────────────
 function OrdersTab() {
   const { data: orders, isLoading } = trpc.admin.orders.useQuery();
@@ -529,6 +737,9 @@ export default function AdminDashboard() {
             <TabsTrigger value="overview" className="flex items-center gap-1.5">
               <LayoutDashboard size={14} /> Overview
             </TabsTrigger>
+            <TabsTrigger value="bookings" className="flex items-center gap-1.5">
+              <Calendar size={14} /> Bookings
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-1.5">
               <Users size={14} /> Users
             </TabsTrigger>
@@ -545,6 +756,9 @@ export default function AdminDashboard() {
 
           <TabsContent value="overview">
             <OverviewTab />
+          </TabsContent>
+          <TabsContent value="bookings">
+            <BookingsTab />
           </TabsContent>
           <TabsContent value="users">
             <UsersTab onSelectUser={setSelectedUserId} />

@@ -62,9 +62,11 @@ export default function StudyResourcesBooking() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [submitted, setSubmitted] = useState(false);
 
-  const contactMutation = trpc.contact.submit.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
+  const checkoutMutation = trpc.payments.createResourceCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
     },
     onError: (err) => {
       toast.error(err.message || "Something went wrong. Please try again.");
@@ -84,33 +86,21 @@ export default function StudyResourcesBooking() {
   };
 
   const handleSubmit = () => {
-    if (!form.phone) {
-      toast.error("Please provide a phone number.");
-      return;
-    }
-    if (!form.preferredContactMethod) {
-      toast.error("Please select a preferred contact method.");
-      return;
-    }
-    const resourceLabel = form.resourceType === "other" ? form.resourceTypeOther : selectedResource?.label ?? form.resourceType;
+    const resourceId = form.resourceType as "revision-notes" | "mock-questions" | "model-answers" | "powerpoint-packs";
     const subjectLabel = form.subject === "other" ? form.subjectOther : form.subject;
-    const message = [
-      `Resource Type: ${resourceLabel}`,
-      `Subject: ${subjectLabel}`,
-      `Level: ${form.level}`,
-      `Quantity: ${form.quantity}`,
-      `Phone: ${form.phone}`,
-      `Preferred Contact: ${form.preferredContactMethod}`,
-      form.notes ? `Additional Notes: ${form.notes}` : null,
-    ].filter(Boolean).join("\n");
-
-    contactMutation.mutate({
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      preferredContactMethod: form.preferredContactMethod,
-      subject: `Study Resources Request — ${resourceLabel} (${subjectLabel})`,
-      message,
+    if (form.resourceType === "other") {
+      // For custom requests, fall back to contact form flow
+      toast.info("For custom resource requests, please use the contact form. Redirecting…");
+      setTimeout(() => { window.location.href = "/contact"; }, 1500);
+      return;
+    }
+    checkoutMutation.mutate({
+      resourceType: resourceId,
+      subject: subjectLabel,
+      level: form.level,
+      customerEmail: form.email,
+      customerName: form.name,
+      origin: window.location.origin,
     });
   };
 
@@ -440,7 +430,7 @@ export default function StudyResourcesBooking() {
                 </div>
 
                 <div className="bg-amber/10 rounded-xl p-4 text-sm text-gray-600 border border-amber/20">
-                  <strong style={{ color: "#281A39" }}>What happens next?</strong> We'll review your request and reply within 24 hours with your tailored resource and a payment link. No upfront payment required.
+                  <strong style={{ color: "#281A39" }}>Secure checkout</strong> — you'll be taken to Stripe to complete your payment. Your resource will be prepared and delivered to your inbox within 24–48 hours.
                 </div>
               </div>
             )}
@@ -475,11 +465,11 @@ export default function StudyResourcesBooking() {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={contactMutation.isPending}
+                  disabled={checkoutMutation.isPending}
                   className="btn-press gap-2 font-semibold"
                   style={{ backgroundColor: "#281A39", color: "white" }}
                 >
-                  {contactMutation.isPending ? "Sending…" : "Submit Request"}
+                  {checkoutMutation.isPending ? "Redirecting to checkout…" : "Pay & Order Now 🔒"}
                   <ChevronRight size={16} />
                 </Button>
               )}

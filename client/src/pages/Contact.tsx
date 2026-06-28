@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageMeta from "@/components/PageMeta";
 
 const CONTACT_METHODS = [
   { id: "email", label: "Email" },
@@ -41,6 +42,11 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-surface">
+      <PageMeta
+        title="Contact Us"
+        description="Get in touch with Oak Scholars. We're here to help with any questions about tutoring, study resources, or anything else."
+        url="/contact"
+      />
       <Navbar />
 
       <div className="container py-24 max-w-5xl mx-auto">

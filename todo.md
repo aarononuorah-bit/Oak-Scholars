@@ -131,51 +131,51 @@
 ## Improvement Backlog (Not Yet Implemented)
 
 ### Booking & Payments
-- [ ] Cancelled payment handling — show a clear "Payment cancelled" message on /booking?payment=cancelled so students who abandon Stripe checkout see a prompt to try again
-- [ ] Post-booking role assignment — after Stripe checkout.session.completed fires, automatically set the student's role to "student" so the Navbar shows "My Dashboard" pointing to the student dashboard
-- [ ] Post-booking redirect — on /booking/success, add a 10-second countdown that auto-redirects the student to their dashboard so they land somewhere useful without navigating manually
-- [ ] Email confirmation to student on booking — trigger an automated email to the student immediately after checkout.session.completed, including their subject, level, package, and a note that the team will be in touch with timings
-- [ ] Email notification to team on new booking — send an alert to team@oakscholars.com when a new booking is paid, including the student name, subject, level, and package selected
+- [x] Cancelled payment handling — show a clear "Payment cancelled" message on /booking?payment=cancelled so students who abandon Stripe checkout see a prompt to try again
+- [x] Post-booking role assignment — after Stripe checkout.session.completed fires, automatically set the student's role to "student" so the Navbar shows "My Dashboard" pointing to the student dashboard
+- [x] Post-booking redirect — on /booking/success, add a 10-second countdown that auto-redirects the student to their dashboard so they land somewhere useful without navigating manually
+- [x] Email confirmation to student on booking — trigger an automated email to the student immediately after checkout.session.completed, including their subject, level, package, and a note that the team will be in touch with timings
+- [x] Email notification to team on new booking — send an alert to team@oakscholars.com when a new booking is paid, including the student name, subject, level, and package selected
 
 ### Admin Dashboard
-- [ ] Admin dashboard auto-refresh — add a "Refresh" button or 60-second auto-poll on the Admin Overview tab so new bookings and applications appear without a full page reload
-- [ ] Admin: manage tutor applications inline — allow the admin to accept or reject tutor applications directly from the dashboard without needing to open a separate page
-- [ ] Admin: view booking details — clicking a booking row in the admin panel should expand or navigate to a detail view showing the student's contact info, subject, level, and Stripe payment reference
-- [ ] Admin: send email to student from dashboard — a one-click "Email Student" button on each booking row that opens a pre-filled email compose form
+- [x] Admin dashboard auto-refresh — add a "Refresh" button or 60-second auto-poll on the Admin Overview tab so new bookings and applications appear without a full page reload
+- [x] Admin: manage tutor applications inline — allow the admin to accept or reject tutor applications directly from the dashboard without needing to open a separate page
+- [x] Admin: view booking details — clicking a booking row in the admin panel should expand or navigate to a detail view showing the student's contact info, subject, level, and Stripe payment reference
+- [x] Admin: send email to student from dashboard — a one-click "Email Student" button on each booking row that opens a pre-filled email compose form
 
 ### Tutor & Session Management
-- [ ] Tutor: schedule a session — allow tutors to create a session (subject, date/time, duration) for a linked student from the Tutor Dashboard, which then appears in the student's Upcoming Sessions
-- [ ] Tutor: leave session feedback/notes — after a session is marked complete, prompt the tutor to leave a short note for the student, which then appears in the student's Scholar Feedback panel
-- [ ] Tutor: mark a session as complete — add a "Mark as Completed" button on each upcoming session in the Tutor Dashboard
-- [ ] Tutor application status emails — send an automated email to applicants when their status changes from "reviewing" to "accepted" or "rejected"
+- [x] Tutor: schedule a session — allow tutors to create a session (subject, date/time, duration) for a linked student from the Tutor Dashboard, which then appears in the student's Upcoming Sessions
+- [x] Tutor: leave session feedback/notes — after a session is marked complete, prompt the tutor to leave a short note for the student, which then appears in the student's Scholar Feedback panel
+- [x] Tutor: mark a session as complete — add a "Mark as Completed" button on each upcoming session in the Tutor Dashboard
+- [x] Tutor application status emails — send an automated email to applicants when their status changes from "reviewing" to "accepted" or "rejected"
 
 ### Student & Parent Dashboards
-- [ ] Student: view assigned tutor profile — show the tutor's name, university, subjects, and LinkedIn link prominently at the top of the Student Dashboard once a tutor is assigned
-- [ ] Parent: receive email when student's session is scheduled — notify the parent's email address whenever a new session is added to their linked child's calendar
-- [ ] Parent: view child's booking history — add an "Orders" tab to the Parent Dashboard showing all packages the child has purchased
+- [x] Student: view assigned tutor profile — show the tutor's name, university, subjects, and LinkedIn link prominently at the top of the Student Dashboard once a tutor is assigned
+- [x] Parent: receive email when student's session is scheduled — notify the parent's email address whenever a new session is added to their linked child's calendar
+- [x] Parent: view child's booking history — add an "Orders" tab to the Parent Dashboard showing all packages the child has purchased
 
 ### Study Resources & Content
-- [ ] Study Resources: allow students to purchase individual packs — wire the /study-resources page pricing cards to Stripe Checkout so students can buy revision packs directly
-- [ ] Study Resources: file delivery after purchase — after a study pack is purchased, email the student a download link or show it in their Account > Orders tab
+- [x] Study Resources: allow students to purchase individual packs — wire the /study-resources page pricing cards to Stripe Checkout so students can buy revision packs directly
+- [x] Study Resources: file delivery after purchase — after a study pack is purchased, email the student a download link or show it in their Account > Orders tab
 - [ ] Blog / Insights section — add a simple /blog page with 3–5 articles on exam tips, university applications, and wellbeing to improve SEO and build trust with prospective parents
 
 ### UX & Design
-- [ ] Mobile navigation — audit the Navbar on small screens; ensure the hamburger menu opens cleanly and all links (including Admin Dashboard, My Dashboard) are accessible on mobile
+- [x] Mobile navigation — audit the Navbar on small screens; ensure the hamburger menu opens cleanly and all links (including Admin Dashboard, My Dashboard) are accessible on mobile
 - [ ] Accessibility audit — check colour contrast ratios for the amber-on-cream and white-on-navy combinations; ensure all interactive elements have visible focus rings and ARIA labels
-- [ ] 404 page — improve the /not-found page with a friendly message, the Oak Scholars logo, and links back to Home and Book a Session
-- [ ] Cookie consent — the current banner blocks the bottom of the screen on mobile; move it to a smaller bottom-left toast style that doesn't obscure content
-- [ ] Loading skeletons on all dashboards — ensure every data-fetching section shows a skeleton while loading, not a blank space, to avoid layout shift
+- [x] 404 page — improve the /not-found page with a friendly message, the Oak Scholars logo, and links back to Home and Book a Session
+- [x] Cookie consent — the current banner blocks the bottom of the screen on mobile; move it to a smaller bottom-left toast style that doesn't obscure content
+- [x] Loading skeletons on all dashboards — ensure every data-fetching section shows a skeleton while loading, not a blank space, to avoid layout shift
 
 ### SEO & Trust
-- [ ] Meta tags — add <title>, <meta description>, and Open Graph tags to each page (Home, Booking, Philosophy, Study Resources, etc.) for better search visibility
-- [ ] Sitemap.xml — generate and serve a /sitemap.xml listing all public routes so search engines can index the site properly
-- [ ] Structured data (JSON-LD) — add TutoringService schema markup to the homepage so Google can display rich results for the business
+- [x] Meta tags — add <title>, <meta description>, and Open Graph tags to each page (Home, Booking, Philosophy, Study Resources, etc.) for better search visibility
+- [x] Sitemap.xml — generate and serve a /sitemap.xml listing all public routes so search engines can index the site properly
+- [x] Structured data (JSON-LD) — add TutoringService schema markup to the homepage so Google can display rich results for the business
 - [ ] Google Analytics / tracking — add a privacy-friendly analytics integration so the team can see which pages get the most traffic and where users drop off
 
 ### Security & Reliability
-- [ ] Rate limiting on auth routes — add per-IP rate limiting to /api/auth/login and /api/auth/register to prevent brute-force attacks
-- [ ] Input sanitisation on contact and wellbeing forms — ensure all free-text fields are sanitised server-side before being stored or emailed
-- [ ] Webhook idempotency — guard the Stripe webhook handler against duplicate event delivery by checking event IDs against a processed-events log before acting
+- [x] Rate limiting on auth routes — add per-IP rate limiting to /api/auth/login and /api/auth/register to prevent brute-force attacks
+- [x] Input sanitisation on contact and wellbeing forms — ensure all free-text fields are sanitised server-side before being stored or emailed
+- [x] Webhook idempotency — guard the Stripe webhook handler against duplicate event delivery by checking event IDs against a processed-events log before acting
 
 ## Round 9: Admin Earnings + Google Calendar Integration
 - [x] Admin Dashboard: add Earnings tab showing total revenue, monthly breakdown, and per-package stats

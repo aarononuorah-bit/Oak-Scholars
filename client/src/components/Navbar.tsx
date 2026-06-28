@@ -204,9 +204,7 @@ export default function Navbar() {
 
           {/* Mobile menu toggle */}
           <button
-            className={`lg:hidden p-2 rounded-md transition-all duration-200 ${
-              scrolled ? "text-[#281A39] hover:bg-gray-100" : "text-white hover:bg-white/10"
-            }`}
+            className="lg:hidden p-2 rounded-md transition-all duration-200 text-white hover:bg-white/10"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
@@ -238,7 +236,7 @@ export default function Navbar() {
                 <>
                   <Link href={dashboardHref}>
                     <Button variant="outline" className="w-full border-white/30 text-white bg-transparent hover:bg-white/10 btn-press">
-                      My Dashboard
+                      {user?.role === "admin" ? "Admin Dashboard" : "My Dashboard"}
                     </Button>
                   </Link>
                   <Link href="/account">

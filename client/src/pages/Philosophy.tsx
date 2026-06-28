@@ -5,6 +5,7 @@ import { BookOpen, Heart, GraduationCap, CheckCircle, ChevronRight } from "lucid
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CtaBanner from "@/components/CtaBanner";
+import PageMeta from "@/components/PageMeta";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -74,9 +75,14 @@ export default function Philosophy() {
 
   return (
     <div className="min-h-screen">
+      <PageMeta
+        title="Our Philosophy"
+        description="Learn about the Oak Scholars approach to tutoring — near-peer learning, tailored support, and a genuine passion for helping students achieve their best."
+        url="/philosophy"
+      />
       <Navbar />
 
-      {/* ─── Hero ──────────────────────────────────────────────────────────────── */}
+      {/* ─── Hero ──────────────────────────────────────────────────────────────────────────── */}
       <section
         className="relative pt-32 pb-20 flex items-center min-h-[70vh]"
         style={{

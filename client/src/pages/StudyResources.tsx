@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Navbar from "@/components/Navbar";
+import PageMeta from "@/components/PageMeta";
 import Footer from "@/components/Footer";
 import CtaBanner from "@/components/CtaBanner";
 
@@ -117,6 +118,11 @@ export default function StudyResources() {
 
   return (
     <div className="min-h-screen">
+      <PageMeta
+        title="Study Resources"
+        description="Tailored revision notes, mock questions, model answers and PowerPoint packs for 11+, GCSE, A-Level and IB — crafted by students who sat the same exams."
+        url="/study-resources"
+      />
       <Navbar />
 
       {/* ─── Hero ─────────────────────────────────────────────────────────────── */}

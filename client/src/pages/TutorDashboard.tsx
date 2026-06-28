@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
   ExternalLink, Shield, Banknote, User, CalendarCheck, CalendarX,
@@ -53,6 +54,192 @@ function CalendarConnectCard() {
           className="shrink-0" style={{ backgroundColor: "#4285F4", color: "white" }}>
           Connect
         </Button>
+      )}
+    </div>
+  );
+}
+
+// ─── Schedule Session Panel ──────────────────────────
+type StudentRel = { id: number; studentId: number; subjects: string; level: string; student?: { id: number; name?: string | null; email?: string | null } | null };
+
+function ScheduleSessionPanel({ students, utils }: { students: StudentRel[]; utils: ReturnType<typeof trpc.useUtils> }) {
+  const [open, setOpen] = useState(false);
+  const [studentId, setStudentId] = useState("");
+  const [subject, setSubject] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [duration, setDuration] = useState("60");
+
+  const createSession = trpc.session.createSession.useMutation({
+    onSuccess: () => {
+      toast.success("Session scheduled!");
+      utils.session.tutorSessions.invalidate();
+      setOpen(false);
+      setStudentId(""); setSubject(""); setScheduledAt(""); setDuration("60");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  if (!open) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6 flex items-center justify-between">
+        <div>
+          <p className="font-semibold text-[#281A39]">Schedule a Session</p>
+          <p className="text-xs text-gray-500">Create a new session for one of your students.</p>
+        </div>
+        <Button size="sm" onClick={() => setOpen(true)} style={{ backgroundColor: "#E8A838", color: "#281A39" }}>
+          + New Session
+        </Button>
+      </div>
+    );
+  }
+
+  const selectedRel = students.find((s) => String(s.studentId) === studentId);
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E8A838]/30 p-6 mb-6">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="font-serif text-lg font-bold text-[#281A39]">Schedule a New Session</h3>
+        <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <Label className="text-xs font-semibold text-[#281A39] uppercase tracking-wide mb-1 block">Student</Label>
+          <select
+            value={studentId}
+            onChange={(e) => {
+              setStudentId(e.target.value);
+              const rel = students.find((s) => String(s.studentId) === e.target.value);
+              if (rel) setSubject(rel.subjects.split(",")[0]?.trim() || "");
+            }}
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber/30"
+          >
+            <option value="">Select student...</option>
+            {students.map((s) => (
+              <option key={s.studentId} value={s.studentId}>{s.student?.name || s.student?.email || `Student #${s.studentId}`}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label className="text-xs font-semibold text-[#281A39] uppercase tracking-wide mb-1 block">Subject</Label>
+          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Mathematics" />
+        </div>
+        <div>
+          <Label className="text-xs font-semibold text-[#281A39] uppercase tracking-wide mb-1 block">Date & Time</Label>
+          <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs font-semibold text-[#281A39] uppercase tracking-wide mb-1 block">Duration (minutes)</Label>
+          <select
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber/30"
+          >
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min (1 hour)</option>
+            <option value="90">90 min</option>
+            <option value="120">120 min (2 hours)</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex gap-3 mt-5 justify-end">
+        <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button
+          size="sm"
+          disabled={!studentId || !subject || !scheduledAt || createSession.isPending}
+          onClick={() => {
+            if (!studentId || !subject || !scheduledAt || !selectedRel) return;
+            createSession.mutate({
+              relationshipId: selectedRel.id,
+              studentId: Number(studentId),
+              subject,
+              scheduledAt: new Date(scheduledAt),
+              duration: Number(duration),
+            });
+          }}
+          style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+        >
+          {createSession.isPending ? "Scheduling..." : "Schedule Session"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Session Row (with mark complete + feedback) ──────
+type SessionData = { id: number; subject: string; scheduledAt: Date | string; duration?: number | null; status: string; notes?: string | null; studentId: number };
+
+function SessionRow({ session: s, utils, completed = false }: { session: SessionData; utils: ReturnType<typeof trpc.useUtils>; completed?: boolean }) {
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackNote, setFeedbackNote] = useState("");
+  const [rating, setRating] = useState(5);
+
+  const updateStatus = trpc.session.updateStatus.useMutation({
+    onSuccess: () => { toast.success("Session marked as completed!"); utils.session.tutorSessions.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const submitFeedback = trpc.feedback.submit.useMutation({
+    onSuccess: () => { toast.success("Feedback saved!"); setShowFeedback(false); setFeedbackNote(""); utils.session.tutorSessions.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  return (
+    <div className={`border rounded-xl p-4 ${ completed ? "bg-gray-50 border-gray-100" : "bg-green-50 border-green-100" }`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
+          <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP p")} &middot; {s.duration || 60} min</p>
+          {s.notes && <p className="text-xs text-gray-400 mt-1 italic">{s.notes}</p>}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${ completed ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700" }`}>{s.status}</span>
+          {!completed && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs border-green-300 text-green-700 hover:bg-green-100"
+              disabled={updateStatus.isPending}
+              onClick={() => updateStatus.mutate({ id: s.id, status: "completed" })}
+            >
+              Mark Complete
+            </Button>
+          )}
+          {completed && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+              onClick={() => setShowFeedback((v) => !v)}
+            >
+              {showFeedback ? "Cancel" : "Leave Feedback"}
+            </Button>
+          )}
+        </div>
+      </div>
+      {showFeedback && (
+        <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+          <div>
+            <Label className="text-xs font-semibold text-[#281A39] uppercase tracking-wide mb-1 block">Rating (1–5)</Label>
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map((r) => (
+                <button key={r} onClick={() => setRating(r)} className={`w-8 h-8 rounded-full text-sm font-bold transition-colors ${ r <= rating ? "bg-[#E8A838] text-[#281A39]" : "bg-gray-100 text-gray-400" }`}>{r}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-[#281A39] uppercase tracking-wide mb-1 block">Session Notes (visible to student)</Label>
+            <Textarea value={feedbackNote} onChange={(e) => setFeedbackNote(e.target.value)} placeholder="Great progress on quadratic equations today..." rows={3} />
+          </div>
+          <Button
+            size="sm"
+            disabled={!feedbackNote.trim() || submitFeedback.isPending}
+            onClick={() => submitFeedback.mutate({ sessionId: s.id, toUserId: s.studentId, rating, comment: feedbackNote })}
+            style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+          >
+            {submitFeedback.isPending ? "Saving..." : "Save Feedback"}
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -101,6 +288,8 @@ export function TutorDashboard() {
     onSuccess: (data) => { setProfilePhotoUrl(data.url); toast.success("Photo uploaded!"); },
     onError: (e) => toast.error(e.message),
   });
+
+  if (studentsLoading || sessionsLoading || feedbackLoading) return <DashboardSkeleton />;
 
   if (!user || user.role !== "tutor") {
     return (
@@ -210,6 +399,8 @@ export function TutorDashboard() {
           </TabsContent>
 
           <TabsContent value="sessions">
+            <ScheduleSessionPanel students={students} utils={utils} />
+
             <div className="mb-8">
               <Timetable targetUserId={user.id} userName="My" />
             </div>
@@ -230,13 +421,7 @@ export function TutorDashboard() {
                       <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3"><Clock size={14} className="text-green-500" /> Upcoming</h3>
                       <div className="space-y-3">
                         {upcomingSessions.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between p-4 bg-green-50 border border-green-100 rounded-xl">
-                            <div>
-                              <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
-                              <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP p")} &middot; {s.duration} min</p>
-                            </div>
-                            <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">{s.status}</span>
-                          </div>
+                          <SessionRow key={s.id} session={s} utils={utils} />
                         ))}
                       </div>
                     </div>
@@ -246,12 +431,7 @@ export function TutorDashboard() {
                       <h3 className="text-sm font-semibold text-[#281A39] flex items-center gap-2 mb-3"><BookOpen size={14} className="text-blue-500" /> Completed</h3>
                       <div className="space-y-3">
                         {completedSessions.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                            <div>
-                              <p className="font-semibold text-[#281A39] text-sm">{s.subject}</p>
-                              <p className="text-xs text-gray-500">{format(new Date(s.scheduledAt), "PPP")}</p>
-                            </div>
-                          </div>
+                          <SessionRow key={s.id} session={s} utils={utils} completed />
                         ))}
                       </div>
                     </div>

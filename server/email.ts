@@ -525,3 +525,104 @@ export async function sendTutorApplicationStatusChange(data: {
   });
   console.log("[Email] Tutor application status email sent:", nodemailer.getTestMessageUrl(info_result) || info_result.messageId);
 }
+
+export async function sendParentSessionNotification(data: {
+  parentName: string;
+  parentEmail: string;
+  studentName: string;
+  subject: string;
+  scheduledAt: Date | string;
+  duration: number;
+  tutorName?: string;
+}) {
+  const transporter = await getTransporter();
+  const sessionDate = new Date(data.scheduledAt).toLocaleString("en-GB", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">New Session Scheduled</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.parentName}</strong>,</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">
+      A new tutoring session has been scheduled for <strong>${data.studentName}</strong>. Here are the details:
+    </p>
+
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Student</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.studentName}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.subject}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Date & Time</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${sessionDate}</td></tr>
+        <tr><td style="padding:12px 0;${data.tutorName ? "border-bottom:1px solid rgba(40,26,57,0.05);" : ""}color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Duration</td><td style="padding:12px 0;${data.tutorName ? "border-bottom:1px solid rgba(40,26,57,0.05);" : ""}color:${BRAND_PURPLE};font-weight:600;">${data.duration} minutes</td></tr>
+        ${data.tutorName ? `<tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tutor</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:600;">${data.tutorName}</td></tr>` : ""}
+      </table>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/parent-dashboard" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">View Dashboard →</a>
+    </div>
+  `, `New session scheduled for ${data.studentName}`);
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.parentEmail,
+    subject: `📅 New session scheduled for ${data.studentName} — Oak Scholars`,
+    html,
+  });
+  console.log("[Email] Parent session notification sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}
+
+export async function sendStudyResourceDelivery(data: {
+  firstName: string;
+  email: string;
+  resourceType: string;
+  subject: string;
+  level: string;
+  examBoard?: string;
+}) {
+  const transporter = await getTransporter();
+  const RESOURCE_NAMES: Record<string, string> = {
+    "revision-notes": "Revision Notes",
+    "mock-questions": "Mock Questions",
+    "model-answers": "Model Answers",
+    "powerpoint-packs": "PowerPoint Pack",
+  };
+  const resourceName = RESOURCE_NAMES[data.resourceType] ?? data.resourceType;
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Your Study Resource is on its way! 📚</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.firstName}</strong>,</p>
+    <p style="color:#666;margin:0 0 24px;font-size:16px;line-height:1.6;">
+      Thank you for purchasing your <strong>${resourceName}</strong> pack from Oak Scholars. Our team is now preparing your personalised materials.
+    </p>
+
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Resource</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${resourceName}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.subject}</td></tr>
+        <tr><td style="padding:12px 0;${data.examBoard ? "border-bottom:1px solid rgba(40,26,57,0.05);" : ""}color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Level</td><td style="padding:12px 0;${data.examBoard ? "border-bottom:1px solid rgba(40,26,57,0.05);" : ""}color:${BRAND_PURPLE};font-weight:600;">${data.level}</td></tr>
+        ${data.examBoard ? `<tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Exam Board</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:600;">${data.examBoard}</td></tr>` : ""}
+      </table>
+    </div>
+
+    <div style="background:rgba(232,168,56,0.08);border:2px solid ${BRAND_AMBER};border-radius:16px;padding:28px;text-align:center;margin-bottom:32px;">
+      <p style="margin:0 0 8px;color:${BRAND_PURPLE};font-size:16px;font-weight:700;">What happens next?</p>
+      <p style="margin:0;color:#666;font-size:14px;line-height:1.7;">
+        Our Oak Scholars are preparing your materials. You will receive a follow-up email with your download link within <strong>24–48 hours</strong>. If you have any questions, reply to this email and we'll be happy to help.
+      </p>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/account" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;margin-right:12px;">My Account</a>
+      <a href="https://oakscholars.co.uk/study-resources" style="display:inline-block;background:${BRAND_AMBER};color:${BRAND_PURPLE};text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:800;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Browse More Resources</a>
+    </div>
+  `, `Your ${resourceName} pack for ${data.subject} is being prepared`);
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.email,
+    subject: `Your Oak Scholars ${resourceName} — ${data.subject} (${data.level}) 📚`,
+    html,
+  });
+  console.log("[Email] Study resource delivery email sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
+}

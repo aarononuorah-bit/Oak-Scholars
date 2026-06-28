@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 import Step3Availability from "@/components/Step3Availability";
+import PageMeta from "@/components/PageMeta";
 
 const SUBJECTS = [
   "Mathematics", "Further Maths", "Physics", "Chemistry", "Biology",
@@ -202,6 +203,11 @@ export default function Booking() {
 
   return (
     <div className="min-h-screen bg-surface">
+      <PageMeta
+        title="Book a Tutoring Session"
+        description="Book your first 1:1 tutoring session with Oak Scholars at 50% off. Expert tutors for 11+, GCSE, A-Level and IB. No commitment required."
+        url="/booking"
+      />
       <Navbar />
 
       <div className="container py-24 max-w-2xl mx-auto">

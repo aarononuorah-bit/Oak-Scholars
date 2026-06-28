@@ -21,6 +21,7 @@ import {
   sendParentLinkCode,
   sendLoginOtp,
   sendTutorApplicationStatusChange,
+  sendParentSessionNotification,
 } from "./email";
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
@@ -31,6 +32,7 @@ import {
   respondToLinkRequest,
   getLinkedStudentForParent,
   getLinkedChildrenForParent,
+  getLinkedParentsForStudent,
   updateTutorProfile,
   updateAccountType,
   createBanner,
@@ -87,6 +89,7 @@ import { tutoringSessions, tutorApplications, tutoringRelationships } from "../d
 import { eq } from "drizzle-orm";
 import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";
+import { authLimiter, contactLimiter } from "./rateLimiter";
 
 // ─── Admin guard ──────────────────────────────────────────────────────────────
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -217,8 +220,18 @@ const contactRouter = router({
         message: z.string().min(10),
       })
     )
-    .mutation(async ({ input }) => {
-      await createContactMessage({ name: input.name, email: input.email, subject: input.subject, message: input.message });
+    .mutation(async ({ input, ctx }) => {
+      const ip = (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || ctx.req.socket?.remoteAddress || "unknown";
+      contactLimiter.check(ip);
+      // Sanitise: strip HTML tags from free-text fields
+      const sanitise = (s: string) => s.replace(/<[^>]*>/g, "").trim();
+      const safeInput = {
+        ...input,
+        name: sanitise(input.name),
+        subject: sanitise(input.subject),
+        message: sanitise(input.message),
+      };
+      await createContactMessage({ name: safeInput.name, email: safeInput.email, subject: safeInput.subject, message: safeInput.message });
       await notifyOwner({
         title: `New Contact Message — ${input.name}`,
         content: `Subject: ${input.subject}\nFrom: ${input.email}\nPhone: ${input.phone}\nPreferred Contact: ${input.preferredContactMethod}\n\n${input.message}`,
@@ -371,6 +384,67 @@ const paymentsRouter = router({
         cancel_url: `${input.origin}/booking?payment=cancelled`,
       });
 
+      return { url: session.url };
+    }),
+
+  createResourceCheckout: publicProcedure
+    .input(
+      z.object({
+        resourceType: z.enum(["revision-notes", "mock-questions", "model-answers", "powerpoint-packs"]),
+        subject: z.string(),
+        level: z.string(),
+        examBoard: z.string().optional(),
+        customerEmail: z.string().email(),
+        customerName: z.string().optional(),
+        origin: z.string().url(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const RESOURCE_PRICES: Record<string, number> = {
+        "revision-notes": 1500,
+        "mock-questions": 1500,
+        "model-answers": 1500,
+        "powerpoint-packs": 2000,
+      };
+      const RESOURCE_NAMES: Record<string, string> = {
+        "revision-notes": "Revision Notes",
+        "mock-questions": "Mock Questions",
+        "model-answers": "Model Answers",
+        "powerpoint-packs": "PowerPoint Pack",
+      };
+      const priceInPence = RESOURCE_PRICES[input.resourceType];
+      const resourceName = RESOURCE_NAMES[input.resourceType];
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "gbp",
+              product_data: {
+                name: `Oak Scholars — ${resourceName}: ${input.subject} (${input.level})`,
+                description: `${resourceName} for ${input.subject} at ${input.level}${input.examBoard ? ` — ${input.examBoard}` : ""}`,
+              },
+              unit_amount: priceInPence,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        allow_promotion_codes: true,
+        customer_email: input.customerEmail,
+        client_reference_id: input.customerEmail,
+        metadata: {
+          product_type: "study-resource",
+          resource_type: input.resourceType,
+          subject: input.subject,
+          level: input.level,
+          exam_board: input.examBoard ?? "",
+          customer_email: input.customerEmail,
+          customer_name: input.customerName ?? "",
+        },
+        success_url: `${input.origin}/study-resources/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${input.origin}/study-resources?payment=cancelled`,
+      });
       return { url: session.url };
     }),
 });
@@ -746,6 +820,31 @@ const sessionRouter = router({
         duration: input.duration,
         status: 'scheduled',
       });
+
+      // Notify parent(s) of the student when a session is scheduled
+      try {
+        const student = await getUserById(input.studentId);
+        const tutor = await getUserById(ctx.user.id);
+        if (student) {
+          const linkedParents = await getLinkedParentsForStudent(input.studentId);
+          for (const parent of linkedParents) {
+            if (parent?.email) {
+              sendParentSessionNotification({
+                parentName: parent.name || 'Parent',
+                parentEmail: parent.email,
+                studentName: student.name || 'Your child',
+                subject: input.subject,
+                scheduledAt: input.scheduledAt,
+                duration: input.duration,
+                tutorName: tutor?.name || undefined,
+              }).catch((e) => console.error('[Email] Parent session notification failed:', e));
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[Session] Parent notification error:', e);
+      }
+
       return { success: true, id };
     }),
 
@@ -1167,6 +1266,8 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
+        const ip = (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || ctx.req.socket?.remoteAddress || "unknown";
+        authLimiter.check(ip);
         const ADMIN_EMAIL = "team@oakscholars.com";
         const existing = await getUserByEmail(input.email);
         if (existing) throw new Error("An account with this email already exists");
@@ -1206,7 +1307,9 @@ export const appRouter = router({
           password: z.string().min(1, "Password is required"),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const ip = (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || ctx.req.socket?.remoteAddress || "unknown";
+        authLimiter.check(ip);
         const ADMIN_EMAIL = "team@oakscholars.com";
         const user = await getUserByEmail(input.email);
         if (!user || !user.passwordHash) throw new Error("Invalid email or password");

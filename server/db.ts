@@ -723,3 +723,19 @@ export async function clearUserCalendarConnection(userId: number) {
     })
     .where(eq(users.id, userId));
 }
+
+export async function getLinkedParentsForStudent(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const requests = await db
+    .select()
+    .from(parentLinkRequests)
+    .where(and(eq(parentLinkRequests.studentId, studentId), eq(parentLinkRequests.status, 'accepted')));
+  if (requests.length === 0) return [];
+  const parentIds = requests.map((r) => r.parentId);
+  const parents = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(inArray(users.id, parentIds));
+  return parents;
+}

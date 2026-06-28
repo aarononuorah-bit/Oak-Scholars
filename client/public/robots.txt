@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oakscholars.co.uk/sitemap.xml
