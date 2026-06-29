@@ -718,6 +718,87 @@ const adminRouter = router({
       return { success: true };
     }),
 
+  // ─── Admin: view any user's full dashboard data ───────────────────────────
+  getUserDashboard: adminProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input }) => {
+      const user = await getUserById(input.userId);
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+
+      const [sessions, relationships, orders, feedbackRec] = await Promise.all([
+        getTutoringSessionsByStudentId(input.userId),
+        getTutoringRelationshipsByStudentId(input.userId),
+        getOrdersByUserId(input.userId).then(async (byId) => {
+          if (byId.length > 0) return byId;
+          if (user.email) return getOrdersByEmail(user.email);
+          return [];
+        }),
+        getFeedbackReceivedByUser(input.userId),
+      ]);
+
+      const tutorRelationships = await getTutoringRelationshipsByTutorId(input.userId);
+      const tutorSessionsData = await getTutoringSessionsByTutorId(input.userId);
+
+      // Enrich relationships with user data
+      const enrichedStudentRels = await Promise.all(
+        relationships.map(async (rel) => {
+          const tutor = await getUserById(rel.tutorId);
+          return { ...rel, tutor };
+        })
+      );
+
+      const enrichedTutorRels = await Promise.all(
+        tutorRelationships.map(async (rel) => {
+          const student = await getUserById(rel.studentId);
+          return { ...rel, student };
+        })
+      );
+
+      // Parent data
+      let linkedChildren: { id: number; name: string | null; email: string | null; accountType: string | null }[] = [];
+      if (user.role === 'parent' || user.accountType === 'parent') {
+        linkedChildren = await getLinkedChildrenForParent(input.userId);
+      }
+
+      // Children data for parent
+      const childrenData = await Promise.all(
+        linkedChildren.map(async (child) => {
+          const [childSessions, childTutors] = await Promise.all([
+            getTutoringSessionsByStudentId(child.id),
+            getTutoringRelationshipsByStudentId(child.id).then(async (rels) =>
+              Promise.all(rels.map(async (rel) => ({ ...rel, tutor: await getUserById(rel.tutorId) })))
+            ),
+          ]);
+          return { child, sessions: childSessions, tutors: childTutors };
+        })
+      );
+
+      return {
+        user,
+        // Student view
+        studentSessions: sessions,
+        studentRelationships: enrichedStudentRels,
+        // Tutor view
+        tutorSessions: tutorSessionsData,
+        tutorRelationships: enrichedTutorRels,
+        feedbackReceived: feedbackRec,
+        // Parent view
+        linkedChildren,
+        childrenData,
+        // Shared
+        orders,
+      };
+    }),
+
+  messages: adminProcedure.query(async () => getAllContactMessages()),
+
+  updateMessageStatus: adminProcedure
+    .input(z.object({ id: z.number(), status: z.enum(["new", "read", "replied"]) }))
+    .mutation(async ({ input }) => {
+      await updateContactStatus(input.id, input.status);
+      return { success: true };
+    }),
+
   earnings: adminProcedure.query(async () => {
     const allOrders = await getAllOrders();
     const paidOrders = allOrders.filter(o => o.status === 'paid');
