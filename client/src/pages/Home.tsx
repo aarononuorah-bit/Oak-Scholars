@@ -168,6 +168,10 @@ function HeroSection() {
                 src="/manus-storage/hero-tutoring-new_2fa775c6.jpg"
                 alt="A university student tutoring a secondary school student"
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                srcSet="/manus-storage/hero-tutoring-new_2fa775c6.jpg?w=400 400w, /manus-storage/hero-tutoring-new_2fa775c6.jpg?w=800 800w, /manus-storage/hero-tutoring-new_2fa775c6.jpg?w=1200 1200w"
               />
               {/* Gradient overlay at bottom */}
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(40,26,57,0.6) 0%, transparent 50%)" }} />
