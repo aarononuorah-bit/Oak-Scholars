@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DashboardSkeleton from "@/components/DashboardSkeleton";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 import {
   Users, Calendar, BookOpen, Star, Clock, Linkedin, GraduationCap,
   ExternalLink, Shield, CalendarCheck, CalendarX,
@@ -60,8 +61,11 @@ function StudentCalendarConnectCard() {
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm">
-      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${color}`}>
+    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm
+      transition-all duration-200 ease-out
+      hover:shadow-md hover:-translate-y-0.5 hover:border-[#E8A838]/40
+      active:scale-[0.98] active:shadow-sm">
+      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${color} transition-transform duration-200 group-hover:scale-110`}>
         <Icon size={20} className="text-white" />
       </div>
       <div>
@@ -242,6 +246,7 @@ export function StudentDashboard() {
 
   const upcomingSessions = sessions.filter((s) => new Date(s.scheduledAt) > new Date());
   const completedSessions = sessions.filter((s) => s.status === "completed");
+  const hasBookedSession = sessions.length > 0;
 
   return (
     <div className="min-h-screen bg-[#F9F7F2]">
@@ -252,6 +257,14 @@ export function StudentDashboard() {
           <h1 className="font-serif text-3xl font-bold text-[#281A39] mt-1">My Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Welcome back, {user.name?.split(" ")[0] || "Scholar"}</p>
         </div>
+
+        {/* Onboarding checklist — shown to new students until all steps are complete */}
+        <OnboardingChecklist
+          role="student"
+          hasLinkedParent={false}
+          hasCredits={false}
+          hasBookedSession={hasBookedSession}
+        />
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <div onClick={() => { const el = document.querySelector('[value="tutors"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
@@ -331,6 +344,11 @@ export function StudentDashboard() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-semibold text-[#281A39]">{rel.tutor?.name || <span className="italic text-gray-400">Name not set</span>}</p>
+                              {/* Verified Undergraduate badge — shown for all approved tutors */}
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#281A39] bg-[#E8A838]/20 border border-[#E8A838]/40 px-2 py-0.5 rounded-full">
+                                <GraduationCap size={10} className="text-[#E8A838]" />
+                                Verified Undergraduate
+                              </span>
                               {rel.tutor?.linkedin && (
                                 <a href={rel.tutor.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                   <Linkedin size={12} /> LinkedIn <ExternalLink size={10} />

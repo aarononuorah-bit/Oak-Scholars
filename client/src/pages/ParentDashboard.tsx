@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import DashboardSkeleton from "@/components/DashboardSkeleton";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 import { format } from "date-fns";
 
 function ParentOrdersTab() {
@@ -60,7 +61,10 @@ function ParentOrdersTab() {
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
+    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm
+      transition-all duration-200 ease-out
+      hover:shadow-md hover:-translate-y-0.5 hover:border-[#E8A838]/40
+      active:scale-[0.98] active:shadow-sm">
       <div className={`w-11 h-11 rounded-full flex items-center justify-center ${color}`}>
         <Icon size={20} className="text-white" />
       </div>
@@ -257,13 +261,25 @@ export function ParentDashboard() {
     confirmLink.mutate({ code: confirmCode });
   };
 
+  const hasBookedSession = (childData?.sessions?.length ?? 0) > 0;
+
   return (
     <div className="min-h-screen bg-[#F9F7F2]">
       <Navbar />
       <div className="container py-24">
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-bold text-[#281A39]">My Dashboard</h1>
+          <span className="text-[#E8A838] text-sm font-semibold tracking-widest uppercase">Parent</span>
+          <h1 className="font-serif text-3xl font-bold text-[#281A39] mt-1">My Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">Welcome back, {user.name?.split(" ")[0] || "Parent"}</p>
         </div>
+
+        {/* Onboarding checklist — shown to new parents until all steps are complete */}
+        <OnboardingChecklist
+          role="parent"
+          hasLinkedChild={children.length > 0}
+          hasCredits={false}
+          hasBookedSession={hasBookedSession}
+        />
 
         <Tabs defaultValue={children.length > 0 ? "children" : "link"}>
           <TabsList className="mb-6 flex gap-1 bg-white border p-1 rounded-xl">

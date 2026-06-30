@@ -84,6 +84,9 @@ import {
   clearLoginOtp,
   clearUserCalendarConnection,
   getUserByOpenId,
+  getCreditBalance,
+  getCreditTransactionsByUserId,
+  updateCreditBalance,
 } from "./db";
 import { tutoringSessions, tutorApplications, tutoringRelationships } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -561,6 +564,13 @@ const accountRouter = router({
     }),
 
   orders: protectedProcedure.query(async ({ ctx }) => {
+    const byId = await getOrdersByUserId(ctx.user.id);
+    if (byId.length > 0) return byId;
+    if (ctx.user.email) return getOrdersByEmail(ctx.user.email);
+    return [];
+  }),
+  // Alias for backwards-compatibility
+  myOrders: protectedProcedure.query(async ({ ctx }) => {
     const byId = await getOrdersByUserId(ctx.user.id);
     if (byId.length > 0) return byId;
     if (ctx.user.email) return getOrdersByEmail(ctx.user.email);
@@ -1554,6 +1564,51 @@ const referralRouter = router({
   }),
 });
 
+// ─── Credit router ─────────────────────────────────────────────────────────
+const creditRouter = router({
+  balance: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      // Allow the user to query their own balance, admin to query any, or parent to view linked child
+      if (ctx.user.id !== input.userId && ctx.user.role !== 'admin') {
+        if (ctx.user.role === 'parent') {
+          const children = await getLinkedChildrenForParent(ctx.user.id);
+          const isLinked = children.some((c) => c.id === input.userId);
+          if (!isLinked) throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this student' });
+        } else {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot view another user\'s credit balance' });
+        }
+      }
+      return getCreditBalance(input.userId);
+    }),
+  history: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user.id !== input.userId && ctx.user.role !== 'admin') {
+        if (ctx.user.role === 'parent') {
+          const children = await getLinkedChildrenForParent(ctx.user.id);
+          const isLinked = children.some((c) => c.id === input.userId);
+          if (!isLinked) throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this student' });
+        } else {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot view another user\'s credit history' });
+        }
+      }
+      return getCreditTransactionsByUserId(input.userId);
+    }),
+  addCredits: protectedProcedure
+    .input(z.object({
+      userId: z.number(),
+      amount: z.number().positive(),
+      description: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can manually add credits' });
+      }
+      await updateCreditBalance(input.userId, input.amount, 'adjustment', input.description || 'Admin credit adjustment');
+      return { success: true };
+    }),
+});
 // ─── App router ───────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,

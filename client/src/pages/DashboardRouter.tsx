@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
-import { useLocation } from 'wouter';
 import AdminDashboard from './AdminDashboard';
 import { TutorDashboard } from './TutorDashboard';
 import { StudentDashboard } from './StudentDashboard';
 import { ParentDashboard } from './ParentDashboard';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 /**
  * DashboardRouter - Routes users to the appropriate dashboard based on their role
@@ -13,20 +12,17 @@ import { ParentDashboard } from './ParentDashboard';
  * - Parent → Parent Dashboard
  * - User/Student → Student Dashboard (default)
  * - Unauthenticated → Redirects to login
+ *
+ * Shows a full-page DashboardSkeleton during the auth check so the transition
+ * feels instantaneous and there is no blank-screen flash.
  */
 export function DashboardRouter() {
   const { user, isAuthenticated, loading } = useAuth({ redirectOnUnauthenticated: true });
-  const [, setLocation] = useLocation();
 
+  // Show the branded skeleton while the session is being resolved — this
+  // prevents the jarring blank-screen flash and makes the page feel instant.
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!isAuthenticated || !user) {

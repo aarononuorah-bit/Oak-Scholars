@@ -331,7 +331,10 @@ function SessionRow({ session: s, utils, completed = false }: { session: Session
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
+    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm
+      transition-all duration-200 ease-out
+      hover:shadow-md hover:-translate-y-0.5 hover:border-[#E8A838]/40
+      active:scale-[0.98] active:shadow-sm">
       <div className={`w-11 h-11 rounded-full flex items-center justify-center ${color}`}>
         <Icon size={20} className="text-white" />
       </div>
