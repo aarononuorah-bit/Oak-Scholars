@@ -344,6 +344,18 @@ const paymentsRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      // ─── Trial guard: Check if user has already used a trial ─────────────────
+      if (input.productId === "trial" && input.customerEmail) {
+        const existingOrders = await getOrdersByEmail(input.customerEmail);
+        const hasUsedTrial = existingOrders.some(o => 
+          o.status === 'paid' && 
+          (o.packageName === 'trial' || o.packageName === 'Trial Session')
+        );
+        if (hasUsedTrial) {
+          throw new Error("You have already used your trial lesson. Please select a standard package.");
+        }
+      }
+
       const product = PRODUCTS.find((p) => p.id === input.productId);
       if (!product) throw new Error("Invalid product");
 
@@ -566,6 +578,20 @@ const accountRouter = router({
       await updateAccountType(ctx.user.id, input.accountType);
       return { success: true };
     }),
+
+  trialEligibility: protectedProcedure.query(async ({ ctx }) => {
+    const orders = await getOrdersByUserId(ctx.user.id);
+    const emailOrders = ctx.user.email ? await getOrdersByEmail(ctx.user.email) : [];
+    const allOrders = [...orders, ...emailOrders];
+    
+    // Check if any paid order has the trial package
+    const hasUsedTrial = allOrders.some(o => 
+      o.status === 'paid' && 
+      (o.packageName === 'trial' || o.packageName === 'Trial Session')
+    );
+    
+    return { eligible: !hasUsedTrial };
+  }),
 });
 
 // ─── Admin overview router ────────────────────────────────────────────────────────

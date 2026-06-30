@@ -232,10 +232,7 @@ function HowItWorksSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, i) => (
             <div key={step.num} className="relative group">
-              {/* Connector line between steps */}
-              {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-full w-full h-px z-0" style={{ background: "linear-gradient(to right, #E8A838, transparent)" }} />
-              )}
+
               <div className="section-number mb-2 group-hover:opacity-30 transition-opacity duration-300">{step.num}</div>
               <h3 className="font-serif text-xl font-bold text-navy-deep mb-3">{step.title}</h3>
               <p className="text-muted-brand text-sm leading-relaxed">{step.desc}</p>

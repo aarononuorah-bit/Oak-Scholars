@@ -75,6 +75,13 @@ export default function Booking() {
 
   // Check if user is logged in
   const { data: user } = trpc.auth.me.useQuery();
+  const { data: trialEligibility } = trpc.account.trialEligibility.useQuery(undefined, {
+    enabled: !!user,
+  });
+
+  const availablePackages = trialEligibility?.eligible === false 
+    ? PACKAGES.filter(p => p.id !== "trial") 
+    : PACKAGES;
 
   // Auto-fill form if user is logged in
   useEffect(() => {
@@ -282,7 +289,7 @@ export default function Booking() {
                 <div>
                   <h2 className="font-serif text-2xl font-bold text-navy-deep mb-6">Choose your package</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {PACKAGES.map((pkg) => (
+                    {availablePackages.map((pkg) => (
                       <button key={pkg.id} onClick={() => update("packageId", pkg.id)} className={`text-left p-5 rounded-xl border-2 transition-all duration-200 hover:-translate-y-0.5 ${form.packageId === pkg.id ? "border-amber shadow-md" : "border-gray-100 hover:border-amber/40 hover:shadow-sm"}`} style={form.packageId === pkg.id ? { backgroundColor: "rgba(232,168,56,0.05)" } : {}}>
                         {pkg.badge && <span className="inline-block bg-amber text-navy-deep text-xs font-bold px-2 py-0.5 rounded-full mb-2">{pkg.badge}</span>}
                         {pkg.save && <span className="inline-block bg-green-50 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full mb-2">{pkg.save}</span>}
