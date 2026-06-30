@@ -280,3 +280,17 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+// ─── Webhook Events (Idempotency) ────────────────────────────────────────────
+export const webhookEvents = mysqlTable("webhook_events", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 255 }).notNull().unique(), // Stripe event ID
+  eventType: varchar("eventType", { length: 100 }).notNull(), // e.g., "charge.succeeded"
+  payload: longtext("payload").notNull(), // Full event JSON
+  processed: int("processed").default(0).notNull(), // 0 = pending, 1 = processed
+  processedAt: timestamp("processedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"), // For cleanup (24h after creation)
+});
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;

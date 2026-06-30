@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   announcementBanners,
@@ -768,4 +768,68 @@ export async function getLinkedParentsForStudent(studentId: number) {
     .from(users)
     .where(inArray(users.id, parentIds));
   return parents;
+}
+
+// ─── Webhook Event Idempotency ──────────────────────────────────────────────
+import { webhookEvents } from "../drizzle/schema";
+
+export async function recordWebhookEvent(
+  eventId: string,
+  eventType: string,
+  payload: object
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await db.insert(webhookEvents).values({
+      eventId,
+      eventType,
+      payload: JSON.stringify(payload),
+      processed: 0,
+      expiresAt,
+    });
+    return true;
+  } catch (err: unknown) {
+    // If unique constraint violation, event already exists
+    if (err instanceof Error && err.message.includes("Duplicate entry")) {
+      return false; // Event already recorded
+    }
+    throw err;
+  }
+}
+
+export async function isWebhookEventProcessed(eventId: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(webhookEvents)
+    .where(eq(webhookEvents.eventId, eventId))
+    .limit(1);
+
+  return result.length > 0 && result[0].processed === 1;
+}
+
+export async function markWebhookEventProcessed(eventId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(webhookEvents)
+    .set({ processed: 1, processedAt: new Date() })
+    .where(eq(webhookEvents.eventId, eventId));
+}
+
+export async function cleanupExpiredWebhookEvents(): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .delete(webhookEvents)
+    .where(lt(webhookEvents.expiresAt, new Date()));
+
+  return result.rowsAffected ?? 0;
 }

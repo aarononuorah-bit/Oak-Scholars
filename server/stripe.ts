@@ -12,6 +12,9 @@ import {
   markReferrerRewardUsed,
   markRefereeRewardUsed,
   updateUserRole,
+  recordWebhookEvent,
+  isWebhookEventProcessed,
+  markWebhookEventProcessed,
 } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -88,20 +91,27 @@ export function registerStripeWebhook(app: Express) {
 }
 
 // ─── Idempotency guard ───────────────────────────────────────────────────────
-// Prevent duplicate processing if Stripe retries the same event.
-const processedEvents = new Set<string>();
-const EVENT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
+// Prevent duplicate processing if Stripe retries the same event using database.
 async function handleStripeEvent(event: Stripe.Event) {
-  // Skip already-processed events (idempotency)
-  if (event.id && processedEvents.has(event.id)) {
-    console.log(`[Webhook] Skipping duplicate event: ${event.id}`);
+  // Check if event has already been processed
+  if (!event.id) {
+    console.warn("[Webhook] Event has no ID, cannot track idempotency");
     return;
   }
-  if (event.id) {
-    processedEvents.add(event.id);
-    // Auto-expire after 24 h to prevent unbounded memory growth
-    setTimeout(() => processedEvents.delete(event.id), EVENT_TTL_MS).unref?.();
+
+  const isAlreadyProcessed = await isWebhookEventProcessed(event.id);
+  if (isAlreadyProcessed) {
+    console.log(`[Webhook] Skipping already-processed event: ${event.id}`);
+    return;
+  }
+
+  // Record the event in database (handles concurrent requests via unique constraint)
+  try {
+    await recordWebhookEvent(event.id, event.type, event.data);
+  } catch (err) {
+    // If recording fails due to duplicate, another process is handling it
+    console.log(`[Webhook] Event already being processed by another instance: ${event.id}`);
+    return;
   }
 
   switch (event.type) {
@@ -234,4 +244,6 @@ async function handleStripeEvent(event: Stripe.Event) {
       break;
     }
   }
+  // Mark event as processed
+  await markWebhookEventProcessed(event.id);
 }
