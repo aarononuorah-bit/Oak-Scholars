@@ -190,14 +190,24 @@
 - [x] TypeScript check — zero errors
 
 ## Round 10: Admin Dashboard Overhaul & Advanced Features
-- [ ] Admin: clickable detail views for all tabs (Bookings, Messages, Applications, Orders, Users)
-- [ ] Admin: user dashboard modal to view student/tutor/parent data from admin side
-- [ ] Admin: grid-based equidistant tab navigation for dashboard
-- [ ] Admin: messages & status management endpoints
-- [ ] Admin: auto-refresh toggle and activity feed improvements
+- [x] Admin: clickable detail views for all tabs (Bookings, Messages, Applications, Orders, Users)
+- [x] Admin: user dashboard modal to view student/tutor/parent data from admin side
+- [x] Admin: grid-based equidistant tab navigation for dashboard
+- [x] Admin: messages & status management endpoints
+- [x] Admin: auto-refresh toggle and activity feed improvements
 
 ## Round 11: Trial Lesson Restriction & UI Cleanup
-- [ ] Backend: account.trialEligibility query to prevent multiple trial purchases
-- [ ] Payments: implement trial guard in createCheckout mutation
-- [ ] UI: hide 'Trial Session' package for ineligible users
-- [ ] Home: remove gold connector lines from 'How it works' section
+- [x] Backend: account.trialEligibility query to prevent multiple trial purchases
+- [x] Payments: implement trial guard in createCheckout mutation
+- [x] UI: hide 'Trial Session' package for ineligible users
+- [x] Home: remove gold connector lines from 'How it works' section
+
+## Round 12: Cross-Role Dashboard & UI Enhancements
+- [x] Visibility: Parents can see student profiles and assigned tutors
+- [x] Visibility: Students can see their tutors, and Tutors can see students/parents
+- [x] UI: Rename all dashboards to "My Dashboard" for a cleaner feel
+- [x] Tutor Dashboard: Dedicated Earnings tab with detailed history and stat card shortcut
+- [x] Interactivity: All dashboard stat cards are now clickable to navigate to relevant tabs
+- [x] Calendar: Expandable 6-month view for upcoming sessions
+- [x] Fix: Photo visibility for non-admin users across the site
+- [x] Compliance: Ensure cookie consent bar is properly displayed

@@ -344,14 +344,22 @@ export function TutorDashboard() {
       <div className="container py-24">
         <div className="mb-8">
           <span className="text-[#E8A838] text-sm font-semibold tracking-widest uppercase">Tutor</span>
-          <h1 className="font-serif text-3xl font-bold text-[#281A39] mt-1">Tutor Dashboard</h1>
+          <h1 className="font-serif text-3xl font-bold text-[#281A39] mt-1">My Dashboard</h1>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard label="My Students" value={students.length} icon={Users} color="bg-[#281A39]" />
-          <StatCard label="Upcoming Sessions" value={upcomingSessions.length} icon={Calendar} color="bg-[#E8A838]" />
-          <StatCard label="Completed Sessions" value={completedSessions.length} icon={BookOpen} color="bg-green-500" />
-          <StatCard label="Avg Rating" value={avgRating} icon={Star} color="bg-purple-500" />
+          <div onClick={() => { const el = document.querySelector('[value="students"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+            <StatCard label="My Students" value={students.length} icon={Users} color="bg-[#281A39]" />
+          </div>
+          <div onClick={() => { const el = document.querySelector('[value="sessions"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+            <StatCard label="Upcoming Sessions" value={upcomingSessions.length} icon={Calendar} color="bg-[#E8A838]" />
+          </div>
+          <div onClick={() => { const el = document.querySelector('[value="earnings"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+            <StatCard label="Earnings" value={`£${totalEarnings.toFixed(2)}`} icon={Banknote} color="bg-green-500" />
+          </div>
+          <div className="cursor-default">
+            <StatCard label="Avg Rating" value={avgRating} icon={Star} color="bg-purple-500" />
+          </div>
         </div>
 
         <Tabs defaultValue="students">
@@ -359,6 +367,7 @@ export function TutorDashboard() {
             {[
               { value: "students", label: "My Students", icon: Users },
               { value: "sessions", label: "Sessions", icon: Calendar },
+              { value: "earnings", label: "Earnings", icon: Banknote },
               { value: "profile", label: "My Profile", icon: User },
             ].map((t) => (
               <TabsTrigger key={t.value} value={t.value} className="flex items-center gap-1.5 text-xs data-[state=active]:bg-[#281A39] data-[state=active]:text-white rounded-lg px-3 py-2">
@@ -600,11 +609,22 @@ export function TutorDashboard() {
                   </div>
                 </div>
 
-                {/* Earnings */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                  <p className="text-sm text-gray-600">Total Earnings</p>
-                  <p className="text-2xl font-bold text-[#281A39]">£{totalEarnings.toFixed(2)}</p>
+                {/* Earnings Shortcut Card */}
+                <div 
+                  className="bg-amber-50 border border-amber-200 rounded-xl p-4 cursor-pointer hover:bg-amber-100 transition-colors"
+                  onClick={() => { const el = document.querySelector('[value="earnings"]'); if (el instanceof HTMLElement) el.click(); }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Earnings</p>
+                      <p className="text-2xl font-bold text-[#281A39]">£{totalEarnings.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-amber-200 p-2 rounded-full">
+                      <Banknote size={20} className="text-[#281A39]" />
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">from {completedSessions.length} completed session{completedSessions.length !== 1 ? 's' : ''}</p>
+                  <p className="text-[10px] text-amber-700 font-bold uppercase mt-2">Click for detailed breakdown →</p>
                 </div>
 
                 {/* Google Calendar */}
@@ -623,6 +643,74 @@ export function TutorDashboard() {
                   {updateProfile.isPending ? "Saving..." : "Save Profile"}
                 </Button>
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="earnings">
+            <div className="bg-white rounded-xl border border-gray-100 p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                  <Banknote size={24} />
+                </div>
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#281A39]">Earnings Overview</h2>
+                  <p className="text-sm text-gray-500">Track your income and session history</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Total Earned</p>
+                  <p className="text-3xl font-bold text-[#281A39]">£{totalEarnings.toFixed(2)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Sessions Completed</p>
+                  <p className="text-3xl font-bold text-[#281A39]">{completedSessions.length}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Current Rate</p>
+                  <p className="text-3xl font-bold text-[#281A39]">£{SESSION_RATE_PER_HOUR}/hr</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Pending Payout</p>
+                  <p className="text-3xl font-bold text-amber">£0.00</p>
+                </div>
+              </div>
+
+              <h3 className="font-serif text-xl font-bold text-[#281A39] mb-4">Completed Sessions History</h3>
+              {completedSessions.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed">
+                  <p className="text-gray-500">No completed sessions yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="py-4 font-semibold text-sm text-gray-600">Date</th>
+                        <th className="py-4 font-semibold text-sm text-gray-600">Student ID</th>
+                        <th className="py-4 font-semibold text-sm text-gray-600">Subject</th>
+                        <th className="py-4 font-semibold text-sm text-gray-600">Duration</th>
+                        <th className="py-4 font-semibold text-sm text-gray-600 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {completedSessions.map((s) => {
+                        const amount = ((s.duration || 60) / 60) * SESSION_RATE_PER_HOUR;
+                        return (
+                          <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="py-4 text-sm text-[#281A39]">{format(new Date(s.scheduledAt), "PPP")}</td>
+                            <td className="py-4 text-sm font-medium text-[#281A39]">{s.studentId}</td>
+                            <td className="py-4 text-sm text-gray-600">{s.subject}</td>
+                            <td className="py-4 text-sm text-gray-600">{s.duration} mins</td>
+                            <td className="py-4 text-sm font-bold text-[#281A39] text-right">£{amount.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

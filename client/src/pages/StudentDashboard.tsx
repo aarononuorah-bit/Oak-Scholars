@@ -132,9 +132,15 @@ export function StudentDashboard() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <StatCard label="My Tutors" value={tutors.length} icon={Users} color="bg-[#281A39]" />
-          <StatCard label="Upcoming Sessions" value={upcomingSessions.length} icon={Calendar} color="bg-[#E8A838]" />
-          <StatCard label="Completed Sessions" value={completedSessions.length} icon={BookOpen} color="bg-green-500" />
+          <div onClick={() => { const el = document.querySelector('[value="tutors"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+            <StatCard label="My Tutors" value={tutors.length} icon={Users} color="bg-[#281A39]" />
+          </div>
+          <div onClick={() => { const el = document.querySelector('[value="sessions"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+            <StatCard label="Upcoming Sessions" value={upcomingSessions.length} icon={Calendar} color="bg-[#E8A838]" />
+          </div>
+          <div onClick={() => { const el = document.querySelector('[value="sessions"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+            <StatCard label="Completed Sessions" value={completedSessions.length} icon={BookOpen} color="bg-green-500" />
+          </div>
         </div>
 
         <Tabs defaultValue="tutors">

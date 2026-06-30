@@ -135,7 +135,7 @@ export function ParentDashboard() {
       <Navbar />
       <div className="container py-24">
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-bold text-[#281A39]">Parent Dashboard</h1>
+          <h1 className="font-serif text-3xl font-bold text-[#281A39]">My Dashboard</h1>
         </div>
 
         <Tabs defaultValue={children.length > 0 ? "children" : "link"}>
@@ -189,30 +189,38 @@ export function ParentDashboard() {
                   <div className="space-y-6">
                     {/* Stats Overview */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <StatCard
-                        label="Total Sessions"
-                        value={childData?.sessions?.length || 0}
-                        icon={Calendar}
-                        color="bg-blue-500"
-                      />
-                      <StatCard
-                        label="Upcoming"
-                        value={childData?.sessions?.filter((s) => new Date(s.scheduledAt) > new Date()).length || 0}
-                        icon={Clock}
-                        color="bg-green-500"
-                      />
-                      <StatCard
-                        label="Completed"
-                        value={childData?.sessions?.filter((s) => s.status === "completed").length || 0}
-                        icon={CheckCircle}
-                        color="bg-purple-500"
-                      />
-                      <StatCard
-                        label="Tutors"
-                        value={childData?.tutors?.length || 0}
-                        icon={Star}
-                        color="bg-orange-500"
-                      />
+                      <div onClick={() => { const el = document.querySelector('[value="children"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+                        <StatCard
+                          label="Total Sessions"
+                          value={childData?.sessions?.length || 0}
+                          icon={Calendar}
+                          color="bg-blue-500"
+                        />
+                      </div>
+                      <div onClick={() => { const el = document.querySelector('[value="children"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+                        <StatCard
+                          label="Upcoming"
+                          value={childData?.sessions?.filter((s) => new Date(s.scheduledAt) > new Date()).length || 0}
+                          icon={Clock}
+                          color="bg-green-500"
+                        />
+                      </div>
+                      <div onClick={() => { const el = document.querySelector('[value="children"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+                        <StatCard
+                          label="Completed"
+                          value={childData?.sessions?.filter((s) => s.status === "completed").length || 0}
+                          icon={CheckCircle}
+                          color="bg-purple-500"
+                        />
+                      </div>
+                      <div onClick={() => { const el = document.querySelector('[value="children"]'); if (el instanceof HTMLElement) el.click(); }} className="cursor-pointer">
+                        <StatCard
+                          label="Tutors"
+                          value={childData?.tutors?.length || 0}
+                          icon={Star}
+                          color="bg-orange-500"
+                        />
+                      </div>
                     </div>
 
                     {/* Timetable */}

@@ -744,12 +744,35 @@ const adminRouter = router({
       return { success: true };
     }),
 
-  // ─── Admin: view any user's full dashboard data ───────────────────────────
-  getUserDashboard: adminProcedure
+  // ─── Admin/Parent/Tutor/Student: view any user's full dashboard data ───────────────────────────
+  getUserDashboard: protectedProcedure
     .input(z.object({ userId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const user = await getUserById(input.userId);
       if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+
+      // ─── Access Control ──────────────────────────────────────────────────
+      if (ctx.user.role !== 'admin' && ctx.user.id !== input.userId) {
+        if (ctx.user.role === 'parent') {
+          const children = await getLinkedChildrenForParent(ctx.user.id);
+          if (!children.some(c => c.id === input.userId)) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this student' });
+          }
+        } else if (ctx.user.role === 'tutor') {
+          const relationships = await getTutoringRelationshipsByTutorId(ctx.user.id);
+          if (!relationships.some(r => r.studentId === input.userId)) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this student' });
+          }
+        } else if (ctx.user.role === 'user') {
+          const relationships = await getTutoringRelationshipsByStudentId(ctx.user.id);
+          if (!relationships.some(r => r.tutorId === input.userId)) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Not linked to this tutor' });
+          }
+        } else {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Unauthorized' });
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────
 
       const [sessions, relationships, orders, feedbackRec] = await Promise.all([
         getTutoringSessionsByStudentId(input.userId),
