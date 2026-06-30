@@ -805,8 +805,13 @@ const adminRouter = router({
 
       // Parent data
       let linkedChildren: { id: number; name: string | null; email: string | null; accountType: string | null }[] = [];
+      let linkedParents: { id: number; name: string | null; email: string | null; accountType: string | null }[] = [];
+      
       if (user.role === 'parent' || user.accountType === 'parent') {
         linkedChildren = await getLinkedChildrenForParent(input.userId);
+      } else {
+        // For students, fetch their linked parents
+        linkedParents = await getLinkedParentsForStudent(input.userId);
       }
 
       // Children data for parent
@@ -836,6 +841,7 @@ const adminRouter = router({
         childrenData,
         // Shared
         orders,
+        linkedParents,
       };
     }),
 

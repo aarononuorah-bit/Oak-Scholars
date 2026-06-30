@@ -209,5 +209,5 @@
 - [x] Tutor Dashboard: Dedicated Earnings tab with detailed history and stat card shortcut
 - [x] Interactivity: All dashboard stat cards are now clickable to navigate to relevant tabs
 - [x] Calendar: Expandable 6-month view for upcoming sessions
-- [x] Fix: Photo visibility for non-admin users across the site
-- [x] Compliance: Ensure cookie consent bar is properly displayed
+- [x] Fix: Photo visibility for non-admin users across the site (ensured public access to storage proxy)
+- [x] Compliance: Ensure cookie consent bar is properly displayed and functional

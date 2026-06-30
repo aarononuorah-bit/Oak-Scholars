@@ -166,6 +166,27 @@ function ScheduleSessionPanel({ students, utils }: { students: StudentRel[]; uti
   );
 }
 
+// ─── Parent List Component ──────────────────────────
+function ParentList({ studentId }: { studentId: number }) {
+  const { data: dashboard } = trpc.admin.getUserDashboard.useQuery({ userId: studentId });
+  const parents = dashboard?.linkedParents || [];
+
+  if (parents.length === 0) return <p className="text-[10px] text-gray-400 italic">No parents linked</p>;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {parents.map((p) => (
+        <div key={p.id} className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+          <div className="w-4 h-4 rounded-full bg-amber text-[#281A39] flex items-center justify-center text-[8px] font-bold">
+            {p.name?.charAt(0) || "P"}
+          </div>
+          <span className="text-[10px] text-[#281A39] font-medium">{p.name || p.email}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Session Row (with mark complete + feedback) ──────
 type SessionData = { id: number; subject: string; scheduledAt: Date | string; duration?: number | null; status: string; notes?: string | null; studentId: number };
 
@@ -396,8 +417,30 @@ export function TutorDashboard() {
                           {(rel.student?.name || rel.student?.email || "?").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-[#281A39]">{rel.student?.name || <span className="italic text-gray-400">Name not set</span>}</p>
-                          <p className="text-xs text-gray-500">{rel.student?.email}</p>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-[#281A39]">{rel.student?.name || <span className="italic text-gray-400">Name not set</span>}</p>
+                              <p className="text-xs text-gray-500">{rel.student?.email}</p>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-[10px] h-7 px-2"
+                              onClick={() => {
+                                // In a real app, this would open a modal or navigate to a detail view
+                                // For now, we'll provide a hint that tutors can see more
+                                toast.info(`Viewing dashboard for ${rel.student?.name || 'student'}...`);
+                              }}
+                            >
+                              View Profile
+                            </Button>
+                          </div>
+                          {rel.student?.id && (
+                            <div className="mt-3 pt-3 border-t border-gray-50">
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Linked Parents</p>
+                              <ParentList studentId={rel.student.id} />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
