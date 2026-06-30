@@ -188,3 +188,16 @@
 - [x] Booking Step 3: smart availability picker — shows tutor's live free slots if connected, falls back to generic time-preference grid
 - [x] Step3Availability component: groups slots by date, handles no-tutor/no-calendar fallback states
 - [x] TypeScript check — zero errors
+
+## Round 10: Admin Dashboard Overhaul & Advanced Features
+- [ ] Admin: clickable detail views for all tabs (Bookings, Messages, Applications, Orders, Users)
+- [ ] Admin: user dashboard modal to view student/tutor/parent data from admin side
+- [ ] Admin: grid-based equidistant tab navigation for dashboard
+- [ ] Admin: messages & status management endpoints
+- [ ] Admin: auto-refresh toggle and activity feed improvements
+
+## Round 11: Trial Lesson Restriction & UI Cleanup
+- [ ] Backend: account.trialEligibility query to prevent multiple trial purchases
+- [ ] Payments: implement trial guard in createCheckout mutation
+- [ ] UI: hide 'Trial Session' package for ineligible users
+- [ ] Home: remove gold connector lines from 'How it works' section
