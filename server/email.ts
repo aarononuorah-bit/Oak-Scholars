@@ -738,3 +738,74 @@ export async function sendStudyResourceDelivery(data: {
   });
   console.log("[Email] Study resource delivery email sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }
+
+export async function sendPaymentReceipt(data: {
+  recipientName: string;
+  recipientEmail: string;
+  packageName: string;
+  amount: number;
+  currency: string;
+}) {
+  const transporter = await getTransporter();
+  const amountStr = new Intl.NumberFormat('en-GB', { style: 'currency', currency: data.currency.toUpperCase() }).format(data.amount / 100);
+  
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">Payment Received — Thank You!</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.recipientName}</strong>,</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">We've received your payment for <strong>${data.packageName}</strong>. Your account has been updated accordingly.</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Package</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;">${data.packageName}</td></tr>
+        <tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Amount Paid</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:700;">${amountStr}</td></tr>
+      </table>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/dashboard" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">View My Dashboard →</a>
+    </div>
+  `, `Payment Confirmation: ${data.packageName}`);
+
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.recipientEmail,
+    subject: `Oak Scholars — Payment Received: ${data.packageName}`,
+    html,
+  });
+}
+
+export async function sendAdminPaymentAlert(data: {
+  customerName: string;
+  customerEmail: string;
+  packageName: string;
+  amount: number;
+  currency: string;
+}) {
+  const transporter = await getTransporter();
+  const amountStr = new Intl.NumberFormat('en-GB', { style: 'currency', currency: data.currency.toUpperCase() }).format(data.amount / 100);
+  
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:24px;margin:0 0 12px;font-family:serif;">New Payment Received</h2>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">A new payment has been processed successfully.</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Customer</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;">${data.customerName}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);"><a href="mailto:${data.customerEmail}" style="color:${BRAND_AMBER};font-weight:600;text-decoration:none;">${data.customerEmail}</a></td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Package</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.packageName}</td></tr>
+        <tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Revenue</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:700;">${amountStr}</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/admin" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">Admin Overview</a>
+    </div>
+  `, `Payment Alert: ${data.customerName}`);
+
+  const ADMIN_EMAIL = "team@oakscholars.com";
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: ADMIN_EMAIL,
+    subject: `💰 Payment Alert — ${data.customerName} (${amountStr})`,
+    html,
+  });
+}

@@ -219,3 +219,10 @@
 - [x] Duration: Flexible session lengths (60, 90, or 120 minutes)
 - [x] Tutor Flow: Accept, Reject, or Propose new time for pending bookings
 - [x] Dashboard: Dedicated Credit History tab for students and parents to track usage/balance
+
+## Round 14: Notification Hardening & Admin Audit
+- [x] Payments: Implemented professional email receipts for customers and instant revenue alerts for admin
+- [x] Recruitment: Consolidated tutor application status notifications to ensure consistency
+- [x] Visibility: Audited admin procedures to ensure full access to users, orders, and tutoring data
+- [x] Compliance: Standardised email templates with brand purple/amber styling across all roles
+- [x] Strategy: Developed SMS notification roadmap for high-priority session reminders

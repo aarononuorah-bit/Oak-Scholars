@@ -304,25 +304,34 @@ const tutorRouter = router({
     .mutation(async ({ input }) => {
       await updateTutorApplicationStatus(input.id, input.status);
       
+      const db = await getDb();
+      if (!db) return { success: true };
+      
+      const apps = await db.select().from(tutorApplications).where(eq(tutorApplications.id, input.id));
+      if (apps.length === 0) return { success: true };
+      const app = apps[0];
+
+      // Send status change email if status changed to interview, accepted, or rejected
+      if (["interview", "accepted", "rejected"].includes(input.status)) {
+        await sendTutorApplicationStatusChange({
+          applicantName: app.firstName,
+          applicantEmail: app.email,
+          status: input.status as "accepted" | "rejected" | "interview",
+        }).catch((e) => console.error("[Email] Tutor status email failed:", e));
+      }
+
       // Auto-promote to tutor if accepted
       if (input.status === "accepted") {
-        const db = await getDb();
-        if (db) {
-          const apps = await db.select().from(tutorApplications).where(eq(tutorApplications.id, input.id));
-          if (apps.length > 0) {
-            const user = await getUserByEmail(apps[0].email);
-            if (user) {
-              await updateUserRole(user.id, "tutor");
-              
-              // Seed tutor profile with application data
-              await updateTutorProfile(user.id, {
-                tutorUniversity: apps[0].university,
-                tutorCourse: apps[0].degreeSubject,
-                tutorSubjects: apps[0].subjects,
-                tutorLevel: apps[0].levels
-              });
-            }
-          }
+        const user = await getUserByEmail(app.email);
+        if (user) {
+          await updateUserRole(user.id, "tutor");
+          // Seed tutor profile with application data
+          await updateTutorProfile(user.id, {
+            tutorUniversity: app.university,
+            tutorCourse: app.degreeSubject,
+            tutorSubjects: app.subjects,
+            tutorLevel: app.levels
+          });
         }
       }
 

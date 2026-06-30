@@ -468,21 +468,7 @@ export async function getPendingRewardsForUser(userId: number) {
     asReferee: allReferrals.filter(r => r.refereeId === userId && r.status === "completed" && r.refereeRewardUsed === 0)
   };
 }
-export async function getCreditBalance(userId: number): Promise<number> {
-  const db = await getDb();
-  if (!db) return 0;
-  const res = await db.select().from(creditBalances).where(eq(creditBalances.userId, userId)).limit(1);
-  return res[0]?.balance ?? 0;
-}
-
-export async function updateCreditBalance(userId: number, amount: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database offline");
-  const current = await getCreditBalance(userId);
-  await db.update(creditBalances)
-    .set({ balance: current + amount })
-    .where(eq(creditBalances.userId, userId));
-}
+// Using the more detailed versions defined earlier in the file
 
 // ─── Tutor Availability ───────────────────────────────────────────────────────
 export async function createTutorAvailability(data: InsertTutorAvailability) {

@@ -15,7 +15,7 @@ import {
 } from "./db";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { sendBookingConfirmation, sendAdminBookingAlert, sendStudyResourceDelivery } from "./email";
+import { sendBookingConfirmation, sendAdminBookingAlert, sendStudyResourceDelivery, sendPaymentReceipt, sendAdminPaymentAlert } from "./email";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
   apiVersion: "2026-06-24.dahlia",
@@ -156,6 +156,24 @@ async function handleStripeEvent(event: Stripe.Event) {
         const [firstName, ...lastNameParts] = customerName.split(" ");
         const lastName = lastNameParts.join(" ") || "Learner";
 
+        // Send Payment Receipt to Customer
+        await sendPaymentReceipt({
+          recipientName: customerName,
+          recipientEmail: email,
+          packageName: isStudyResource ? `Resource: ${session.metadata?.resource_type}` : packageName,
+          amount: amountTotal,
+          currency: session.currency ?? "gbp",
+        }).catch(e => console.error("[Stripe] Failed to send payment receipt:", e));
+
+        // Send Payment Alert to Admin
+        await sendAdminPaymentAlert({
+          customerName,
+          customerEmail: email,
+          packageName: isStudyResource ? `Resource: ${session.metadata?.resource_type}` : packageName,
+          amount: amountTotal,
+          currency: session.currency ?? "gbp",
+        }).catch(e => console.error("[Stripe] Failed to send admin payment alert:", e));
+
         if (isStudyResource) {
           // Study resource purchase — send delivery email
           await sendStudyResourceDelivery({
@@ -167,7 +185,7 @@ async function handleStripeEvent(event: Stripe.Event) {
             examBoard: session.metadata?.exam_board || undefined,
           });
         } else {
-          // Regular tutoring booking
+          // Regular tutoring booking confirmation
           await sendBookingConfirmation({
             firstName: firstName || "there",
             email,
