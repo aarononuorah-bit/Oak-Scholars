@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, lt } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle, MySqlRawQueryResult } from "drizzle-orm/mysql2";
 import {
   announcementBanners,
   bookings,
@@ -27,6 +27,7 @@ import {
   creditBalances,
   tutoringSessions,
   users,
+  creditTransactions,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -383,7 +384,7 @@ export async function updateCreditBalance(userId: number, amount: number, type: 
   const current = await getCreditBalance(userId);
   const newBalance = (current.balance || 0) + amount;
   
-  if (current.id) {
+  if ('id' in current && current.id) {
     await db.update(creditBalances).set({ balance: newBalance }).where(eq(creditBalances.id, current.id));
   } else {
     await db.insert(creditBalances).values({ userId, balance: newBalance });
@@ -764,7 +765,7 @@ export async function getLinkedParentsForStudent(studentId: number) {
   if (requests.length === 0) return [];
   const parentIds = requests.map((r) => r.parentId);
   const parents = await db
-    .select({ id: users.id, name: users.name, email: users.email })
+    .select({ id: users.id, name: users.name, email: users.email, accountType: users.accountType })
     .from(users)
     .where(inArray(users.id, parentIds));
   return parents;
@@ -831,5 +832,5 @@ export async function cleanupExpiredWebhookEvents(): Promise<number> {
     .delete(webhookEvents)
     .where(lt(webhookEvents.expiresAt, new Date()));
 
-  return result.rowsAffected ?? 0;
+  return (result as any).rowsAffected ?? 0;
 }

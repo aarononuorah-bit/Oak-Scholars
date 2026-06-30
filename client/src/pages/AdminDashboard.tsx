@@ -1188,7 +1188,7 @@ function ApplicationsTab() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <StatusBadge status={app.status} />
-                {app.cvFileUrl && <FileText size={13} className="text-blue-400" title="CV uploaded" />}
+                {app.cvFileUrl && <div title="CV uploaded"><FileText size={13} className="text-blue-400" /></div>}
                 <Eye size={14} className="text-gray-300" />
               </div>
             </div>

@@ -31,9 +31,9 @@ export function createRateLimiter(options: RateLimiterOptions) {
   // Periodically clean up expired entries to prevent memory leaks
   const cleanup = setInterval(() => {
     const now = Date.now();
-    for (const [key, entry] of store.entries()) {
+    store.forEach((entry, key) => {
       if (now > entry.resetAt) store.delete(key);
-    }
+    });
   }, windowMs * 2);
 
   // Allow cleanup to be stopped in tests

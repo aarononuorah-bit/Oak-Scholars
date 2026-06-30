@@ -22,6 +22,8 @@ import {
   sendLoginOtp,
   sendTutorApplicationStatusChange,
   sendParentSessionNotification,
+  sendAssignmentEmail,
+  sendSessionUpdateEmail,
 } from "./email";
 import { storagePut } from "./storage";
 import { sendPushToAll, getVapidPublicKey } from "./push";
@@ -88,7 +90,7 @@ import {
   getCreditTransactionsByUserId,
   updateCreditBalance,
 } from "./db";
-import { tutoringSessions, tutorApplications, tutoringRelationships } from "../drizzle/schema";
+import { tutoringSessions, tutorApplications, tutoringRelationships, creditTransactions } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { stripe, getOrCreateStripeCustomer, createStripePortalSession } from "./stripe";
 import { PRODUCTS } from "./products";

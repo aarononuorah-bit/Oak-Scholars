@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { Calendar, Clock, Lock, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface TimetableProps {
   targetUserId: number;

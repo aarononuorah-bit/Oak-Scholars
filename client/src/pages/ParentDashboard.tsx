@@ -14,7 +14,7 @@ import {
   CheckCircle, Loader2, UserPlus, ShoppingBag, CreditCard,
   Wallet, ArrowUpRight, ArrowDownLeft, PlusCircle,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "wouter";
 import DashboardSkeleton from "@/components/DashboardSkeleton";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import { format } from "date-fns";
@@ -127,7 +127,7 @@ function CreditHistoryList({ userId }: { userId: number }) {
 
 function ParentBookingForm({ studentId, onSuccess }: { studentId: number, onSuccess: () => void }) {
   const { data: childData } = trpc.parent.childData.useQuery({ studentId });
-  const relationships = childData?.relationships || [];
+  const relationships = childData?.tutors || [];
   const [relId, setRelId] = useState("");
   const [subject, setSubject] = useState("");
   const [date, setDate] = useState("");

@@ -4,6 +4,8 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -158,7 +160,7 @@ function StudentBookingForm({ studentId, relationships, onSuccess }: { studentId
         </div>
         <div>
           <Label className="text-xs font-bold uppercase text-gray-400 mb-1.5 block">Date & Time</Label>
-          <Input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Input type="datetime-local" value={date} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)} />
         </div>
       </div>
       <div className="space-y-4">
