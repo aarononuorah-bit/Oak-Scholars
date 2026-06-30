@@ -192,11 +192,18 @@ type SessionData = { id: number; subject: string; scheduledAt: Date | string; du
 
 function SessionRow({ session: s, utils, completed = false }: { session: SessionData; utils: ReturnType<typeof trpc.useUtils>; completed?: boolean }) {
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showProposal, setShowProposal] = useState(false);
+  const [proposalDate, setProposalDate] = useState("");
+  const [proposalMsg, setProposalMsg] = useState("");
   const [feedbackNote, setFeedbackNote] = useState("");
   const [rating, setRating] = useState(5);
 
   const updateStatus = trpc.session.updateStatus.useMutation({
-    onSuccess: () => { toast.success("Session marked as completed!"); utils.session.tutorSessions.invalidate(); },
+    onSuccess: (data, variables) => { 
+      toast.success(`Session ${variables.status === 'scheduled' ? 'accepted' : variables.status}!`); 
+      utils.session.tutorSessions.invalidate(); 
+      setShowProposal(false);
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -214,8 +221,20 @@ function SessionRow({ session: s, utils, completed = false }: { session: Session
           {s.notes && <p className="text-xs text-gray-400 mt-1 italic">{s.notes}</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${ completed ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700" }`}>{s.status}</span>
-          {!completed && (
+          {s.status === "pending" && (
+            <>
+              <Button size="sm" onClick={() => updateStatus.mutate({ id: s.id, status: "scheduled" })} style={{ backgroundColor: "#281A39", color: "white" }}>
+                Accept
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowProposal(true)}>
+                Propose New Time
+              </Button>
+              <Button size="sm" variant="ghost" className="text-red-600" onClick={() => updateStatus.mutate({ id: s.id, status: "cancelled" })}>
+                Reject
+              </Button>
+            </>
+          )}
+          {s.status === "scheduled" && !completed && (
             <Button
               size="sm"
               variant="outline"
@@ -226,6 +245,15 @@ function SessionRow({ session: s, utils, completed = false }: { session: Session
               Mark Complete
             </Button>
           )}
+          {s.status === "proposed" && (
+            <span className="text-xs text-amber-600 font-medium italic mr-2">Waiting for student...</span>
+          )}
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${ 
+            completed ? "bg-blue-100 text-blue-700" : 
+            s.status === "pending" ? "bg-amber-100 text-amber-700" :
+            s.status === "proposed" ? "bg-amber-50 text-amber-600" :
+            "bg-green-100 text-green-700" 
+          }`}>{s.status}</span>
           {completed && (
             <Button
               size="sm"
@@ -237,6 +265,41 @@ function SessionRow({ session: s, utils, completed = false }: { session: Session
             </Button>
           )}
         </div>
+
+        {showProposal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+              <h3 className="font-serif text-2xl font-bold text-[#281A39] mb-2">Propose New Time</h3>
+              <p className="text-gray-500 text-sm mb-6">Suggest a better time for this session. The student will be notified.</p>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs font-bold uppercase text-gray-400 mb-1.5 block">New Date & Time</Label>
+                  <Input type="datetime-local" value={proposalDate} onChange={(e) => setProposalDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold uppercase text-gray-400 mb-1.5 block">Message to Student</Label>
+                  <Textarea placeholder="Explain why you're rescheduling..." value={proposalMsg} onChange={(e) => setProposalMsg(e.target.value)} />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setShowProposal(false)}>Cancel</Button>
+                  <Button 
+                    className="flex-1" 
+                    style={{ backgroundColor: "#281A39", color: "white" }}
+                    disabled={!proposalDate || updateStatus.isPending}
+                    onClick={() => updateStatus.mutate({ 
+                      id: s.id, 
+                      status: "proposed", 
+                      scheduledAt: new Date(proposalDate), 
+                      proposalMessage: proposalMsg 
+                    })}
+                  >
+                    {updateStatus.isPending ? "Sending..." : "Send Proposal"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       {showFeedback && (
         <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">

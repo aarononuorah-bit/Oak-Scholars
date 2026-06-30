@@ -352,13 +352,57 @@ export async function getTutoringSessionsByRelationshipId(relationshipId: number
   return db.select().from(tutoringSessions).where(eq(tutoringSessions.relationshipId, relationshipId)).orderBy(desc(tutoringSessions.scheduledAt));
 }
 
-export async function updateTutoringSessionStatus(id: number, status: "scheduled" | "completed" | "cancelled" | "no-show", notes?: string) {
+export async function updateTutoringSessionStatus(
+  id: number,
+  status: "pending" | "scheduled" | "completed" | "cancelled" | "no-show" | "proposed",
+  notes?: string,
+  proposalMessage?: string,
+  scheduledAt?: Date
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const updateData: Record<string, unknown> = { status };
   if (notes !== undefined) updateData.notes = notes;
+  if (proposalMessage !== undefined) updateData.proposalMessage = proposalMessage;
+  if (scheduledAt !== undefined) updateData.scheduledAt = scheduledAt;
   if (status === "completed") updateData.completedAt = new Date();
   await db.update(tutoringSessions).set(updateData).where(eq(tutoringSessions.id, id));
+}
+
+export async function getCreditBalance(userId: number) {
+  const db = await getDb();
+  if (!db) return { balance: 0 };
+  const result = await db.select().from(creditBalances).where(eq(creditBalances.userId, userId)).limit(1);
+  return result[0] || { balance: 0 };
+}
+
+export async function updateCreditBalance(userId: number, amount: number, type: "purchase" | "usage" | "refund" | "adjustment", description?: string, sessionId?: number, orderId?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const current = await getCreditBalance(userId);
+  const newBalance = (current.balance || 0) + amount;
+  
+  if (current.id) {
+    await db.update(creditBalances).set({ balance: newBalance }).where(eq(creditBalances.id, current.id));
+  } else {
+    await db.insert(creditBalances).values({ userId, balance: newBalance });
+  }
+  
+  await db.insert(creditTransactions).values({
+    userId,
+    amount,
+    type,
+    description,
+    sessionId,
+    orderId,
+  });
+}
+
+export async function getCreditTransactionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(creditTransactions).where(eq(creditTransactions.userId, userId)).orderBy(desc(creditTransactions.createdAt));
 }
 
 // ─── Feedback ─────────────────────────────────────────────────────────────────

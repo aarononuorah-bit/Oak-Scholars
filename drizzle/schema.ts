@@ -171,8 +171,9 @@ export const tutoringSessions = mysqlTable("tutoring_sessions", {
   subject: varchar("subject", { length: 100 }).notNull(),
   scheduledAt: timestamp("scheduledAt").notNull(),
   duration: int("duration").notNull(), // in minutes
-  status: mysqlEnum("status", ["scheduled", "completed", "cancelled", "no-show"]).default("scheduled").notNull(),
+  status: mysqlEnum("status", ["pending", "scheduled", "completed", "cancelled", "no-show", "proposed"]).default("pending").notNull(),
   notes: text("notes"), // tutor notes from the session
+  proposalMessage: text("proposalMessage"), // message when proposing new time
   completedAt: timestamp("completedAt"),
   reminderSentAt: timestamp("reminderSentAt"),
   followUpSentAt: timestamp("followUpSentAt"),
@@ -251,6 +252,21 @@ export const creditBalances = mysqlTable("credit_balances", {
 
 export type CreditBalance = typeof creditBalances.$inferSelect;
 export type InsertCreditBalance = typeof creditBalances.$inferInsert;
+
+// ─── Credit Transactions ─────────────────────────────────────────────────────
+export const creditTransactions = mysqlTable("credit_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  amount: float("amount").notNull(), // positive for purchase, negative for usage
+  type: mysqlEnum("type", ["purchase", "usage", "refund", "adjustment"]).notNull(),
+  description: text("description"),
+  sessionId: int("sessionId"), // link to session if type is 'usage'
+  orderId: int("orderId"), // link to order if type is 'purchase'
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
 
 // ─── Notifications System ────────────────────────────────────────────────────
 export const notifications = mysqlTable("notifications", {

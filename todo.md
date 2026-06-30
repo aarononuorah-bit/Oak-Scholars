@@ -211,3 +211,11 @@
 - [x] Calendar: Expandable 6-month view for upcoming sessions
 - [x] Fix: Photo visibility for non-admin users across the site (ensured public access to storage proxy)
 - [x] Compliance: Ensure cookie consent bar is properly displayed and functional
+
+## Round 13: Credit System & Advanced Booking
+- [x] Backend: Credit balance and transaction tracking system (1 credit = 1 hour)
+- [x] Emails: Automated assignment notifications for tutors, students, and parents
+- [x] Booking: Credit-based booking for students and parents (on behalf of child)
+- [x] Duration: Flexible session lengths (60, 90, or 120 minutes)
+- [x] Tutor Flow: Accept, Reject, or Propose new time for pending bookings
+- [x] Dashboard: Dedicated Credit History tab for students and parents to track usage/balance

@@ -572,6 +572,118 @@ export async function sendParentSessionNotification(data: {
   console.log("[Email] Parent session notification sent:", nodemailer.getTestMessageUrl(info) || info.messageId);
 }
 
+export async function sendAssignmentEmail(data: {
+  recipientName: string;
+  recipientEmail: string;
+  role: "tutor" | "student" | "parent";
+  studentName: string;
+  tutorName: string;
+  subjects: string;
+  level: string;
+}) {
+  const transporter = await getTransporter();
+  
+  let title = "";
+  let message = "";
+  let ctaText = "View My Dashboard";
+  let ctaUrl = `https://oakscholars.co.uk/${data.role}-dashboard`;
+
+  if (data.role === "tutor") {
+    title = "New Student Assigned! 🎓";
+    message = `Great news! You have been assigned a new student, <strong>${data.studentName}</strong>, for <strong>${data.subjects}</strong> (${data.level}). You can now coordinate and schedule your first session.`;
+  } else if (data.role === "student") {
+    title = "Your Oak Scholar is here! ✨";
+    message = `We've matched you with <strong>${data.tutorName}</strong> for <strong>${data.subjects}</strong> (${data.level}). Your tutor will be in touch soon to schedule your first lesson.`;
+  } else {
+    title = "Tutor Assigned for " + data.studentName;
+    message = `We've successfully matched <strong>${data.studentName}</strong> with <strong>${data.tutorName}</strong> for <strong>${data.subjects}</strong> (${data.level}). You can track their progress and manage sessions from your dashboard.`;
+  }
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">${title}</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.recipientName}</strong>,</p>
+    <p style="color:#666;margin:0 0 32px;font-size:16px;line-height:1.6;">${message}</p>
+    
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Student</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;font-size:15px;">${data.studentName}</td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tutor</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:600;">${data.tutorName}</td></tr>
+        <tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:600;">${data.subjects} (${data.level})</td></tr>
+      </table>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="${ctaUrl}" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">${ctaText} →</a>
+    </div>
+  `, `Tutor Assignment: ${data.studentName} & ${data.tutorName}`);
+
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.recipientEmail,
+    subject: `Oak Scholars — ${title}`,
+    html,
+  });
+}
+
+export async function sendSessionUpdateEmail(data: {
+  recipientName: string;
+  recipientEmail: string;
+  type: "accepted" | "rejected" | "proposed";
+  studentName: string;
+  tutorName: string;
+  subject: string;
+  scheduledAt: Date | string;
+  message?: string;
+}) {
+  const transporter = await getTransporter();
+  const dateStr = new Date(data.scheduledAt).toLocaleString("en-GB", {
+    weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
+  });
+
+  let title = "";
+  let intro = "";
+  if (data.type === "accepted") {
+    title = "Session Confirmed! ✅";
+    intro = `Your session for <strong>${data.subject}</strong> has been accepted by <strong>${data.tutorName}</strong>.`;
+  } else if (data.type === "rejected") {
+    title = "Session Cancelled ❌";
+    intro = `The session for <strong>${data.subject}</strong> on ${dateStr} could not be accommodated.`;
+  } else {
+    title = "New Time Proposed 📅";
+    intro = `<strong>${data.tutorName}</strong> has proposed a new time for your <strong>${data.subject}</strong> session.`;
+  }
+
+  const html = baseTemplate(`
+    <h2 style="color:${BRAND_PURPLE};font-size:26px;margin:0 0 16px;font-family:serif;">${title}</h2>
+    <p style="color:${BRAND_PURPLE};margin:0 0 24px;font-size:17px;line-height:1.6;">Hi <strong>${data.recipientName}</strong>,</p>
+    <p style="color:#666;margin:0 0 24px;font-size:16px;line-height:1.6;">${intro}</p>
+    
+    ${data.message ? `
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:20px;margin-bottom:24px;border-left:4px solid ${BRAND_AMBER};">
+      <p style="margin:0;color:${BRAND_PURPLE};font-size:15px;line-height:1.6;font-style:italic;">"${data.message}"</p>
+    </div>
+    ` : ""}
+
+    <div style="background:${BRAND_SURFACE};border-radius:12px;padding:24px;margin-bottom:32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:#999;font-size:13px;width:140px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</td><td style="padding:12px 0;border-bottom:1px solid rgba(40,26,57,0.05);color:${BRAND_PURPLE};font-weight:700;">${data.subject}</td></tr>
+        <tr><td style="padding:12px 0;color:#999;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Date & Time</td><td style="padding:12px 0;color:${BRAND_PURPLE};font-weight:600;">${dateStr}</td></tr>
+      </table>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="https://oakscholars.co.uk/dashboard" style="display:inline-block;background:${BRAND_PURPLE};color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.05em;text-transform:uppercase;">View My Dashboard →</a>
+    </div>
+  `, `Session Update: ${data.subject}`);
+
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.recipientEmail,
+    subject: `Oak Scholars — ${title}`,
+    html,
+  });
+}
+
 export async function sendStudyResourceDelivery(data: {
   firstName: string;
   email: string;

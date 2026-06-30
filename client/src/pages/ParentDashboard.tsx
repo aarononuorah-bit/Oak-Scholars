@@ -12,7 +12,9 @@ import Footer from "@/components/Footer";
 import {
   Users, Calendar, BookOpen, Star, Clock, GraduationCap,
   CheckCircle, Loader2, UserPlus, ShoppingBag, CreditCard,
+  Wallet, ArrowUpRight, ArrowDownLeft, PlusCircle,
 } from "lucide-react";
+import Link from "next/link";
 import DashboardSkeleton from "@/components/DashboardSkeleton";
 import { format } from "date-fns";
 
@@ -70,9 +72,134 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
   );
 }
 
+function CreditBalanceView({ userId, compact = false }: { userId: number, compact?: boolean }) {
+  const { data: creditData, isLoading } = trpc.credit.balance.useQuery({ userId });
+  if (isLoading) return <div className="h-6 w-16 bg-gray-100 animate-pulse rounded" />;
+  const balance = creditData?.balance || 0;
+  
+  if (compact) {
+    return <p className="text-xs text-[#E8A838] font-bold">{balance} Credits Available</p>;
+  }
+  
+  return (
+    <p className="text-4xl font-bold text-[#281A39]">
+      {balance} <span className="text-lg font-medium text-gray-400">Hours</span>
+    </p>
+  );
+}
+
+function CreditHistoryList({ userId }: { userId: number }) {
+  const { data: history = [], isLoading } = trpc.credit.history.useQuery({ userId });
+
+  if (isLoading) return <div className="p-8 space-y-4">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-gray-50 rounded-lg animate-pulse" />)}</div>;
+  if (history.length === 0) return <div className="p-12 text-center text-gray-400 italic">No credit transactions yet.</div>;
+
+  return (
+    <div className="divide-y divide-gray-100">
+      {history.map((tx) => (
+        <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              tx.amount > 0 ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
+            }`}>
+              {tx.amount > 0 ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[#281A39]">{tx.description || (tx.type === 'purchase' ? 'Credit Top-up' : 'Lesson Usage')}</p>
+              <p className="text-xs text-gray-500">{format(new Date(tx.createdAt), "PPP p")}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className={`font-bold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+              {tx.amount > 0 ? "+" : ""}{tx.amount} Credits
+            </p>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400">{tx.type}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ParentBookingForm({ studentId, onSuccess }: { studentId: number, onSuccess: () => void }) {
+  const { data: childData } = trpc.parent.childData.useQuery({ studentId });
+  const relationships = childData?.relationships || [];
+  const [relId, setRelId] = useState("");
+  const [subject, setSubject] = useState("");
+  const [date, setDate] = useState("");
+  const [duration, setDuration] = useState("60");
+
+  const bookSession = trpc.session.createSession.useMutation({
+    onSuccess: () => { toast.success("Booking request sent to tutor!"); onSuccess(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  if (relationships.length === 0) return <p className="text-sm text-gray-500 italic text-center py-4">No tutors assigned to this student yet. Oak Scholars will assign one soon.</p>;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
+        <div>
+          <Label className="text-xs font-bold uppercase text-gray-400 mb-1.5 block">Tutor / Subject</Label>
+          <select 
+            className="w-full border border-gray-200 rounded-lg p-2.5 text-sm"
+            value={relId}
+            onChange={(e) => {
+              setRelId(e.target.value);
+              const rel = relationships.find((r: any) => String(r.id) === e.target.value);
+              if (rel) setSubject(rel.subjects.split(',')[0].trim());
+            }}
+          >
+            <option value="">Select tutor...</option>
+            {relationships.map((r: any) => (
+              <option key={r.id} value={r.id}>{r.tutor?.name} — {r.subjects}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label className="text-xs font-bold uppercase text-gray-400 mb-1.5 block">Date & Time</Label>
+          <Input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-4">
+        <div>
+          <Label className="text-xs font-bold uppercase text-gray-400 mb-1.5 block">Session Duration</Label>
+          <select 
+            className="w-full border border-gray-200 rounded-lg p-2.5 text-sm"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          >
+            <option value="60">60 Minutes (1 Hour)</option>
+            <option value="90">90 Minutes (1.5 Hours)</option>
+            <option value="120">120 Minutes (2 Hours)</option>
+          </select>
+        </div>
+        <div className="pt-6">
+          <Button 
+            className="w-full" 
+            style={{ backgroundColor: "#E8A838", color: "#281A39" }}
+            disabled={!relId || !date || bookSession.isPending}
+            onClick={() => bookSession.mutate({
+              relationshipId: Number(relId),
+              studentId,
+              subject,
+              scheduledAt: new Date(date),
+              duration: Number(duration),
+            })}
+          >
+            {bookSession.isPending ? "Processing..." : "Confirm Booking"}
+          </Button>
+          <p className="text-[10px] text-gray-400 mt-2 text-center">This will use {Number(duration)/60} credits from your balance.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ParentDashboard() {
   const { user } = useAuth();
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
   const [linkEmail, setLinkEmail] = useState("");
   const [confirmCode, setConfirmCode] = useState("");
   const [linkStep, setLinkStep] = useState<"email" | "code">("email");
@@ -143,6 +270,10 @@ export function ParentDashboard() {
             <TabsTrigger value="children" className="text-xs px-3 py-2 flex items-center gap-2">
               <Users size={16} />
               My Children
+            </TabsTrigger>
+            <TabsTrigger value="credits" className="text-xs px-3 py-2 flex items-center gap-2">
+              <Wallet size={16} />
+              Credits
             </TabsTrigger>
             <TabsTrigger value="orders" className="text-xs px-3 py-2 flex items-center gap-2">
               <ShoppingBag size={16} />
@@ -223,6 +354,28 @@ export function ParentDashboard() {
                       </div>
                     </div>
 
+                    {/* Booking Section */}
+                    <div className="bg-white rounded-xl border border-[#E8A838]/30 p-6 shadow-sm">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="font-serif text-xl font-bold text-[#281A39]">Book a Session</h3>
+                          <p className="text-xs text-gray-500">Schedule a lesson for {selectedChild.name || "your child"}</p>
+                        </div>
+                        <Button onClick={() => setShowBooking(!showBooking)} variant="outline" size="sm">
+                          {showBooking ? "Cancel" : "+ Book Session"}
+                        </Button>
+                      </div>
+                      
+                      {showBooking && (
+                        <div className="mt-6 pt-6 border-t border-gray-100">
+                          <ParentBookingForm 
+                            studentId={selectedChild.id} 
+                            onSuccess={() => { setShowBooking(false); }} 
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     {/* Timetable */}
                     <div className="bg-white rounded-xl border border-gray-100 p-6">
                       <h2 className="font-serif text-lg font-bold text-[#281A39] mb-4">Weekly Schedule</h2>
@@ -252,6 +405,67 @@ export function ParentDashboard() {
                 )}
               </>
             )}
+          </TabsContent>
+
+          {/* ─── Credits Tab ─── */}
+          <TabsContent value="credits">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Sidebar for Child Selection */}
+              <div className="lg:col-span-1 space-y-3">
+                <h3 className="text-xs font-semibold text-[#281A39] uppercase tracking-wider px-2 mb-2">Select Student</h3>
+                {children.map((child) => (
+                  <button
+                    key={child.id}
+                    onClick={() => setSelectedChildId(child.id)}
+                    className={`w-full text-left p-4 rounded-xl border transition-all ${
+                      (selectedChildId ?? children[0]?.id) === child.id 
+                        ? "bg-[#281A39] border-[#281A39] text-white shadow-lg" 
+                        : "bg-white border-gray-100 text-[#281A39] hover:border-amber/30"
+                    }`}
+                  >
+                    <p className="font-bold">{child.name || child.email}</p>
+                    <CreditBalanceView userId={child.id} compact />
+                  </button>
+                ))}
+              </div>
+
+              {/* Credits Detail */}
+              <div className="lg:col-span-3">
+                {effectiveChildId ? (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-xl border border-gray-100 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center">
+                          <Wallet size={32} className="text-[#E8A838]" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 font-medium">Available Credits</p>
+                          <CreditBalanceView userId={effectiveChildId} />
+                        </div>
+                      </div>
+                      <Link href="/tuition">
+                        <Button style={{ backgroundColor: "#281A39", color: "white" }} className="gap-2">
+                          <PlusCircle size={18} /> Buy More Credits
+                        </Button>
+                      </Link>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="font-serif text-xl font-bold text-[#281A39]">Transaction History</h3>
+                        <p className="text-xs text-gray-500">Full record of credit purchases and session usage.</p>
+                      </div>
+                      <CreditHistoryList userId={effectiveChildId} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+                    <Wallet size={40} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-500">Select a student to view their credit history</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           {/* ─── Orders Tab ─── */}

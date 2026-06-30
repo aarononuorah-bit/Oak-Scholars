@@ -698,6 +698,51 @@ const adminRouter = router({
         level: input.level,
         status: 'active',
       });
+
+      // Send assignment emails to Tutor, Student, and Parent
+      try {
+        const tutor = await getUserById(input.tutorId);
+        const student = await getUserById(input.studentId);
+        const parents = await getLinkedParentsForStudent(input.studentId);
+
+        if (tutor && student) {
+          const assignmentData = {
+            studentName: student.name || "Student",
+            tutorName: tutor.name || "Tutor",
+            subjects: input.subjects,
+            level: input.level,
+          };
+
+          // To Tutor
+          await sendAssignmentEmail({
+            recipientName: tutor.name || "Tutor",
+            recipientEmail: tutor.email!,
+            role: "tutor",
+            ...assignmentData,
+          }).catch(e => console.error("[Email] Tutor assignment failed:", e));
+
+          // To Student
+          await sendAssignmentEmail({
+            recipientName: student.name || "Student",
+            recipientEmail: student.email!,
+            role: "student",
+            ...assignmentData,
+          }).catch(e => console.error("[Email] Student assignment failed:", e));
+
+          // To Parents
+          for (const parent of parents) {
+            await sendAssignmentEmail({
+              recipientName: parent.name || "Parent",
+              recipientEmail: parent.email!,
+              role: "parent",
+              ...assignmentData,
+            }).catch(e => console.error("[Email] Parent assignment failed:", e));
+          }
+        }
+      } catch (e) {
+        console.error("[Admin] Failed to coordinate assignment emails:", e);
+      }
+
       return { success: true, id };
     }),
 
@@ -944,50 +989,170 @@ const sessionRouter = router({
     return getTutoringSessionsByStudentId(ctx.user.id);
   }),
 
-  createSession: tutorProcedure
+  createSession: protectedProcedure
     .input(z.object({ relationshipId: z.number(), studentId: z.number(), subject: z.string(), scheduledAt: z.date(), duration: z.number() }))
     .mutation(async ({ input, ctx }) => {
+      // Access check: User must be the tutor, the student, or the student's parent
+      const isTutor = ctx.user.role === "tutor";
+      const isStudent = ctx.user.id === input.studentId;
+      const parents = await getLinkedParentsForStudent(input.studentId);
+      const isParent = parents.some(p => p.id === ctx.user.id);
+
+      if (!isTutor && !isStudent && !isParent) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not authorized to book for this student." });
+      }
+
+      // Credit check (1 credit = 1 hour)
+      const creditCost = input.duration / 60;
+      const balanceObj = await getCreditBalance(input.studentId);
+      if (balanceObj.balance < creditCost) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `Insufficient credits. This session requires ${creditCost} credits, but the student only has ${balanceObj.balance}.` });
+      }
+
+      // Deduct credits
+      await updateCreditBalance(
+        input.studentId, 
+        -creditCost, 
+        "usage", 
+        `Session: ${input.subject} (${input.duration} min)`,
+      );
+
+      // Get tutor ID if not the one booking
+      let tutorId = ctx.user.id;
+      if (!isTutor) {
+        const db = await getDb();
+        if (db) {
+          const rels = await db.select().from(tutoringRelationships).where(eq(tutoringRelationships.id, input.relationshipId)).limit(1);
+          if (rels[0]) tutorId = rels[0].tutorId;
+        }
+      }
+
       const id = await createTutoringSession({
         relationshipId: input.relationshipId,
-        tutorId: ctx.user.id,
+        tutorId: tutorId,
         studentId: input.studentId,
         subject: input.subject,
         scheduledAt: input.scheduledAt,
         duration: input.duration,
-        status: 'scheduled',
+        status: isTutor ? "scheduled" : "pending", // Student/Parent bookings are pending tutor approval
       });
 
-      // Notify parent(s) of the student when a session is scheduled
+      // Link transaction to session
+      const db = await getDb();
+      if (db) {
+        const lastTx = (await getCreditTransactionsByUserId(input.studentId))[0];
+        if (lastTx) {
+          await db.update(creditTransactions).set({ sessionId: id }).where(eq(creditTransactions.id, lastTx.id));
+        }
+      }
+
+      // Notify relevant parties
       try {
         const student = await getUserById(input.studentId);
-        const tutor = await getUserById(ctx.user.id);
-        if (student) {
-          const linkedParents = await getLinkedParentsForStudent(input.studentId);
-          for (const parent of linkedParents) {
-            if (parent?.email) {
-              sendParentSessionNotification({
-                parentName: parent.name || 'Parent',
-                parentEmail: parent.email,
-                studentName: student.name || 'Your child',
-                subject: input.subject,
-                scheduledAt: input.scheduledAt,
-                duration: input.duration,
-                tutorName: tutor?.name || undefined,
-              }).catch((e) => console.error('[Email] Parent session notification failed:', e));
+        const tutor = await getUserById(tutorId);
+        
+        if (student && tutor) {
+          if (isTutor) {
+            // Tutor scheduled: Notify parents
+            for (const parent of parents) {
+              if (parent?.email) {
+                sendParentSessionNotification({
+                  parentName: parent.name || 'Parent',
+                  parentEmail: parent.email,
+                  studentName: student.name || 'Your child',
+                  subject: input.subject,
+                  scheduledAt: input.scheduledAt,
+                  duration: input.duration,
+                  tutorName: tutor.name || undefined,
+                }).catch((e) => console.error('[Email] Parent session notification failed:', e));
+              }
             }
+          } else {
+            // Student/Parent booked: Notify Tutor for approval
+            // (Tutor will see this in their pending sessions tab)
           }
         }
       } catch (e) {
-        console.error('[Session] Parent notification error:', e);
+        console.error("[Session] Failed to coordinate notifications:", e);
       }
 
       return { success: true, id };
     }),
 
-  updateStatus: tutorProcedure
-    .input(z.object({ id: z.number(), status: z.enum(['scheduled', 'completed', 'cancelled', 'no-show']), notes: z.string().optional() }))
-    .mutation(async ({ input }) => {
-      await updateTutoringSessionStatus(input.id, input.status, input.notes);
+  updateStatus: protectedProcedure
+    .input(z.object({ 
+      id: z.number(), 
+      status: z.enum(['pending', 'scheduled', 'completed', 'cancelled', 'no-show', 'proposed']), 
+      notes: z.string().optional(),
+      proposalMessage: z.string().optional(),
+      scheduledAt: z.date().optional()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Fetch session for validation
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const sessions = await db.select().from(tutoringSessions).where(eq(tutoringSessions.id, input.id)).limit(1);
+      if (sessions.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+      const session = sessions[0];
+
+      // Access check
+      const isTutor = ctx.user.role === "tutor" && ctx.user.id === session.tutorId;
+      const isStudent = ctx.user.id === session.studentId;
+      const parents = await getLinkedParentsForStudent(session.studentId);
+      const isParent = parents.some(p => p.id === ctx.user.id);
+
+      if (!isTutor && !isStudent && !isParent) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      // Logic for status transitions
+      if (input.status === 'scheduled' && isTutor && session.status === 'pending') {
+        // Tutor accepts a pending booking
+        await updateTutoringSessionStatus(input.id, 'scheduled');
+        // Notify Student
+        const student = await getUserById(session.studentId);
+        const tutor = await getUserById(session.tutorId);
+        if (student && tutor) {
+          await sendSessionUpdateEmail({
+            recipientName: student.name || "Student",
+            recipientEmail: student.email!,
+            type: "accepted",
+            studentName: student.name || "Student",
+            tutorName: tutor.name || "Tutor",
+            subject: session.subject,
+            scheduledAt: session.scheduledAt,
+          });
+        }
+      } else if (input.status === 'proposed' && isTutor) {
+        // Tutor proposes new time
+        if (!input.scheduledAt) throw new TRPCError({ code: "BAD_REQUEST", message: "Proposed time is required" });
+        await updateTutoringSessionStatus(input.id, 'proposed', undefined, input.proposalMessage, input.scheduledAt);
+        // Notify Student
+        const student = await getUserById(session.studentId);
+        const tutor = await getUserById(session.tutorId);
+        if (student && tutor) {
+          await sendSessionUpdateEmail({
+            recipientName: student.name || "Student",
+            recipientEmail: student.email!,
+            type: "proposed",
+            studentName: student.name || "Student",
+            tutorName: tutor.name || "Tutor",
+            subject: session.subject,
+            scheduledAt: input.scheduledAt,
+            message: input.proposalMessage,
+          });
+        }
+      } else if (input.status === 'cancelled') {
+        // Refund credits if session was scheduled/pending
+        if (session.status === 'scheduled' || session.status === 'pending' || session.status === 'proposed') {
+          const creditCost = session.duration / 60;
+          await updateCreditBalance(session.studentId, creditCost, "refund", `Refund: Cancelled session ${session.subject}`);
+        }
+        await updateTutoringSessionStatus(input.id, 'cancelled', input.notes);
+      } else {
+        await updateTutoringSessionStatus(input.id, input.status, input.notes);
+      }
+
       return { success: true };
     }),
 
@@ -1387,6 +1552,7 @@ export const appRouter = router({
   storage: storageRouter,
   referral: referralRouter,
   parent: parentRouter,
+  credit: creditRouter,
   tutorProfile: tutorProfileRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
