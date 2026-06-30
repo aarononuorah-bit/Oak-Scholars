@@ -30,12 +30,16 @@ export default function CtaBanner() {
     >
       {/* Decorative background circles */}
       <div
-        className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-10 pointer-events-none"
-        style={{ background: "radial-gradient(circle, #E8A838 0%, transparent 70%)" }}
+        className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-15 pointer-events-none blur-3xl animate-pulse"
+        style={{ background: "radial-gradient(circle, #E8A838 0%, transparent 70%)", animationDuration: '4s' }}
       />
       <div
-        className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-8 pointer-events-none"
-        style={{ background: "radial-gradient(circle, #E8A838 0%, transparent 70%)" }}
+        className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-10 pointer-events-none blur-3xl animate-pulse"
+        style={{ background: "radial-gradient(circle, #E8A838 0%, transparent 70%)", animationDuration: '6s' }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-full opacity-[0.03] pointer-events-none"
+        style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 50%)" }}
       />
       {/* Dot grid */}
       <div

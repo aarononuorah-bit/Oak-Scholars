@@ -154,10 +154,12 @@ function HeroSection() {
             </div>
 
             {/* Stats row — animated counters */}
-            <div ref={statsRef} className="grid grid-cols-2 sm:flex sm:items-center gap-6 sm:gap-8 pt-8 border-t border-white/10 animate-fade-in" style={{ animationDelay: "350ms" }}>
+            <div ref={statsRef} className="grid grid-cols-2 sm:flex sm:items-center gap-6 sm:gap-12 pt-8 border-t border-white/10 animate-fade-in" style={{ animationDelay: "350ms" }}>
               <HeroStat value={50} suffix="%" label="Off first lesson" started={statsVisible} />
               <HeroStat value={30} prefix="£" label="Per session from" started={statsVisible} />
-              <HeroStat value={12} suffix="+" label="Subjects covered" started={statsVisible} />
+              <div className="hidden sm:block">
+                <HeroStat value={12} suffix="+" label="Subjects covered" started={statsVisible} />
+              </div>
             </div>
           </div>
 

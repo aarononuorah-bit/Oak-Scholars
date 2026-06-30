@@ -55,20 +55,20 @@ export default function TrustBar() {
           <p className="text-white/40 text-xs font-semibold tracking-widest uppercase text-center mb-8">
             Our Scholars come from the UK's top institutions
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12">
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
             {universities.map((uni, i) => (
               <div
                 key={uni}
-                className="relative group"
+                className="relative group cursor-default"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <span
-                  className="font-serif text-lg md:text-xl font-bold tracking-wider transition-all duration-300 text-white/30 group-hover:text-amber/80"
+                  className="font-serif text-lg md:text-2xl font-bold tracking-widest transition-all duration-500 text-white/20 group-hover:text-amber group-hover:drop-shadow-[0_0_15px_rgba(232,168,56,0.3)]"
                 >
                   {uni}
                 </span>
-                {/* Subtle underline on hover */}
-                <span className="absolute bottom-0 left-0 w-0 h-px bg-amber/60 group-hover:w-full transition-all duration-300" />
+                {/* Subtle glow effect on hover */}
+                <div className="absolute -inset-2 bg-amber/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
               </div>
             ))}
           </div>
