@@ -46,40 +46,42 @@ export default function CookieConsent() {
       }}
     >
       <div
-        className="rounded-xl shadow-2xl p-3.5 sm:p-4"
+        className="rounded-xl shadow-2xl p-4"
         style={{ backgroundColor: "#281A39", border: "1px solid rgba(232,168,56,0.2)" }}
       >
-        <div className="flex items-start gap-3">
-          <Cookie size={18} className="text-amber flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-semibold mb-0.5">Cookie Notice</p>
-            <p className="text-white/60 text-xs leading-relaxed">
-              We use cookies to improve your experience on Oak Scholars.{" "}
-              <Link href="/privacy" className="text-amber underline hover:opacity-80 transition-opacity">
-                Privacy Policy
-              </Link>
-            </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <Cookie size={18} className="text-amber flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-semibold mb-0.5">Cookie Notice</p>
+              <p className="text-white/60 text-xs leading-relaxed">
+                We use cookies to improve your experience on Oak Scholars.{" "}
+                <Link href="/privacy" className="text-amber underline hover:opacity-80 transition-opacity">
+                  Privacy Policy
+                </Link>
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <Button
               size="sm"
               variant="outline"
               onClick={() => dismiss("declined")}
-              className="border-white/20 text-white/70 bg-transparent hover:bg-white/10 text-xs h-8 px-3 transition-all duration-200"
+              className="flex-1 sm:flex-none border-white/20 text-white/70 bg-transparent hover:bg-white/10 text-xs h-8 px-3 transition-all duration-200"
             >
               Decline
             </Button>
             <Button
               size="sm"
               onClick={() => dismiss("accepted")}
-              className="text-xs font-semibold btn-press h-8 px-3"
+              className="flex-1 sm:flex-none text-xs font-semibold btn-press h-8 px-3"
               style={{ backgroundColor: "#E8A838", color: "#281A39" }}
             >
               Accept
             </Button>
             <button
               onClick={() => dismiss("declined")}
-              className="text-white/40 hover:text-white/70 transition-colors duration-200 p-1"
+              className="text-white/40 hover:text-white/70 transition-colors duration-200 p-1 ml-1"
               aria-label="Dismiss"
             >
               <X size={14} />

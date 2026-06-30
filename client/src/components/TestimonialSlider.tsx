@@ -97,7 +97,7 @@ export default function TestimonialSlider({
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 md:-translate-x-20 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 hover:text-[#281A39]"
+            className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 md:-translate-x-16 lg:-translate-x-20 p-2 rounded-full bg-white/80 md:bg-transparent shadow-md md:shadow-none hover:bg-gray-100 transition-colors text-gray-600 hover:text-[#281A39] z-10"
             aria-label="Previous testimonial"
           >
             <ChevronLeft size={24} />
@@ -105,7 +105,7 @@ export default function TestimonialSlider({
 
           <button
             onClick={goToNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 md:translate-x-20 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 hover:text-[#281A39]"
+            className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 md:translate-x-16 lg:translate-x-20 p-2 rounded-full bg-white/80 md:bg-transparent shadow-md md:shadow-none hover:bg-gray-100 transition-colors text-gray-600 hover:text-[#281A39] z-10"
             aria-label="Next testimonial"
           >
             <ChevronRight size={24} />

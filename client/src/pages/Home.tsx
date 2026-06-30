@@ -122,7 +122,7 @@ function HeroSection() {
               <span className="text-amber text-xs font-semibold tracking-widest uppercase">Online Tutoring</span>
             </div>
 
-            <h1 className="font-serif text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
               Your Oak Scholar sat{" "}
               <em className="text-amber not-italic gold-underline-instant">the same exam</em>{" "}
               two years ago.
@@ -154,7 +154,7 @@ function HeroSection() {
             </div>
 
             {/* Stats row — animated counters */}
-            <div ref={statsRef} className="flex items-center gap-8 pt-8 border-t border-white/10 animate-fade-in" style={{ animationDelay: "350ms" }}>
+            <div ref={statsRef} className="grid grid-cols-2 sm:flex sm:items-center gap-6 sm:gap-8 pt-8 border-t border-white/10 animate-fade-in" style={{ animationDelay: "350ms" }}>
               <HeroStat value={50} suffix="%" label="Off first lesson" started={statsVisible} />
               <HeroStat value={30} prefix="£" label="Per session from" started={statsVisible} />
               <HeroStat value={12} suffix="+" label="Subjects covered" started={statsVisible} />
