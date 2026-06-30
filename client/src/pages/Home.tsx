@@ -8,6 +8,7 @@ import TrustBar from "@/components/TrustBar";
 import CtaBanner from "@/components/CtaBanner";
 import PageMeta from "@/components/PageMeta";
 import JsonLd from "@/components/JsonLd";
+import TestimonialSlider from "@/components/TestimonialSlider";
 
 // ─── Intersection Observer hook for scroll animations ─────────────────────────
 function useScrollReveal(options?: IntersectionObserverInit) {
@@ -508,6 +509,11 @@ function TestimonialsSection() {
       author: "Parent of UCAS applicant",
       stars: 5,
     },
+    {
+      quote: "Oak Scholars matched me with a tutor who not only knew the subject but genuinely cared about my progress. Best investment my parents made.",
+      author: "GCSE student (English & History)",
+      stars: 5,
+    },
   ];
 
   return (
@@ -519,30 +525,9 @@ function TestimonialsSection() {
             Real results, <span className="gold-underline">real students</span>
           </h2>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((t, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover flex flex-col"
-            >
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: t.stars }).map((_, j) => (
-                  <Star key={j} size={16} fill="#E8A838" className="text-amber" />
-                ))}
-              </div>
-              <p className="text-navy-deep text-sm leading-relaxed mb-6 italic flex-1">"{t.quote}"</p>
-              <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                  style={{ backgroundColor: "#281A39" }}
-                >
-                  {t.author.charAt(0)}
-                </div>
-                <p className="text-muted-brand text-xs font-semibold">— {t.author}</p>
-              </div>
-            </div>
-          ))}
+        {/* Testimonial slider with auto-fade and manual navigation */}
+        <div className="max-w-3xl mx-auto px-4 md:px-0">
+          <TestimonialSlider testimonials={testimonials} autoPlayInterval={6000} transitionDuration={1000} />
         </div>
       </div>
     </section>
