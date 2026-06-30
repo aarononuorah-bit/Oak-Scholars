@@ -187,9 +187,18 @@ export function ChatbotWidget() {
       {/* Help Prompt Popup */}
       {!isOpen && showPrompt && !promptDismissed && (
         <div
+          role="button"
+          tabIndex={0}
           className="mb-3 w-52 bg-white p-4 rounded-2xl shadow-xl border border-amber/30 cursor-pointer group"
           style={{ animation: "chatSlideUp 300ms cubic-bezier(0.23, 1, 0.32, 1) both" }}
           onClick={() => { setIsOpen(true); setShowPrompt(false); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsOpen(true);
+              setShowPrompt(false);
+            }
+          }}
         >
           {/* Speech bubble tail */}
           <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-r border-b border-amber/30 rotate-45" />

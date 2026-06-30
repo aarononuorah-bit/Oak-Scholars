@@ -232,10 +232,21 @@ function DashboardLayoutContent({
           </SidebarFooter>
         </Sidebar>
         <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Sidebar resizer"
+          tabIndex={0}
           className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
           onMouseDown={() => {
             if (isCollapsed) return;
             setIsResizing(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") {
+              setSidebarWidth((prev) => Math.max(200, prev - 10));
+            } else if (e.key === "ArrowRight") {
+              setSidebarWidth((prev) => Math.min(450, prev + 10));
+            }
           }}
           style={{ zIndex: 50 }}
         />

@@ -126,6 +126,12 @@ export default function TestimonialSlider({
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               aria-label={`Go to testimonial ${idx + 1}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  goToSlide(idx);
+                }
+              }}
             />
           ))}
         </div>

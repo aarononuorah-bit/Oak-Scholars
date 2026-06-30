@@ -51,12 +51,24 @@ export default function Timetable({ targetUserId, userName }: TimetableProps) {
           <div className="flex bg-gray-100 p-1 rounded-lg">
             <button 
               onClick={() => setViewMode("week")}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setViewMode("week");
+                }
+              }}
               className={`text-[10px] px-2 py-1 rounded-md font-bold transition-all ${viewMode === "week" ? "bg-white text-navy-deep shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
             >
               Week
             </button>
             <button 
               onClick={() => setViewMode("6month")}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setViewMode("6month");
+                }
+              }}
               className={`text-[10px] px-2 py-1 rounded-md font-bold transition-all ${viewMode === "6month" ? "bg-white text-navy-deep shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
             >
               6 Months

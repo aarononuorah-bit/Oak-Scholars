@@ -219,13 +219,13 @@ export default function Navbar() {
         <div className="lg:hidden bg-[#281A39] border-t border-white/10">
           <div className="container py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="text-white/80 hover:text-[#E8A838] font-medium px-3 py-2.5 rounded-md transition-colors hover:bg-white/5"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <div className="flex flex-col gap-3 pt-3 mt-2 border-t border-white/10">
               <Link href="/tutor-apply">
