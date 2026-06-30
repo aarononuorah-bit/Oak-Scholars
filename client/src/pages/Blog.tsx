@@ -185,7 +185,7 @@ export default function Blog() {
       <PageMeta
         title="Blog & Insights | Oak Scholars"
         description="Expert advice on exam tips, university applications, and student wellbeing from Oak Scholars."
-        path="/blog"
+        url="/blog"
       />
       <Navbar />
 

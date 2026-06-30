@@ -197,7 +197,7 @@ export default function BlogArticle() {
       <PageMeta
         title={`${article.title} | Oak Scholars Blog`}
         description={article.excerpt}
-        path={`/blog/${id}`}
+        url={`/blog/${id}`}
       />
       <Navbar />
 
@@ -285,9 +285,9 @@ export default function BlogArticle() {
                 <p className="text-sm font-semibold text-gray-600 mb-2">Share this article</p>
                 <div className="flex gap-3">
                   {[
-                    { name: "Twitter", url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://oakscholars.com/blog/${article.id}` },
-                    { name: "Facebook", url: `https://facebook.com/sharer/sharer.php?u=https://oakscholars.com/blog/${article.id}` },
-                    { name: "LinkedIn", url: `https://www.linkedin.com/sharing/share-offsite/?url=https://oakscholars.com/blog/${article.id}` },
+                    { name: "Twitter", url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://oakscholars.co.uk/blog/${article.id}` },
+                    { name: "Facebook", url: `https://facebook.com/sharer/sharer.php?u=https://oakscholars.co.uk/blog/${article.id}` },
+                    { name: "LinkedIn", url: `https://www.linkedin.com/sharing/share-offsite/?url=https://oakscholars.co.uk/blog/${article.id}` },
                   ].map((social) => (
                     <a
                       key={social.name}
